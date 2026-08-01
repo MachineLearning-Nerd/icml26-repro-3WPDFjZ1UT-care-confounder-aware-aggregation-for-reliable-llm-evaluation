@@ -269,7 +269,7 @@ def c5_results(v):
         ],
     ]
     calib = table(
-        ["Sweep", "Measured exponent", "Predicted", "Contract", "Theil–Sen refit"],
+        ["Sweep", "Measured exponent", "Predicted", "Contract", "Theil–Sen refit / status"],
         rows
         + [
             [
@@ -277,51 +277,78 @@ def c5_results(v):
                 f"{num(c.get('loglog_slope_n_star_vs_alpha'), 3)} ± {num(c.get('loglog_slope_n_star_vs_alpha_stderr'), 3)}",
                 num(c.get("predicted_slope_n_star_vs_alpha"), 1),
                 c.get("requirement_n_star_vs_alpha", ""),
-                "—",
+                c.get("alpha_sweep_status", "—"),
             ],
             [
                 "n\\*(δ) — stage 2",
                 f"{num(c.get('loglog_slope_n_star_vs_delta'), 3)} ± {num(c.get('loglog_slope_n_star_vs_delta_stderr'), 3)}",
                 num(c.get("predicted_slope_n_star_vs_delta"), 1),
                 c.get("requirement_n_star_vs_delta", ""),
-                "—",
+                c.get("delta_sweep_status", "—"),
             ],
         ],
     )
     return (
         calib
+        + "".join(
+            f"\n\nThe n\\*({nm}) sweep is **NOT INFORMATIVE**: "
+            + "; ".join((c.get(f"{k}_sweep_informativeness") or {}).get("not_informative_because", []))
+            + ". It is excluded from the verdict rather than counted as a pass."
+            for k, nm in (("alpha", "α"), ("delta", "δ"))
+            if not (c.get(f"{k}_sweep_informativeness") or {}).get("informative", True)
+        )
         + f"\n\nGrid: `n \u2208 {c.get('grid_n')}`. Saturated points are excluded from every fit, so each "
         "exponent is read from the regime where the bound is active. The stage-2 row is the "
         "one Theorem 4.2 governs; the stage-3 row describes our solver."
     )
 
 
+def sweep_status(blk):
+    """Render the informativeness verdict, and say why when a sweep measured nothing."""
+    info = blk.get("informativeness") or blk.get("informativeness_record") or {}
+    status = blk.get("status") or info.get("status") or "—"
+    why = info.get("not_informative_because") or []
+    return status, ("; ".join(why) if why else "")
+
+
 def c6_results(v):
     s = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", default={})
-    rows = []
+    rows, notes = [], []
     for key, label in (("sigma", "σ_max"), ("pi_min", "π_min"), ("p", "p·log(p/ε)")):
         blk = s.get(key) or {}
         # the p sweep names its exponent after the composite variable it regresses on
         exponent = blk.get("exponent", blk.get("exponent_vs_p_log_p"))
+        status, why = sweep_status(blk)
+        notes.extend([f"* **{label} — {status}.** {why}"] if why else [])
         rows.append(
             [
                 label,
                 num(blk.get("stated_exponent"), 1),
                 f"{num(exponent, 3)} ± {num(blk.get('stderr'), 3)}",
                 f"`{blk.get('requirement', '—')}`",
-                yesno(blk.get("ok")),
+                status,
+                yesno(blk.get("ok")) if status == "MEASURED" else "n/a",
             ]
         )
     ic = g(v, "independent_check", "c6_slope_recheck", default={})
     tail = (
-        f"\n\nOverall sample-complexity contract satisfied: {yesno(s.get('ok'))}.\n\n"
+        f"\n\nOverall sample-complexity contract satisfied: {yesno(s.get('ok'))}. "
+        f"Informative sweeps: {s.get('informative_sweeps') or 'none'}; "
+        f"uninformative: {s.get('uninformative_sweeps') or 'none'}. A sweep marked NOT "
+        "INFORMATIVE contributes no evidence in either direction and is excluded from the "
+        "verdict; it is shown here so the exclusion is visible rather than silent."
+        + ("\n\n" + "\n".join(notes) if notes else "")
+        + "\n\n"
         f"Independent Theil–Sen refit of the σ boundary probe: slope "
         f"{num(ic.get('theil_sen_slope'), 4)} against least squares "
         f"{num(ic.get('least_squares_slope'), 4)}; both estimators agree there is no "
         f"σ-growth: {yesno(ic.get('theil_sen_agrees_no_sigma_growth'))}."
         + (f"\n\nNot measured: {s['not_measured']}" if s.get("not_measured") else "")
     )
-    return table(["Parameter", "Stated exponent", "Measured", "One-sided contract", "Passes"], rows) + tail
+    return table(
+        ["Parameter", "Stated exponent", "Measured", "One-sided contract", "Status", "Passes"],
+        rows,
+    ) + tail
 
 
 def verdicts(v):

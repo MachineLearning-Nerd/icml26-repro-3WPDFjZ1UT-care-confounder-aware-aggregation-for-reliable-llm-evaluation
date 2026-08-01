@@ -157,3 +157,40 @@ published 0.701 would look like a dramatic refutation of the paper, and it is no
 the sort — the paper's PKU-BETTER numbers were presumably computed against labels that
 are not in the release. No verdict about CARE is drawn from this column in either
 direction.
+
+## 13. One-sided rate contracts can pass without measuring anything
+
+Theorems 4.2 and 4.3 state sufficient conditions, so every exponent contract on this
+logbook is one-sided: the measured exponent must not exceed (4.3) or fall below (4.2)
+the stated one. Such a contract can only ever be *violated* by data; it can never be
+confirmed by it, and it is satisfied trivially by a sweep whose search never resolved an
+exponent at all.
+
+We hit this. With the `n*` search grid floored at `n = 5 000`, every `π_min` setting in
+Claim 6 returned `n* = 5 000` — the error was already under target at the first grid
+point — giving a fitted exponent of `0.000 ± 0.000` that duly satisfied `≥ −2`. The
+contract passed on a constant.
+
+Two changes, both published:
+
+* the grid was extended down to `n = 200`, so the `π_min` search is no longer censored
+  from below;
+* [`repro/src/informativeness.py`](repro/src/informativeness.py) makes admissibility a
+  machine-checked precondition — ≥ 3 usable points, ≥ 3 distinct `n*` values, no pinning
+  of every `n*` to a grid endpoint, and a fitted trend exceeding its own standard error.
+  A sweep failing any of these is reported **NOT INFORMATIVE** and excluded from the
+  verdict rather than counted as a pass.
+
+## 14. The `δ` sweep bounds the exponent but does not isolate `δ`
+
+`δ` is the eigengap, and it cannot be varied independently of everything else: moving it
+means rescaling the spectrum, which also changes the conditioning of the problem. The
+measured `n*(δ)` is correspondingly non-monotonic in `δ`, and the fitted exponent is
+positive with a standard error nearly as large as the estimate.
+
+We therefore state what this sweep does and does not support. It **does** establish that
+`n*` does not blow up faster than `δ^{-2}` over the range swept, which is the one-sided
+direction Theorem 4.2's `O(·)` asserts. It **does not** confirm the `δ^{-2}` factor
+itself: a bound that is loose over the swept range is consistent with many exponents,
+and the confounded sweep cannot separate them. Claim 5's verdict rests on the stage-2
+`n^{-1/2}` measurement and the reconstructed symbolic derivation, not on this sweep.

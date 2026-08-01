@@ -76,6 +76,14 @@ attributed to the stage that produces it:
 `n*(α)` and `n*(δ)` are read from the **stage-2** curve. The stage-3 figure is reported
 separately and is a statement about our implementation, not about the theorem.
 
+Theorem 4.2 is an `O(·)` upper bound, so both `n*` contracts are one-sided — and a
+one-sided contract is satisfied by a sweep that measured nothing. Each sweep therefore
+passes through the same admissibility test as Claim 6's, in
+[`repro/src/informativeness.py`](repro/src/informativeness.py): ≥ 3 usable points,
+≥ 3 distinct `n*` values, no pinning of every `n*` to a grid endpoint, and a fitted
+trend exceeding its own standard error. A sweep that fails is marked **NOT INFORMATIVE**
+in the table below and excluded from the verdict, rather than counted as a pass.
+
 ### Results
 
 <!-- FILL:c5.results -->

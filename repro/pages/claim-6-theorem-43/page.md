@@ -50,8 +50,8 @@ observed to be violated has not been falsified, however flawed its derivation.
 The claim is a statement about **exponents**, so each parameter is swept independently
 and `n*` — the sample size at which the parameter error first falls below
 `TARGET = 0.05` — is located by search over a geometric grid
-`n ∈ {5 000, 12 500, 31 250, 78 125, 195 312, 488 281, 1 220 703}`. No sample size is
-computed from the formula under test.
+`n ∈ {200, 500, 1 250, 3 125, 5 000, 12 500, 31 250, 78 125, 195 312, 488 281, 1 220 703}`.
+No sample size is computed from the formula under test.
 
 Because the theorem is a sufficient condition (`n ≳ …`), each contract is **one-sided**:
 the measured exponent must not *exceed* what the theorem requires.
@@ -61,6 +61,24 @@ the measured exponent must not *exceed* what the theorem requires.
 | `σ_max` | 6 | measured `≤ 6 + 2·stderr` |
 | `π_min` | −2 | measured `≥ −2 − 2·stderr` |
 | `p·log(p/ε)` | 1 | measured `≤ 1 + 2·stderr` |
+
+### Why a one-sided contract needs an informativeness precondition
+
+A one-sided contract is satisfied by any sweep that does not *exceed* the stated
+exponent — including a sweep that measured nothing at all. An earlier revision of this
+page fell into exactly that trap: with the grid floor at `n = 5 000`, every `π_min`
+setting returned `n* = 5 000` because the error was already below target at the first
+grid point. The fitted exponent was `0.000 ± 0.000`, the contract `≥ −2` passed, and the
+number was a property of the grid rather than of the estimator.
+
+[`repro/src/informativeness.py`](repro/src/informativeness.py) now makes that
+undetectable-by-reading condition machine-checkable. A sweep is admissible as evidence
+only if it has ≥ 3 usable points, ≥ 3 *distinct* values of `n*`, no pinning of every
+`n*` to a grid endpoint, and a fitted trend larger than its own standard error. A sweep
+failing any of these is reported **NOT INFORMATIVE**, contributes nothing in either
+direction, and is excluded from the verdict — rather than passing because it failed to
+disagree. The grid was also extended down to `n = 200` so the `π_min` search is no
+longer censored from below.
 
 ### Results
 
