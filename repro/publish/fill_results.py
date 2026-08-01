@@ -37,7 +37,13 @@ def num(x, nd=4):
     if isinstance(x, bool):
         return "yes" if x else "no"
     if isinstance(x, (int, float)):
-        return f"{x:.{nd}f}".rstrip("0").rstrip(".") if isinstance(x, float) else str(x)
+        # Never strip trailing zeros. An earlier version returned
+        # f"{x:.{nd}f}".rstrip("0").rstrip("."), which is wrong in three ways a blind
+        # reviewer demonstrated on the rendered pages: num(0.0, 0) -> "0" -> "" (a slope
+        # of 0 vanished from a table row), num(100.0, 0) -> "1", and num(3.3e-4, 4) ->
+        # "0.0003" but num(3.3e-4, 0) -> "0", printing a measured difference as exact
+        # agreement. Significant zeros are information; the caller chose `nd`.
+        return f"{x:.{nd}f}" if isinstance(x, float) else str(x)
     return str(x)
 
 
@@ -870,10 +876,16 @@ def c6_results(v):
         + "\n\n"
         f"Independent Theil–Sen refit of the σ boundary probe: slope "
         f"{num(ic.get('theil_sen_slope'), 4)} against least squares "
-        f"{num(ic.get('least_squares_slope'), 4)}; both fall under the 0.5 threshold for "
-        f"'no σ-growth': {yesno(ic.get('theil_sen_agrees_no_sigma_growth'))}. The "
-        "Theil–Sen figure clears that threshold only narrowly, so the two estimators "
-        "agree on the direction rather than on the magnitude."
+        f"{num(ic.get('least_squares_slope'), 4)}, differing by "
+        f"{num(ic.get('abs_difference_between_estimators'), 4)}. The two estimators "
+        "**do not agree on the magnitude** — the difference is of the same order as the "
+        "smaller of them. An earlier revision printed here that both 'fall under the 0.5 "
+        "threshold for no σ-growth: **yes**'; the Theil–Sen figure clears that threshold "
+        "by about 0.02, a margin this logbook elsewhere calls inside the noise, so "
+        "printing it as an affirmative in the results block of a claim whose verdict is "
+        "'decides nothing' invited exactly the misreading a blind reviewer flagged. The "
+        "disagreement is itself the finding: it is a second reason the σ probe is not "
+        "measuring a slope."
         + (f"\n\nNot measured: {s['not_measured']}" if s.get("not_measured") else "")
     )
     return table(
@@ -1097,7 +1109,17 @@ def c6_boundary(v):
         f"Predicted if the σ³ factor were genuinely missing: "
         f"{num(b.get('predicted_slope_if_sigma3_is_missing'), 1)}; predicted if the theorem is "
         f"correct as stated: {num(b.get('predicted_slope_if_theorem_correct'), 1)}. "
-        f"σ³ violation hypothesis supported by the data: {yesno(b.get('ok'))}.\n\n"
+        f"**Excludes the σ³ hypothesis (slope 3):** "
+        f"{yesno(b.get('excludes_sigma3_hypothesis'))} · "
+        f"**excludes the theorem's prediction (slope 0):** "
+        f"{yesno(b.get('excludes_theorem_hypothesis'))} · "
+        f"**decides between them:** {yesno(b.get('discriminates'))}. "
+        "The interval contains both hypotheses, so this probe supports neither. An "
+        "earlier revision printed here 'σ³ violation hypothesis supported by the data: "
+        "**yes**', rendered from the block's `ok` field — which means only that the "
+        "least-squares fit returned two finite numbers and could not have read 'no' "
+        "unless the probe crashed. A blind reviewer found it; it asserted a "
+        "falsification of Theorem 4.3 that this page's own verdict header denies.\n\n"
         "The exponent is fitted to the **ratio** column, which is the quantity the "
         "theorem bounds by a constant; the raw weight error itself falls with σ because "
         "n rises as σ⁶ along the boundary. Both columns are shown so the two cannot be "
@@ -1109,11 +1131,37 @@ def c6_boundary(v):
 def c6_controls(v):
     nc = g(v, "claims", "C6_thm43", "negative_controls", default={})
     rows = []
+    def span(r):
+        lo, hi = r.get("min_err"), r.get("max_err")
+        if lo is None or hi is None:
+            return "—"
+        return f"{num(lo, 4)} – {num(hi, 4)} ({num(r.get('spread_max_over_min'), 1)}×)"
     for r in nc.get("nc1_rows", []):
-        rows.append([f"NC1 — n = {r.get('n')}", num(r.get("median_err"), 4)])
+        rows.append([f"NC1 — n = {r.get('n')}", num(r.get("median_err"), 4), span(r),
+                     num(r.get("n_seeds_usable"), 0)])
     for r in nc.get("nc2_rows", []):
-        rows.append([f"NC2 — σ = {num(r.get('sigma_max'), 2)}, n = {r.get('n')}", num(r.get("median_err"), 4)])
-    return table(["Setting", "Median weight error"], rows) + (
+        rows.append([f"NC2 — σ = {num(r.get('sigma_max'), 2)}, n = {r.get('n')}",
+                     num(r.get("median_err"), 4), span(r), num(r.get("n_seeds_usable"), 0)])
+    p1, p2 = nc.get("nc1_effect_vs_seed_noise") or {}, nc.get("nc2_effect_vs_seed_noise") or {}
+    sh = nc.get("shared_configuration_cross_check") or {}
+    return table(
+        ["Setting", "Median weight error", "seed min – max (spread)", "seeds used"], rows
+    ) + (
+        f"\n\n**Effect against noise.** NC1 moves the error by "
+        f"{num(p1.get('effect_ratio'), 2)}× against a worst within-setting seed spread of "
+        f"{num(p1.get('worst_within_setting_seed_spread'), 2)}× — effect exceeds spread: "
+        f"{yesno(p1.get('effect_exceeds_seed_spread'))}. NC2 moves it by "
+        f"{num(p2.get('effect_ratio'), 2)}× against {num(p2.get('worst_within_setting_seed_spread'), 2)}× "
+        f"— effect exceeds spread: {yesno(p2.get('effect_exceeds_seed_spread'))}. "
+        "A control whose effect is smaller than its own seed spread has not discriminated, "
+        "whatever its endpoint comparison says; an earlier revision published bare medians "
+        "with no dispersion at all.\n\n"
+        f"**Shared-configuration cross-check.** NC1 and NC2 both measure σ = 1 at "
+        f"n = {sh.get('configuration', {}).get('n', '—')}; drawing from one seed stream they "
+        f"must return the identical median. They do: {yesno(sh.get('identical'))}. An "
+        "earlier revision used different seed offsets and the two controls reported "
+        "medians 5.2× apart at that one shared point — a fact about seed noise that read "
+        "as a fact about the estimator. This cross-check now gates the run."
         f"\n\nNC1 (over-sampling reduces error): {yesno(nc.get('nc1_oversampling_reduces_error'))} · "
         f"NC2 (frozen n, larger σ raises error): {yesno(nc.get('nc2_frozen_n_larger_sigma_raises_error'))} · "
         f"NC2 monotone across the whole σ grid: "

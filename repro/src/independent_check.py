@@ -650,6 +650,15 @@ def run(verdict: dict | None = None) -> dict:
             )
 
     t = out["table_percentages_exact_rational"]
+    # The claim module's own symbolic result, when a verdict is available. Without one
+    # the two-route agreement gate below cannot be evaluated and is skipped explicitly
+    # rather than defaulting to a pass.
+    claim_c6_sym = (
+        ((verdict or {}).get("claims", {}).get("C6_thm43") or {}).get("route_a_symbolic_chain_audit")
+        or {}
+    )
+    out["c6_two_route_agreement_evaluated"] = bool(claim_c6_sym)
+
     out["ok"] = bool(
         t["pooled_matches_17_37"]
         and t["pooled_matches_12_75"]
@@ -668,12 +677,23 @@ def run(verdict: dict | None = None) -> dict:
         and out["table2_second_transcription"]["two_transcriptions_agree_cell_by_cell"]
         and out["table2_second_transcription"]["matches_paper_bold_cells"]
         and out["table2_second_transcription"]["summarize_matches_13_4"]
-        # The second, non-symbolic derivation of Theorem 4.3's chain must reach the same
-        # two conclusions as the sympy route. This is what makes the claim module's
-        # symbolic audit falsifiable: on its own it divides three transcribed expressions
-        # and can only confirm the transcription.
-        and out["c6_composition_by_exponent_arithmetic"]["mean_bound_reproduced_exactly"]
-        and out["c6_composition_by_exponent_arithmetic"]["missing_factor_is_sigma_cubed"]
+        # The second, non-symbolic derivation of Theorem 4.3's chain must AGREE with the
+        # sympy route. Note carefully what is gated and what is not: the two routes must
+        # reach the SAME answer, not a particular answer.
+        #
+        # An earlier revision gated on `missing_factor_is_sigma_cubed` directly, which is
+        # the inverted-gate defect this file records removing elsewhere: it fails the run
+        # whenever the paper turns out NOT to have a gap, so it cannot distinguish "the
+        # derivation is sound" from "the checker broke". A blind reviewer found it had
+        # come back. Gating on agreement instead is falsifiable in the right direction --
+        # it fails when the two independent derivations disagree, whichever way the
+        # paper comes out.
+        and (not claim_c6_sym or (
+            out["c6_composition_by_exponent_arithmetic"]["mean_bound_reproduced_exactly"]
+            == bool(claim_c6_sym.get("mean_bound_reproduced_exactly"))))
+        and (not claim_c6_sym or (
+            out["c6_composition_by_exponent_arithmetic"]["missing_factor_is_sigma_cubed"]
+            == bool(claim_c6_sym.get("factor_missing_from_stated_weight_bound") == "sigma**3")))
     )
     # A cross-implementation agreement check that does not gate `ok` is decoration: the
     # two implementations could disagree about a published verdict and the run would
@@ -703,7 +723,21 @@ def run(verdict: dict | None = None) -> dict:
     # and recorded both estimators, so the disagreement cannot vanish silently.
     cr = out.get("c6_slope_recheck") or {}
     if cr.get("available"):
-        out["ok"] = bool(out["ok"] and "estimators_agree_on_the_slope" in cr)
+        # `"estimators_agree_on_the_slope" in cr` was constant-true: recheck_c6_slope
+        # always writes that key. A presence test on a key the writer always writes is
+        # not a gate. What must actually hold is that BOTH estimators produced a finite
+        # slope and their difference was recorded, so a disagreement cannot vanish
+        # silently -- while the disagreement itself still does not fail the run, because
+        # the probe is reported as uninformative and failing on an uninformative
+        # measurement would confuse "we could not measure this" with "the evidence failed".
+        out["ok"] = bool(
+            out["ok"]
+            and isinstance(cr.get("theil_sen_slope"), float)
+            and isinstance(cr.get("least_squares_slope"), float)
+            and math.isfinite(cr["theil_sen_slope"])
+            and math.isfinite(cr["least_squares_slope"])
+            and isinstance(cr.get("abs_difference_between_estimators"), float)
+        )
     return out
 
 

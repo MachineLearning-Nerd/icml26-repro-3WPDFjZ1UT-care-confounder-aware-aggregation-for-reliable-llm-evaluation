@@ -250,11 +250,25 @@ def appendix_consistency_audit() -> dict:
     avg = np.array(TABLE1_MAE["AVG"], dtype=float)
 
     Z_CONSISTENT = 2.0  # fixed before the z-scores were computed
+
+    # How many seeds each table averages over is NOT published. Both tables say only
+    # "mean +/- std", so `s` is a per-seed dispersion, while the quantity being compared
+    # is a MEAN. The sampling SD of a mean over k seeds is s/sqrt(k), so the correct
+    # denominator is sqrt(s1^2/k1 + s7^2/k7) and the k = 1 form used here is the most
+    # conservative reading available: every larger k makes every z LARGER and every
+    # disagreement stronger. A blind reviewer pointed out that the k = 1 form understates
+    # the disagreement; it does, deliberately, because k is not ours to choose -- but the
+    # sensitivity is now published rather than left implicit, because the headline "four
+    # of six agree" is a property of k.
+    K_GRID = [1, 3, 5, 10]
     rows = []
     for i, ds in enumerate(TABLE1_DATASETS):
         gap = float(m1[i] - m7[i])
         pooled = float(np.hypot(s1[i], s7[i]))
         z = abs(gap) / pooled if pooled > 0 else float("inf") if gap else 0.0
+        z_at_k = {k: (round(float(z * np.sqrt(k)), 3) if np.isfinite(z) else None)
+                  for k in K_GRID}
+        breaks = [k for k in K_GRID if np.isfinite(z) and z * np.sqrt(k) > Z_CONSISTENT]
         rows.append({
             "dataset": ds,
             "table1_care_svd": float(m1[i]),
@@ -264,9 +278,17 @@ def appendix_consistency_audit() -> dict:
             "gap": round(gap, 4),
             "combined_std": round(pooled, 4),
             "z": round(float(z), 3),
+            "z_if_each_table_averaged_k_seeds": z_at_k,
+            "smallest_k_at_which_this_column_disagrees": (min(breaks) if breaks else None),
             "consistent": bool(z <= Z_CONSISTENT),
         })
     inconsistent = [r["dataset"] for r in rows if not r["consistent"]]
+    n_consistent_at_k = {
+        k: sum(1 for r in rows
+               if r["z_if_each_table_averaged_k_seeds"][k] is not None
+               and r["z_if_each_table_averaged_k_seeds"][k] <= Z_CONSISTENT)
+        for k in K_GRID
+    }
 
     # Does the leading factor really win every column, as Appendix E.8 asserts?
     # On two datasets Table 7 lists ONE factor, so "the leading factor is best" is true
@@ -302,6 +324,18 @@ def appendix_consistency_audit() -> dict:
         "n_consistent": sum(r["consistent"] for r in rows),
         "n_datasets": len(rows),
         "inconsistent_datasets": inconsistent,
+        "seed_count_behind_the_published_std_is_not_stated": True,
+        "z_denominator_used": "sqrt(s1^2 + s7^2), i.e. k = 1 -- the most conservative",
+        "n_consistent_if_each_table_averaged_k_seeds": n_consistent_at_k,
+        "seed_count_sensitivity_note": (
+            "Tables 1 and 7 report 'mean +/- std' without saying over how many seeds. "
+            "The quantity compared is a MEAN, so the correct denominator is "
+            "sqrt(s1^2/k1 + s7^2/k7); k = 1 is used because k is not published, and it "
+            "is the reading most favourable to the paper -- every larger k multiplies "
+            "every z by sqrt(k) and can only turn agreement into disagreement, never the "
+            "reverse. The count of agreeing columns is therefore an UPPER bound. At the "
+            "five seeds our own reproduction uses, the agreeing count is given above."
+        ),
         "tables_agree_everywhere": not inconsistent,
         "leading_factor_is_best_per_dataset": leading_best,
         "leading_factor_column_is_informative": leading_informative,
@@ -344,28 +378,69 @@ def asset_adjudication(appendix: dict, t1: dict) -> dict:
     if len(vals) < 2:
         return {"available": False, "why": "ASSET reproduction did not run"}
     mean, std = float(np.mean(vals)), float(np.std(vals, ddof=1))
+    n = len(vals)
+    # The comparison is between OUR MEAN and a published value, so the dispersion that
+    # belongs in the denominator is the standard error of our mean, std/sqrt(n), not the
+    # per-seed std. A blind reviewer showed the published figures were multiples of the
+    # per-seed std, which understates our own precision by sqrt(5) = 2.24x and made this
+    # block report a weaker result than the data support. Unlike the paper's tables, our
+    # seed count IS known, so here the correction is unambiguous.
+    sem = std / np.sqrt(n) if n else float("nan")
+    distinct = len({round(v, 12) for v in vals})
     row = next(r for r in appendix["rows"] if r["dataset"] == "ASSET")
     d1 = abs(mean - row["table1_care_svd"])
     d7 = abs(mean - row["table7_first_factor"])
     return {
         "available": True,
-        "n_seeds": len(vals),
+        "n_seeds": n,
+        "n_distinct_seed_values": distinct,
+        "seeds_are_all_distinct": bool(distinct == n),
+        "duplicate_seed_note": (
+            "every seed produced a distinct value" if distinct == n else
+            f"only {distinct} of {n} seed results are distinct, so the standard "
+            "deviation is computed over a sample with a repeated element and the "
+            "effective number of independent draws is smaller than the seed count"
+        ),
         "reproduced_mean": round(mean, 4),
         "reproduced_std": round(std, 4),
+        "reproduced_sem": round(float(sem), 4),
         "reproduced_min": round(float(min(vals)), 4),
         "reproduced_max": round(float(max(vals)), 4),
-        "sd_from_table1": round(d1 / std, 3) if std else None,
-        "sd_from_table7": round(d7 / std, 3) if std else None,
-        "excludes_table1": bool(std and d1 / std > 2.0),
-        "excludes_table7": bool(std and d7 / std > 2.0),
-        "adjudicates": bool(std and ((d1 / std > 2.0) != (d7 / std > 2.0))),
+        "comparison_uses": "standard error of our mean (std/sqrt(n)), not the per-seed std",
+        "sem_from_table1": round(d1 / sem, 3) if sem else None,
+        "sem_from_table7": round(d7 / sem, 3) if sem else None,
+        "sd_from_table1_per_seed_understated": round(d1 / std, 3) if std else None,
+        "sd_from_table7_per_seed_understated": round(d7 / std, 3) if std else None,
+        "excludes_table1": bool(sem and d1 / sem > 2.0),
+        "excludes_table7": bool(sem and d7 / sem > 2.0),
+        "adjudicates": bool(sem and ((d1 / sem > 2.0) != (d7 / sem > 2.0))),
+        # A duplicated seed value means fewer independent draws than seeds, so the SEM
+        # above is optimistic. Recomputing it at the number of DISTINCT values is the
+        # conservative reading, and whether the exclusion survives that is published --
+        # because an exclusion that holds at n = 5 and fails at n = 4 is marginal, and
+        # calling it decisive would be exactly the overclaim this logbook keeps catching.
+        "sem_at_distinct_values_only": round(float(std / np.sqrt(distinct)), 4) if distinct else None,
+        "excludes_table7_at_distinct_values_only": bool(
+            distinct and d7 / (std / np.sqrt(distinct)) > 2.0
+        ),
+        "excludes_table1_at_distinct_values_only": bool(
+            distinct and d1 / (std / np.sqrt(distinct)) > 2.0
+        ),
+        "adjudication_survives_the_duplicate_seed": bool(
+            distinct
+            and ((d1 / (std / np.sqrt(distinct)) > 2.0) != (d7 / (std / np.sqrt(distinct)) > 2.0))
+        ),
         "our_spread_exceeds_both_reported_stds": bool(
             std > row["table1_std"] and std > row["table7_std"]
         ),
         "why": (
-            "our five seeds are consistent with both published values, so this column "
-            "cannot decide between them; what it does show is that the seed-to-seed "
-            "spread of a faithful reproduction is wider than either reported std"
+            "measured against the standard error of our own mean, which is the right "
+            "dispersion for comparing a mean to a published value. Whether this excludes "
+            "either published value is reported above rather than asserted here; an "
+            "earlier revision used the per-seed std, understating our precision by "
+            "sqrt(n) and reporting a weaker result than the data support. What the column "
+            "shows either way is that the seed-to-seed spread of a faithful reproduction "
+            "is wider than either reported std"
         ),
     }
 

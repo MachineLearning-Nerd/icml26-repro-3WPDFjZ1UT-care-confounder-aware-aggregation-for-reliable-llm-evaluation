@@ -74,6 +74,14 @@ def symbolic_chain_audit() -> dict:
     mu_err_stated = C1 * sigma**3 / delta * sp.sqrt(p * sp.log(p / eps) / n)
     mu_ratio = sp.simplify(mu_err_derived / mu_err_stated)
     mu_sigma_free = sp.simplify(sp.diff(mu_ratio, sigma)) == 0
+    # sigma-freeness alone is far weaker than "reproduced exactly": a derived bound
+    # carrying delta^-2 against a stated delta^-1, or n^-1 against n^-1/2, would pass it
+    # unchanged. A blind reviewer pointed that out. The real test is that the ratio is a
+    # CONSTANT -- free of every variable the bound is a function of -- which is what the
+    # independent checker's exponent-vector route computes as a residual.
+    mu_ratio_is_constant = all(
+        sp.simplify(sp.diff(mu_ratio, v)) == 0 for v in (sigma, delta, p, eps, n)
+    )
 
     # (11): weight error
     pi_err_derived = C_pi * E_op
@@ -88,8 +96,16 @@ def symbolic_chain_audit() -> dict:
     ratio_on_boundary = sp.simplify(derived_on_boundary / stated_on_boundary)
 
     return {
-        "ok": bool(mu_sigma_free) and bool(sp.simplify(pi_missing_factor - sigma**3) == 0),
-        "mean_bound_reproduced_exactly": bool(mu_sigma_free),
+        "ok": bool(mu_ratio_is_constant) and bool(sp.simplify(pi_missing_factor - sigma**3) == 0),
+        "mean_bound_reproduced_exactly": bool(mu_ratio_is_constant),
+        "mean_bound_ratio_is_free_of_sigma_only": bool(mu_sigma_free),
+        "mean_bound_ratio_is_constant_in_every_variable": bool(mu_ratio_is_constant),
+        "mean_bound_ratio": str(mu_ratio),
+        "what_reproduced_exactly_means": (
+            "the derived-over-stated ratio is free of sigma, delta, p, eps AND n, so the "
+            "two bounds differ by at most a universal constant. An earlier revision "
+            "tested sigma-freeness alone and published it under this name."
+        ),
         "mean_derived": sp.srepr(mu_err_derived) and str(mu_err_derived),
         "mean_stated": str(mu_err_stated),
         "weight_derived_from_paper_proof": str(pi_err_derived),
@@ -622,37 +638,91 @@ def sigma_sweep(sigmas=(1.0, 1.25, 1.5, 1.75, 2.0), n_base=20000, seeds=(0, 1, 2
             "the sigma-dependence in either direction"
         ),
         # `ok` asserts that the probe RAN and produced a finite fit, not that it came
-        # out any particular way. Whether it discriminates is reported separately, above,
-        # so a non-discriminating probe cannot be read as a result.
+        # out any particular way. That is the right gate -- a probe that decides nothing
+        # must not fail the verifier -- but the NAME is dangerous, and a blind reviewer
+        # showed exactly how: a renderer read this `ok` and printed "sigma^3 violation
+        # hypothesis supported by the data: yes" on the claim page, an affirmative
+        # falsification of Theorem 4.3 asserted on the strength of "the least-squares fit
+        # returned two finite floats". The same field is published under an unambiguous
+        # name so that no reader, human or machine, can take it for a result.
+        "probe_ran_and_produced_a_finite_fit": bool(np.isfinite(slope) and np.isfinite(se)),
         "ok": bool(np.isfinite(slope) and np.isfinite(se)),
+        "ok_means": (
+            "the probe executed and the fit is finite. It is NOT a verdict on the "
+            "sigma^3 hypothesis; read `discriminates`, `excludes_sigma3_hypothesis` and "
+            "`excludes_theorem_hypothesis` for that."
+        ),
     }
 
 
-def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2)) -> dict:
+def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2, 3, 4)) -> dict:
     """Controls that must move the measured error in the intended direction.
 
     The two seeds are parameters rather than literals in the body so that the published
     seeds table, which is generated from these signatures, can see them.
+
+    Two things a blind reviewer was right to call out, both fixed here. First, the two
+    controls used DIFFERENT seed offsets (500 + 13s against 900 + 29s) at the one
+    configuration they share -- sigma = 1, n = n_base -- and reported medians differing
+    by 5.2x there, which is a statement about seed noise, not about either control. They
+    now draw from one offset, so the shared point is literally the same measurement.
+    Second, each point was published as a bare median with no dispersion, while the
+    effect being claimed (a factor of ~4) is of the same order as the spread across
+    seeds. Every point now carries its min and max, and each control publishes its
+    effect size AGAINST that spread, so a reader can see whether the control discriminates
+    rather than being told that it does.
     """
     rng = np.random.default_rng(model_seed)
     mus = _fixed_model(rng)
 
+    def point(sigma, n, tag):
+        errs = [e for e in (_one_run(mus, sigma, n, 500 + 13 * s) for s in seeds)
+                if e is not None]
+        if not errs:
+            return {"sigma_max": sigma, "n": n, "median_err": None, "n_seeds_usable": 0}
+        return {
+            "sigma_max": sigma, "n": n,
+            "median_err": float(np.median(errs)),
+            "min_err": float(np.min(errs)),
+            "max_err": float(np.max(errs)),
+            "spread_max_over_min": float(np.max(errs) / np.min(errs)) if np.min(errs) > 0 else None,
+            "n_seeds_usable": len(errs),
+        }
+
     # NC1 - over-sample far past the boundary: the error MUST fall.
-    over = []
-    for mult in (1, 16, 128):
-        n = int(round(n_base * mult))
-        errs = [e for e in (_one_run(mus, 1.0, n, 500 + 13 * s) for s in seeds) if e is not None]
-        over.append({"n": n, "median_err": float(np.median(errs))})
+    over = [point(1.0, int(round(n_base * mult)), "nc1") for mult in (1, 16, 128)]
     nc1 = over[-1]["median_err"] < over[0]["median_err"]
 
     # NC2 - freeze n while raising sigma: the error MUST rise.
-    frozen = []
-    for sigma in (1.0, 2.0, 3.0):
-        errs = [
-            e for e in (_one_run(mus, sigma, n_base, 900 + 29 * s) for s in seeds) if e is not None
-        ]
-        frozen.append({"sigma_max": sigma, "n": n_base, "median_err": float(np.median(errs))})
+    frozen = [point(sigma, n_base, "nc2") for sigma in (1.0, 2.0, 3.0)]
     nc2 = frozen[-1]["median_err"] > frozen[0]["median_err"]
+
+    def effect_vs_noise(rows, lo_i, hi_i):
+        """Is the control's claimed effect larger than the seed spread it sits in?"""
+        a, b = rows[lo_i], rows[hi_i]
+        if not (a.get("median_err") and b.get("median_err")):
+            return None
+        effect = max(a["median_err"], b["median_err"]) / min(a["median_err"], b["median_err"])
+        noise = max(r.get("spread_max_over_min") or 1.0 for r in rows)
+        return {
+            "effect_ratio": round(float(effect), 3),
+            "worst_within_setting_seed_spread": round(float(noise), 3),
+            "effect_exceeds_seed_spread": bool(effect > noise),
+        }
+
+    nc1_power = effect_vs_noise(over, 0, -1)
+    nc2_power = effect_vs_noise(frozen, 0, -1)
+    shared = {
+        "configuration": {"sigma_max": 1.0, "n": n_base},
+        "nc1_median": over[0]["median_err"],
+        "nc2_median": frozen[0]["median_err"],
+        "identical": bool(over[0]["median_err"] == frozen[0]["median_err"]),
+        "why": (
+            "NC1 and NC2 share one configuration and now share one seed stream, so the "
+            "two medians must be identical. If they are not, the controls are not "
+            "measuring the same system and neither number means what it says."
+        ),
+    }
     # The contract is only the endpoint comparison, so a non-monotone interior passes it.
     # Whether the interior IS monotone is a different fact about the estimator and is
     # reported rather than left for a reader to notice in the table: a reversal at large
@@ -662,10 +732,13 @@ def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2)) -> dic
     monotone = all(b > a for a, b in zip(errs_by_sigma, errs_by_sigma[1:]))
 
     return {
-        "ok": bool(nc1 and nc2),
+        "ok": bool(nc1 and nc2 and shared["identical"]),
         "nc1_oversampling_reduces_error": bool(nc1),
         "nc1_rows": over,
         "nc2_frozen_n_larger_sigma_raises_error": bool(nc2),
+        "nc1_effect_vs_seed_noise": nc1_power,
+        "nc2_effect_vs_seed_noise": nc2_power,
+        "shared_configuration_cross_check": shared,
         "nc2_monotone_across_the_whole_sigma_grid": bool(monotone),
         "nc2_saturation_note": (
             "the contract compares only the endpoints; a reversal in the interior means "
@@ -745,12 +818,40 @@ def run() -> dict:
     # reports a falsification of the stated p-dependence.
     p_falsified = violations == ["p"] and p_decides
     ok = sym["ok"] and nc["ok"] and (sweeps_ok or p_falsified)
+    # `ok` covers the CLAIM CONTRACTS. The restart-budget attribution is a diagnostic,
+    # not a contract, and its own `ok` is False whenever too few settings produced an n*
+    # at both budgets -- so a blanket "contract satisfied: yes" on the page was doing
+    # work it had not earned, as a blind reviewer noted. What each `ok` covers is now
+    # published beside it, so the page can render the scope rather than a bare yes.
+    ok_scope = {
+        "covered_by_ok": [
+            "route A symbolic chain (both bounds)",
+            "negative controls NC1 and NC2",
+            "the sample-complexity sweeps, where they measured anything",
+        ],
+        "not_covered_by_ok": [
+            k for k, v in (
+                ("restart-budget attribution (diagnostic; its own ok is "
+                 f"{bool(attribution.get('ok'))})", attribution.get("ok")),
+                ("the sigma boundary probe's discrimination (it does not discriminate)",
+                 boundary.get("discriminates")),
+            ) if not v
+        ],
+    }
     # An unmeasured exponent is absent evidence, not failed evidence: it must not fail
     # the verifier, and it must not be reported as a verified sample-complexity
     # condition either. The verdict is downgraded to say exactly what was measured.
     measured = sweeps["sample_complexity_condition_measured"]
     proof_gap = sym["ok"]
-    stated_weight_bound_violated = bool(boundary.get("ok"))
+    # NOT bool(boundary["ok"]) -- that field means only that the probe ran. The probe
+    # does not discriminate between "the stated bound holds" and "it is violated by a
+    # factor sigma^3", so the honest value here is neither True nor False. `None` is
+    # published, with the reason beside it, because a machine reader keying on a boolean
+    # would otherwise get the opposite of this claim's own verdict.
+    stated_weight_bound_violated = (
+        None if not boundary.get("discriminates")
+        else bool(boundary.get("excludes_theorem_hypothesis"))
+    )
 
     return {
         "claim": "C6 / Theorem 4.3 (Appendix Theorem D.9): sample complexity for (mu_qc, pi_qc)",
@@ -811,6 +912,7 @@ def run() -> dict:
                 + "; not informative: " + ", ".join(sweeps["uninformative_sweeps"])
             )
         ),
+        "ok_scope": ok_scope,
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],
             "stated_p_factor_falsified": bool(p_falsified),

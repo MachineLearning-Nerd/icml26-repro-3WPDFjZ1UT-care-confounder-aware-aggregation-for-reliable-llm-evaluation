@@ -616,11 +616,20 @@ def eta_tail_measurement(n=12800, n_seeds=240, p=40, h=3, seed0=90210) -> dict:
         # grow NO FASTER than sqrt(eta). The one-sided form is not vacuous here because
         # the same fit must also resolve a non-zero exponent -- a run that measured no
         # eta-dependence at all would fail, rather than passing by measuring nothing.
-        "bound_holds_tail_no_faster_than_sqrt_eta": bool(lo <= 0.5),
+        # Testing `lo <= 0.5` is vacuous: a measured exponent of 2.0 with interval
+        # [0.4, 3.6] -- a fourfold violation of sqrt(eta) -- would pass, because its
+        # LOWER endpoint is below 0.5. A blind reviewer found it. "Grows no faster than
+        # sqrt(eta)" is a statement about how large the exponent can be, so the test
+        # belongs on the UPPER endpoint. The measured interval lies wholly below 0.5, so
+        # the published conclusion is unchanged; the contract that certified it was not
+        # capable of rejecting the opposite.
+        "bound_holds_tail_no_faster_than_sqrt_eta": bool(hi <= 0.5),
+        "bound_holds_at_the_point_estimate": bool(slope <= 0.5),
+        "contract_tests_the_upper_endpoint": True,
         "measurement_resolves_a_nonzero_exponent": bool(lo * hi > 0),
         "stated_exponent_is_tight": bool(lo <= 0.5 <= hi),
         "excludes_one": bool(not (lo <= 1.0 <= hi)),
-        "ok": bool(lo <= 0.5 and lo * hi > 0),
+        "ok": bool(hi <= 0.5 and lo * hi > 0),
         "why": (
             "quantile(q) is the tightest bound holding with probability q, so reading the "
             "error's quantiles against eta(q) = -log((1-q)/2) measures the tail exponent "
