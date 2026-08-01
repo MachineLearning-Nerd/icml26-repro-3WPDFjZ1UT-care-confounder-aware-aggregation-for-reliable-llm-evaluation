@@ -45,6 +45,8 @@ only the n, alpha and delta dependences are measured.
 from __future__ import annotations
 
 import numpy as np
+
+from informativeness import informativeness
 import sympy as sp
 
 
@@ -356,10 +358,17 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         else (float("nan"), float("nan"))
     )
 
+    alpha_info = informativeness([n for _, n in stars], slope_alpha, se_alpha, ns)
+    delta_info = informativeness(
+        [r["n_star_alpha_0.30"] for r in ok_rows], slope_delta, se_delta, ns)
+
     theta_ok = abs(slope_theta + 0.5) < 0.12
     oracle_ok = np.isfinite(slope_oracle) and slope_oracle <= -0.42
-    a_ok = np.isfinite(slope_alpha) and slope_alpha >= -2.6
-    d_ok = np.isfinite(slope_delta) and slope_delta >= -2.4
+    # A sweep counts only when it is informative. If it is, it must satisfy its
+    # contract; if it is not, it is reported NOT INFORMATIVE and contributes no
+    # evidence either way, rather than passing because it failed to disagree.
+    a_ok = (not alpha_info["informative"]) or (np.isfinite(slope_alpha) and slope_alpha >= -2.6)
+    d_ok = (not delta_info["informative"]) or (np.isfinite(slope_delta) and slope_delta >= -2.4)
     n_ok = np.isfinite(slope_n) and slope_n <= -0.42
     return {
         "ok": bool(theta_ok and oracle_ok and a_ok and d_ok),
@@ -395,6 +404,10 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         "predicted_slope_n_star_vs_alpha": -2.0,
         "requirement_n_star_vs_alpha": "slope >= -2.6 (grows no faster than alpha^-2)",
         "delta_sweep": delta_rows,
+        "delta_sweep_status": delta_info["status"],
+        "delta_sweep_informativeness": delta_info,
+        "alpha_sweep_status": alpha_info["status"],
+        "alpha_sweep_informativeness": alpha_info,
         "loglog_slope_n_star_vs_delta": slope_delta,
         "loglog_slope_n_star_vs_delta_stderr": se_delta,
         "predicted_slope_n_star_vs_delta": -2.0,

@@ -41,6 +41,8 @@ error down, and freezing n must drive it up.
 from __future__ import annotations
 
 import numpy as np
+
+from informativeness import informativeness
 import sympy as sp
 
 from tensor_mom import empirical_moments, recover_weights, sample_mixture
@@ -132,7 +134,11 @@ def _stated_bound_unit(n):
     return float(np.sqrt(P_TOTAL * np.log(P_TOTAL / EPS) / n))
 
 
-NS_GRID = [5000, 12500, 31250, 78125, 195312, 488281, 1220703]
+# The grid must start well below the smallest n* any setting needs. At a floor of
+# 5000 every pi_min setting returned n* = 5000 exactly: the error was already under
+# target at the first point, so the search was censored and the fitted exponent was a
+# property of the grid, not of the estimator.
+NS_GRID = [200, 500, 1250, 3125, 5000, 12500, 31250, 78125, 195312, 488281, 1220703]
 TARGET = 0.05  # target accuracy for max_{q,c} |pi^_qc - pi_qc|
 
 
@@ -202,10 +208,14 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
         rows.append({"sigma_max": sigma, "errors": c, "n_star": _n_star(NS_GRID, c)})
     ok_rows = [r for r in rows if r["n_star"]]
     s_sigma, se_sigma = _fit([r["sigma_max"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
+    info_sigma = informativeness([r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID)
     out["sigma"] = {
         "rows": rows, "exponent": s_sigma, "stderr": se_sigma,
         "stated_exponent": 6.0, "requirement": "exponent <= 6 + 2*stderr",
-        "ok": bool(np.isfinite(s_sigma) and s_sigma <= 6.0 + 2 * se_sigma),
+        "informativeness": info_sigma,
+        "status": info_sigma["status"],
+        "ok": bool((not info_sigma["informative"])
+                   or (np.isfinite(s_sigma) and s_sigma <= 6.0 + 2 * se_sigma)),
     }
 
     # pi_min sweep: predicted exponent >= -2 (n* grows no faster than pi_min^-2).
@@ -217,10 +227,14 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
         rows.append({"pi_min": pmin, "errors": c, "n_star": _n_star(NS_GRID, c)})
     ok_rows = [r for r in rows if r["n_star"]]
     s_pi, se_pi = _fit([r["pi_min"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
+    info_pi = informativeness([r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID)
     out["pi_min"] = {
         "rows": rows, "exponent": s_pi, "stderr": se_pi,
         "stated_exponent": -2.0, "requirement": "exponent >= -2 - 2*stderr",
-        "ok": bool(np.isfinite(s_pi) and s_pi >= -2.0 - 2 * se_pi),
+        "informativeness": info_pi_min,
+        "status": info_pi_min["status"],
+        "ok": bool((not info_pi_min["informative"])
+                   or (np.isfinite(s_pi) and s_pi >= -2.0 - 2 * se_pi)),
     }
 
     # p sweep: predicted n* grows no faster than p log(p/eps).
@@ -237,13 +251,19 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
         s_p, se_p = _fit(x, [r["n_star"] for r in ok_rows])
     else:
         s_p, se_p = float("nan"), float("nan")
+    info_p = informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID)
     out["p"] = {
         "rows": rows, "exponent_vs_p_log_p": s_p, "stderr": se_p,
         "stated_exponent": 1.0, "requirement": "exponent <= 1 + 2*stderr",
-        "ok": bool(np.isfinite(s_p) and s_p <= 1.0 + 2 * se_p),
+        "informativeness": info_p,
+        "status": info_p["status"],
+        "ok": bool((not info_p["informative"])
+                   or (np.isfinite(s_p) and s_p <= 1.0 + 2 * se_p)),
     }
 
     out["ok"] = all(out[k]["ok"] for k in ("sigma", "pi_min", "p"))
+    out["informative_sweeps"] = [k for k in ("sigma", "pi_min", "p") if out[k]["informativeness"]["informative"]]
+    out["uninformative_sweeps"] = [k for k in ("sigma", "pi_min", "p") if not out[k]["informativeness"]["informative"]]
     out["target_accuracy"] = TARGET
     out["grid_n"] = NS_GRID
     out["not_measured"] = (

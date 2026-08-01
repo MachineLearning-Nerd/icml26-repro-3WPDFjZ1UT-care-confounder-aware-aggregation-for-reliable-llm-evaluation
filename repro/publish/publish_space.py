@@ -45,6 +45,7 @@ ALLOWLIST = [
     "repro/src/run_all.py",
     "repro/src/threads.py",
     "repro/src/label_audit.py",
+    "repro/src/informativeness.py",
     "repro/src/bench_shard.py",
     "repro/src/paper_source.py",
     "repro/src/tensor_mom.py",
