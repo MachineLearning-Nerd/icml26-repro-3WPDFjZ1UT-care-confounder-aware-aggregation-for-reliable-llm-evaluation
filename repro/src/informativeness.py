@@ -9,6 +9,9 @@ disqualify the sweep rather than pass it:
   * fewer than three usable points, so no exponent is identifiable;
   * every n* pinned to an endpoint of the search grid, so the search was censored and
     the reported exponent is a property of the grid rather than of the estimator;
+  * two independent n* estimators (curve-crossing and curve-fitting) whose 95%
+    intervals for the exponent do not overlap, so the number is a property of the
+    estimator rather than of the system;
   * a fitted trend whose 95% interval covers zero, so no exponent was resolved. The
     threshold is 2 standard errors rather than 1: a slope of 0.60 +/- 0.56 has a 95%
     interval of [-0.50, +1.71], and a sweep that cannot distinguish its exponent from
@@ -22,7 +25,32 @@ from __future__ import annotations
 import math
 
 
-def informativeness(ys, slope, stderr, grid) -> dict:
+def estimators_agree(a_slope, a_se, b_slope, b_se) -> dict:
+    """Do two independent estimators of the same exponent overlap at 95%?
+
+    n* can be read as the crossing of the decay curve with the target, or by fitting
+    the whole curve and solving. Both are estimates of the same quantity, so a real
+    exponent must survive either. Where they disagree, the number being reported is a
+    property of the estimator rather than of the system, and it cannot decide a claim.
+    """
+    vals = (a_slope, a_se, b_slope, b_se)
+    if not all(isinstance(v, float) and math.isfinite(v) for v in vals):
+        return {"agree": False, "why": "an estimator produced no finite exponent"}
+    lo_a, hi_a = a_slope - 1.96 * a_se, a_slope + 1.96 * a_se
+    lo_b, hi_b = b_slope - 1.96 * b_se, b_slope + 1.96 * b_se
+    overlap = max(lo_a, lo_b) <= min(hi_a, hi_b)
+    return {
+        "agree": bool(overlap),
+        "fitted_ci95": [lo_a, hi_a],
+        "crossing_ci95": [lo_b, hi_b],
+        "why": "" if overlap else
+               f"the two estimators' 95% intervals [{lo_a:.3f}, {hi_a:.3f}] and "
+               f"[{lo_b:.3f}, {hi_b:.3f}] do not overlap; the exponent is a property "
+               "of the estimator, not of the system",
+    }
+
+
+def informativeness(ys, slope, stderr, grid, agreement=None) -> dict:
     ys = [y for y in ys if y is not None and math.isfinite(y)]
     why = []
     if len(ys) < 3:
@@ -43,8 +71,11 @@ def informativeness(ys, slope, stderr, grid) -> dict:
             f"[{slope - 1.96 * stderr:.4f}, {slope + 1.96 * stderr:.4f}] covering zero; "
             "no exponent was resolved"
         )
+    if agreement is not None and not agreement.get("agree"):
+        why.append(agreement.get("why") or "the two n* estimators disagree")
     return {
         "informative": not why,
+        "estimator_agreement": agreement,
         "status": "MEASURED" if not why else "NOT INFORMATIVE",
         "not_informative_because": why,
         "n_usable_points": len(ys),

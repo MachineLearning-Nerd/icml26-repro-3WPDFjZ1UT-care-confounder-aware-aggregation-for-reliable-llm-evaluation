@@ -42,7 +42,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from informativeness import informativeness
+from informativeness import estimators_agree, informativeness
 import sympy as sp
 
 from tensor_mom import empirical_moments, recover_weights, sample_mixture
@@ -240,6 +240,18 @@ def _fit(x, y):
     return float(s), se
 
 
+def _sweep_fits(rows, xs_of):
+    """Fit the exponent twice, once per n* estimator, and test whether they agree."""
+    fit_rows = [r for r in rows if r.get("n_star")]
+    cross_rows = [r for r in rows if r.get("n_star_crossing")]
+    nan = (float("nan"), float("nan"))
+    s_f, se_f = (_fit(xs_of(fit_rows), [r["n_star"] for r in fit_rows])
+                 if len(fit_rows) >= 3 else nan)
+    s_c, se_c = (_fit(xs_of(cross_rows), [r["n_star_crossing"] for r in cross_rows])
+                 if len(cross_rows) >= 3 else nan)
+    return fit_rows, s_f, se_f, s_c, se_c, estimators_agree(s_f, se_f, s_c, se_c)
+
+
 def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
     """Measure the exponents of n*(sigma), n*(pi_min) and n*(p) by SEARCH.
 
@@ -259,15 +271,18 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
         f = _n_star_fit(NS_GRID, c)
         rows.append({"sigma_max": sigma, "errors": c, "n_star": f["n_star"],
                      "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
-    ok_rows = [r for r in rows if r["n_star"]]
-    s_sigma, se_sigma = _fit([r["sigma_max"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
-    info_sigma = informativeness([r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID)
+    ok_rows, s_sigma, se_sigma, sc_sigma, sec_sigma, agr_sigma = _sweep_fits(
+        rows, lambda rs: [r["sigma_max"] for r in rs])
+    info_sigma = informativeness(
+        [r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID, agr_sigma)
     out["sigma"] = {
         "rows": rows, "exponent": s_sigma, "stderr": se_sigma,
         "stated_exponent": 6.0, "requirement": "exponent <= 6 + 2*stderr",
         "n_settings_used": len(ok_rows),
         "n_settings_censored": len(rows) - len(ok_rows),
         "censored_why": [r["n_star_fit"].get("why") for r in rows if r["n_star"] is None],
+        "exponent_from_crossing_estimator": sc_sigma,
+        "stderr_from_crossing_estimator": sec_sigma,
         "informativeness": info_sigma,
         "status": info_sigma["status"],
         "ok": bool((not info_sigma["informative"])
@@ -283,15 +298,18 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
         f = _n_star_fit(NS_GRID, c)
         rows.append({"pi_min": pmin, "errors": c, "n_star": f["n_star"],
                      "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
-    ok_rows = [r for r in rows if r["n_star"]]
-    s_pi, se_pi = _fit([r["pi_min"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
-    info_pi_min = informativeness([r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID)
+    ok_rows, s_pi, se_pi, sc_pi, sec_pi, agr_pi = _sweep_fits(
+        rows, lambda rs: [r["pi_min"] for r in rs])
+    info_pi_min = informativeness(
+        [r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID, agr_pi)
     out["pi_min"] = {
         "rows": rows, "exponent": s_pi, "stderr": se_pi,
         "stated_exponent": -2.0, "requirement": "exponent >= -2 - 2*stderr",
         "n_settings_used": len(ok_rows),
         "n_settings_censored": len(rows) - len(ok_rows),
         "censored_why": [r["n_star_fit"].get("why") for r in rows if r["n_star"] is None],
+        "exponent_from_crossing_estimator": sc_pi,
+        "stderr_from_crossing_estimator": sec_pi,
         "informativeness": info_pi_min,
         "status": info_pi_min["status"],
         "ok": bool((not info_pi_min["informative"])
@@ -308,19 +326,17 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
         f = _n_star_fit(NS_GRID, c)
         rows.append({"p_total": pt, "errors": c, "n_star": f["n_star"],
                      "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
-    ok_rows = [r for r in rows if r["n_star"]]
-    if len(ok_rows) >= 3:
-        x = [r["p_total"] * np.log(r["p_total"] / EPS) for r in ok_rows]
-        s_p, se_p = _fit(x, [r["n_star"] for r in ok_rows])
-    else:
-        s_p, se_p = float("nan"), float("nan")
-    info_p = informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID)
+    ok_rows, s_p, se_p, sc_p, sec_p, agr_p = _sweep_fits(
+        rows, lambda rs: [r["p_total"] * np.log(r["p_total"] / EPS) for r in rs])
+    info_p = informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID, agr_p)
     out["p"] = {
         "rows": rows, "exponent_vs_p_log_p": s_p, "stderr": se_p,
         "stated_exponent": 1.0, "requirement": "exponent <= 1 + 2*stderr",
         "n_settings_used": len(ok_rows),
         "n_settings_censored": len(rows) - len(ok_rows),
         "censored_why": [r["n_star_fit"].get("why") for r in rows if r["n_star"] is None],
+        "exponent_from_crossing_estimator": sc_p,
+        "stderr_from_crossing_estimator": sec_p,
         "informativeness": info_p,
         "status": info_p["status"],
         "ok": bool((not info_p["informative"])
@@ -329,6 +345,7 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
 
     out["ok"] = all(out[k]["ok"] for k in ("sigma", "pi_min", "p"))
     out["informative_sweeps"] = [k for k in ("sigma", "pi_min", "p") if out[k]["informativeness"]["informative"]]
+    out["exponents_measured"] = bool(out["informative_sweeps"])
     out["uninformative_sweeps"] = [k for k in ("sigma", "pi_min", "p") if not out[k]["informativeness"]["informative"]]
     out["target_accuracy"] = TARGET
     out["grid_n"] = NS_GRID
@@ -478,6 +495,10 @@ def run() -> dict:
     sweeps["gating_sweeps"] = gating
     sweeps["p_sweep_excluded_because_solver_bound"] = not p_decides
     ok = sym["ok"] and sweeps_ok and nc["ok"]
+    # An unmeasured exponent is absent evidence, not failed evidence: it must not fail
+    # the verifier, and it must not be reported as a verified sample-complexity
+    # condition either. The verdict is downgraded to say exactly what was measured.
+    measured = sweeps.get("exponents_measured", False)
     proof_gap = sym["ok"]
     stated_weight_bound_violated = bool(boundary.get("ok"))
 
@@ -489,13 +510,19 @@ def run() -> dict:
         "negative_controls": nc,
         "route_d_restart_budget_attribution": attribution,
         "ok": bool(ok),
-        "verdict": "VERIFIED (sample-complexity condition and mean bound) with a documented "
-                   "gap in the displayed proof of the weight bound"
-        if ok
-        else "INCONCLUSIVE",
+        "verdict": (
+            "INCONCLUSIVE" if not ok else
+            "VERIFIED (sample-complexity condition and mean bound) with a documented "
+            "gap in the displayed proof of the weight bound" if measured else
+            "VERIFIED (mean bound, and the stated weight bound is not violated along "
+            "its own sample-complexity boundary) with a documented gap in the displayed "
+            "proof of the weight bound; the sample-complexity EXPONENTS are NOT MEASURED "
+            "at this budget -- see route_b informativeness"
+        ),
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],
-            "sample_complexity_exponents_respected": bool(sweeps_ok),
+            "sample_complexity_exponents_measured": bool(measured),
+            "sample_complexity_exponents_respected": bool(sweeps_ok) if measured else None,
             "displayed_proof_of_weight_bound_is_incomplete": bool(proof_gap),
             "stated_weight_bound_empirically_violated": stated_weight_bound_violated,
             "note": (
