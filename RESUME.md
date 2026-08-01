@@ -35,9 +35,18 @@ judged revision `2a647ca068d0943b4c3a54d2f7940594fac5287f` (5/12).
    BRANCH=main bash /tmp/run_hf_job.sh"
    ```
 
-2. Capture the JSON printed between `===CARE_VERDICT_BEGIN===` and
-   `===CARE_VERDICT_END===` into `verdict.json` (job filesystems are discarded, which is
-   why the verdict is printed to stdout).
+2. Capture the payload printed between `===CARE_VERDICT_BEGIN===` and
+   `===CARE_VERDICT_END===` and base64-decode it into `verdict.json`:
+
+   ```
+   hf jobs logs DineshAI/<id> \
+     | awk '/===CARE_VERDICT_BEGIN===/{f=1;next}/===CARE_VERDICT_END===/{f=0}f' \
+     | tr -d '\n' | base64 -d > verdict.json
+   ```
+
+   Job filesystems are discarded, so the verdict leaves via stdout; it is base64-encoded
+   because the log transport decodes JSON escapes and would otherwise turn an escaped
+   newline inside a string into a real control character, corrupting the file.
 
 3. Stage and gate:
 

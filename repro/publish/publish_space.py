@@ -108,6 +108,15 @@ def stage(work: Path) -> None:
     print(f"seeded {work} from live {REPO}")
 
 
+# A few published paths do not mirror their repository location: the environment files
+# live at the repository root but are published under repro/env/ so the Space groups
+# them with the code they pin.
+SOURCE_MAP = {
+    "repro/env/pyproject.toml": "pyproject.toml",
+    "repro/env/uv.lock": "uv.lock",
+}
+
+
 def sync_pages_and_code(work: Path) -> None:
     """Overlay the pages and every allowlisted source file the pages link to.
 
@@ -130,7 +139,7 @@ def sync_pages_and_code(work: Path) -> None:
     for rel in ALLOWLIST:
         if not rel.startswith("repro/"):
             continue
-        src = repo / rel
+        src = repo / SOURCE_MAP.get(rel, rel)
         if not src.exists():
             raise SystemExit(f"allowlisted source missing from the repository: {rel}")
         dst = work / rel

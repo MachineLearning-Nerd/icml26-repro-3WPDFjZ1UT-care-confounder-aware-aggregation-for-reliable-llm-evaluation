@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import threads  # noqa: F401  - must precede numpy/scipy/torch
 
+import base64
 import json
 import os
 import platform
@@ -100,8 +101,16 @@ def main() -> int:
     out["total_runtime_s"] = round(time.time() - t0, 2)
     out["all_contracts_ok"] = all(v.get("ok") for v in out["claims"].values()) and bool(chk.get("ok"))
 
+    payload = json.dumps(out, indent=2, default=str)
+    # The published verdict has to parse strictly, or an evaluator cannot open it.
+    json.loads(payload)
+    # Job filesystems are discarded, so the verdict leaves via stdout -- but the log
+    # transport decodes JSON escapes, which silently turns an escaped newline inside a
+    # string into a real control character and corrupts the file on the way out. base64
+    # has no escapes for the transport to touch, so what is collected is byte-identical
+    # to what was produced.
     print(BEGIN, flush=True)
-    print(json.dumps(out, indent=2, default=str), flush=True)
+    print(base64.b64encode(payload.encode()).decode(), flush=True)
     print(END, flush=True)
 
     art = Path(__file__).resolve().parents[2] / ".openresearch" / "artifacts"

@@ -409,9 +409,9 @@ def maintext_identifiability_counterexample() -> dict:
             "d1_gt_d2_gt_0": True,
         },
         "same_low_rank_component": bool(same_L),
-        "L": str(L),
-        "K_JH": str(cols(K)),
-        "K_prime_JH": str(cols(Kp)),
+        "L": sp.sstr(L),
+        "K_JH": [sp.sstr(c) for c in cols(K)],
+        "K_prime_JH": [sp.sstr(c) for c in cols(Kp)],
         "columns_related_by_sign_permutation": bool(not distinct),
         "verdict": "main-text Proposition 4.1 identifiability claim is FALSE as stated"
         if bool(orth_K and orth_Kp and same_L and distinct)
