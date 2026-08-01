@@ -533,6 +533,11 @@ def c5_results(v):
             for k, nm in (("alpha", "α"), ("delta", "δ"))
             if not (c.get(f"{k}_sweep_informativeness") or {}).get("informative", True)
         )
+        + "\n\nContract outcome per element, exactly as `verdict.json` records it: "
+        + " \u00b7 ".join(f"`{k}` = **{val}**" for k, val in (c.get("checks") or {}).items())
+        + ". `NOT MEASURED` is published as itself rather than as a pass; the verifier's "
+        "gate treats an unmeasured sweep as non-failing, which is a different statement "
+        "from a satisfied contract."
         + f"\n\nGrid: `n \u2208 {c.get('grid_n')}`. Saturated points are excluded from every fit, so each "
         "exponent is read from the regime where the bound is active. The stage-2 row is the "
         "one Theorem 4.2 governs; the stage-3 row describes our solver."
@@ -850,9 +855,15 @@ def c6_results(v):
         )
     ic = g(v, "independent_check", "c6_slope_recheck", default={})
     tail = (
-        f"\n\nOverall sample-complexity contract satisfied: {yesno(s.get('ok'))} — and on "
-        "the p row that **is the result**, not a defect in the run: the exponent was "
-        "resolved by both estimators and exceeds what the theorem states. "
+        "\n\nPer-parameter contract outcome: "
+        + " · ".join(f"{k} = **{s.get('contract_outcome', {}).get(k, '—')}**"
+                     for k in ("sigma", "pi_min", "p"))
+        + ". `NOT MEASURED` is published as itself rather than collapsed to a pass — the "
+        "verifier's own gate treats an unmeasured sweep as non-failing, which is correct "
+        "(absence of evidence is not failed evidence) and is not the same statement as "
+        "a satisfied contract. On the p row the outcome **is the result**, not a defect "
+        "in the run: the exponent was resolved by both estimators and exceeds what the "
+        "theorem states. "
         f"Informative sweeps: {s.get('informative_sweeps') or 'none'}; "
         f"uninformative: {s.get('uninformative_sweeps') or 'none'}. A sweep marked NOT "
         "INFORMATIVE contributes no evidence in either direction and is excluded from the "
