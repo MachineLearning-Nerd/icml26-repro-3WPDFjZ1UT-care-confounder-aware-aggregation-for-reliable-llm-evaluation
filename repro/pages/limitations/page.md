@@ -1,9 +1,10 @@
 # Limitations and deviations
 
 Items 1–9 were recorded **before** any result was measured, so nothing in them is
-retrofitted to a convenient outcome. Items 10–11 were added afterwards and are marked
-as such: they record two findings that went **against** this reproduction's own
-hypotheses.
+retrofitted to a convenient outcome. Items 10 onwards were added afterwards and are
+marked as such. They are not softer for being later: items 10, 15, 21, 22 and 23 each
+record a finding that went **against** this reproduction's own hypotheses, including
+three verdicts this logbook withdrew after publishing or staging them.
 
 ## 1. Ten of the twelve benchmark columns cannot be produced here
 
@@ -127,10 +128,12 @@ bound whose own quantity is never observed to be violated in `σ` has not been f
 in `σ`. Reporting it as a falsification would have been the more impressive result and
 the wrong one.
 
-To be unambiguous, because an earlier draft of this item said the opposite: the live
-Claim 6 verdict **is** a falsification, but of a *different* factor — the stated
-`p·log(p/ε)` term, reached by the route described in item 15 and 17, not by this `σ`
-probe.
+To be unambiguous, because two earlier drafts of this item each said something different:
+the live Claim 6 verdict is **not** a falsification of any factor. A later revision did
+report the stated `p·log(p/ε)` term as falsified, by the route described in items 15 and
+17 rather than by this `σ` probe; that finding has since been withdrawn as well
+(item 23b). What survives is a verified sample-complexity condition and mean bound,
+plus a documented gap in the displayed proof of the weight bound.
 
 ## 11. The end-to-end pipeline does not attain `n^{-1/2}` at our solver's budget
 
@@ -215,17 +218,18 @@ resolved no exponent cannot bound one. Claim 5's verdict rests on the stage-2 `n
 measurement, the `n*(α)` exponent (−1.9584 ± 0.0537, 36 standard errors from zero), and
 the reconstructed symbolic derivation — not on this sweep.
 
-## 15. What the `p`-factor falsification does and does not cover
+## 15. Which factors of Theorem 4.3 this campaign can and cannot speak to
 
-Claim 6 reports the stated `p·log(p/ε)` sample-complexity factor as FALSIFIED. The
-boundaries of that finding:
+An earlier revision reported the stated `p·log(p/ε)` sample-complexity factor as
+FALSIFIED. **That finding is withdrawn** (item 23b). What remains is a factor-by-factor
+statement of what was and was not measurable:
 
-* It is a statement about the **exponent**, not the value, so the theorem's unknown
-  universal constant `C₁` cannot rescue it — but equally, nothing here bounds `C₁`.
-* It covers the algorithm the theorem names (robust tensor power method with whitening)
-  on a model family satisfying the theorem's hypotheses. A different estimator for the
-  same statistical problem could have a different `p`-dependence, and this campaign has
-  not tested one.
+* Any statement obtainable here is about the **exponent**, not the value, so the
+  theorem's unknown universal constant `C₁` could never have been decided either way.
+* Anything measured covers only the algorithm the theorem names (robust tensor power
+  method with whitening) on a model family satisfying the theorem's hypotheses. A
+  different estimator for the same statistical problem could have a different
+  `p`-dependence, and this campaign has not tested one.
 * The `σ⁶` and `π_min^{-2}` exponents are **NOT MEASURED**: both sweeps failed the
   admissibility test in `informativeness.py`, and neither is reported as evidence in
   either direction.
@@ -250,16 +254,18 @@ calling the hypothesis refuted outright.
 
 The campaign's claim contract, written before any measurement, gives Claim 6 a single
 falsification criterion: the `σ` boundary. The `p`-exponent criterion was added
-mid-campaign after a censored run had already shown a large exponent, and it is the
-`p` criterion that produced this logbook's falsification.
+mid-campaign after a censored run had already shown a large exponent, and it was the
+`p` criterion that produced the falsification this logbook has since withdrawn.
 
 Both criteria, and this provenance, are in
 [`raw/claim_contract.json`](raw/claim_contract.json) under `C6`. The three admissibility
-gates the finding had to clear were each fixed before their own outcomes were known, and
-two of the three sweeps failed those gates and are reported as NOT MEASURED — so the
-gates were not tuned to let this one through. But the decision to look at `p` at all was
-prompted by a number, and a reader who discounts post-hoc findings should discount this
-one accordingly.
+gates were each fixed before their own outcomes were known, and two of the three sweeps
+failed those gates and are reported as NOT MEASURED — so the gates were not tuned to let
+anything through. They were nonetheless too weak: the `p` sweep cleared all three and was
+still not usable, which is why per-setting screening and the confound audit were added
+afterwards. The right lesson is not that post-hoc findings should be discounted a little
+but that this particular one should never have been published, and the machinery that let
+it through is documented in items 23b–23f rather than removed.
 
 ## 18. Defects found by the pre-publication red team
 
@@ -350,25 +356,31 @@ the curve were not a clean power law. But it should be read as an internal consi
 check, not as corroboration from a new direction, and the Claim 5 page's phrase "reported
 as evidence" overstates it in that respect.
 
-## 21. Claim 2's falsification was found by exploration, and the earlier page understated it
+## 21. Claim 2's scope qualification was found by exploration, and one round overreached
 
 The unit-dependence of the paper's 17.37% statistic was not predicted in advance. It was
 found while enumerating candidate definitions for a different purpose -- deciding which
 definition the paper used -- and the pre-registered contract for Claim 2 contains no
-element about unit invariance. Two consequences, both stated rather than smoothed over:
+element about unit invariance. Three consequences, all stated rather than smoothed over:
 
 * **The contract element is post-hoc.** `aggregation_convention_audit` was written after
-  the discrepancy was observed. What is *not* post-hoc is the criterion it applies:
-  invariance under a change of units on one benchmark is a property any across-benchmark
-  average must have, and it was fixed independently of what the numbers turned out to be.
-  The criterion could have exonerated the paper's statistic and did not.
-* **The 2026-08-01 revision of the Claim 2 page reported the same discrepancy and then
-  declined to draw a conclusion from it**, saying it was "a finding about the paper's
-  headline statistic, not as an error in it". That page had the pooled-versus-unweighted
-  numbers (17.37% versus 15.19%) and the ASSET-dominance observation already. What it
-  lacked was the invariance test that makes the finding decidable, and its framing was
-  weaker than its own evidence supported. That was an error of nerve in the write-up, not
-  a gap in the measurement, and it is recorded here rather than quietly corrected.
+  the discrepancy was observed, and `raw/claim_contract.json` marks it POST-HOC.
+* **The invariance test cannot fail, and an earlier revision claimed otherwise.** That
+  revision said the criterion "could have exonerated the paper's statistic and did not".
+  It could not have. Rescaling one benchmark by `c` multiplies that benchmark's AVG and
+  CARE errors alike, and `(c·a − c·k)/(c·a) = (a − k)/a`, so a per-benchmark ratio is
+  invariant by algebra and an unweighted mean of invariant ratios is invariant too. The
+  test confirms an identity; it is published as an executable consistency check on the
+  implementation, not as a criterion the paper passed or failed. See item 23a.
+* **What actually decides the claim is not invariance but weight.** The identified
+  definition places 84.40% of the weight on a single benchmark (ASSET), because
+  "improvement of the mean" is algebraically an MAE-weighted mean of improvements. That
+  is a fact about the statistic's construction, is quantified on the claim page, and is
+  reported as a **scope qualification on a reproduced number** -- both headline figures
+  reproduce exactly -- not as a falsification.
+
+A revision between those two reported this as a falsification. It was withdrawn on the
+same evidence that produced it, before any of it reached the published Space.
 
 One further scope limit: the verdict is about the published *summary statistic*, not
 about CARE's benchmark performance. CARE-SVD improves on AVG on all six Table 1
@@ -395,7 +407,7 @@ implementations genuinely disagreed about whether Claim 2 is falsified, nothing 
 release gates would have caught it, and the page would have published a verdict that its
 own second implementation contradicted.
 
-## 23. A blind reviewer found six defects in the previous revision, including two of mine
+## 23. A blind reviewer found nineteen defects in the previous candidate, six of which changed a published conclusion
 
 Before this revision was published, the candidate artifact was given to a reviewer with
 no knowledge of how it was built, who was told only to start at `logbook.json` and score
@@ -403,7 +415,9 @@ every claim. It returned `partial` on five of six claims and found nineteen defe
 changed the published conclusions, and they are listed here because the review is part
 of the evidence, not a step that precedes it.
 
-**23a. Claim 2 was published as FALSIFIED and is not.** The unit-invariance test was
+**23a. Claim 2 was about to be published as FALSIFIED and is not.** The candidate the
+reviewer read carried that verdict; it was caught before upload, so no revision of this
+Space has ever carried it. The unit-invariance test was
 presented as "a criterion that could have exonerated the paper's statistic and did not."
 That is false: `(c·a − c·k)/(c·a) = (a − k)/a` identically, so the unweighted mean must
 be unit-invariant and the pooled mean must be unit-dependent unless every benchmark
