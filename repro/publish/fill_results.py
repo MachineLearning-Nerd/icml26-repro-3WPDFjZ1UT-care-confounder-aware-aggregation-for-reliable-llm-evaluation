@@ -1149,6 +1149,8 @@ CONFIDENCE = {
                    "would survive both. Empirically, one of six Table 2 columns is "
                    "reproduced end-to-end; four ship no judge outputs and PKU-BETTER's "
                    "released labels are degenerate."),
+    "C4": ("HIGH", "Symbolic over a parameterised family, plus exact counterexamples that "
+                   "satisfy the paper's own hypotheses. Deterministic; no seeds to vary."),
     "C5": ("MEDIUM", "The cited Davis-Kahan constant is validated adversarially over 4,000 "
                      "perturbations, and the eta-dependence -- which earlier revisions "
                      "reported as NOT MEASURED -- is now measured directly from the error's "
