@@ -160,8 +160,8 @@ def _err(mus, pi, sigma, n, seed, p_total, n_restarts=30):
     return float(np.max(np.abs(w - np.sort(pi)[::-1])))
 
 
-def _curve(mus, pi, sigma, p_total, ns, seeds, n_restarts=30):
-    """Median error at each n, stopping at the first n that reaches TARGET.
+def _curve(mus, pi, sigma, p_total, ns, seeds, n_restarts=30, n_past=3):
+    """Median error at each n, continuing `n_past` points beyond the first that reaches TARGET.
 
     `_n_star` reads the FIRST crossing, so points beyond it are never used. Computing
     them anyway cost more than the rest of the sweep combined -- the largest grid point
@@ -178,8 +178,13 @@ def _curve(mus, pi, sigma, p_total, ns, seeds, n_restarts=30):
         # Two points past the crossing, and never fewer than four: `_n_star_fit` pools
         # every computed point, so stopping dead at the crossing would leave it nothing
         # to pool.
+        # Stopping two points past the crossing left the decay fit spanning only the
+        # flattest, noisiest stretch of the curve: at p=18 it produced slope -0.076 and
+        # r2 0.38 over errors that merely hovered around the target, and n* was then
+        # extrapolated from that. Going further past the crossing buys the fit a real
+        # decay range, which is what the per-setting screen requires.
         below = [i for i, e in enumerate(out) if np.isfinite(e) and e <= TARGET]
-        if below and len(out) >= max(4, below[0] + 3):
+        if below and len(out) >= max(5, below[0] + 1 + n_past):
             break
     return out + [None] * (len(ns) - len(out))
 
@@ -262,7 +267,7 @@ def _sweep_fits(rows, xs_of, key):
     return fit_rows, s_f, se_f, s_c, se_c, estimators_agree(s_f, se_f, s_c, se_c), screen
 
 
-def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
+def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
     """Measure the exponents of n*(sigma), n*(pi_min) and n*(p) by SEARCH.
 
     Theorem 4.3's condition is a sufficient sample size, so each check is
@@ -419,11 +424,14 @@ def p_sweep_confound_audit() -> dict:
         M2_hat, _ = empirical_moments(X1, X2, X3)
         ev = np.sort(np.abs(np.linalg.eigvalsh((M2_hat + M2_hat.T) / 2)))[::-1]
         top = ev[:K_COMPONENTS]
+        # At p_per_view == K_COMPONENTS the matrix has no eigenvalues outside the
+        # signal subspace, so there is no leakage to measure -- not zero leakage.
+        leak = float(ev[K_COMPONENTS] / top[-1]) if ev.size > K_COMPONENTS else None
         rows.append({
             "p_total": 3 * ppv,
             "min_pairwise_mean_separation": min(seps),
             "empirical_m2_topk_condition_number": float(top[0] / top[-1]),
-            "empirical_m2_leakage_outside_topk": float(ev[K_COMPONENTS] / top[-1]),
+            "empirical_m2_leakage_outside_topk": leak,
             "n_used_for_this_probe": n_probe,
         })
 
@@ -436,18 +444,30 @@ def p_sweep_confound_audit() -> dict:
     # Leakage outside the top-k subspace is expected to GROW with p at fixed n. That is
     # the honest finding this audit exists to surface, so it is reported as a number
     # rather than folded into a pass/fail.
-    leak = [r["empirical_m2_leakage_outside_topk"] for r in rows]
+    leak = [r["empirical_m2_leakage_outside_topk"] for r in rows
+            if r["empirical_m2_leakage_outside_topk"] is not None]
     out = {
         "rows": rows,
         "fixed_by_construction": by_construction,
         "held_fixed": held,
         "measured_quantities_held_fixed": all(held.values()),
-        "leakage_ratio_first_to_last_p": float(leak[-1] / leak[0]) if leak[0] > 0 else None,
-        "leakage_grows_with_p": bool(leak[-1] > leak[0]),
+        "leakage_ratio_first_to_last_p": (float(leak[-1] / leak[0]) if len(leak) >= 2 and leak[0] > 0 else None),
+        "leakage_grows_with_p": (bool(leak[-1] > leak[0]) if len(leak) >= 2 else None),
         "ok": bool(held["min_pairwise_mean_separation"]),
     }
+    # Growing leakage is itself a confound: at fixed n the empirical second moment
+    # degrades with p, so part of any measured n*(p) growth is the moment estimate
+    # deteriorating rather than the theorem's p*log(p/eps) factor. A p-exponent measured
+    # under this condition cannot be attributed to the bound, and must not support a
+    # falsification of it.
     out["all_other_quantities_held_fixed"] = bool(
-        out["measured_quantities_held_fixed"]
+        out["measured_quantities_held_fixed"] and not out["leakage_grows_with_p"]
+    )
+    out["why_not_attributable"] = "" if out["all_other_quantities_held_fixed"] else (
+        "the empirical M2 top-k condition number is not constant across p"
+        + (f", and subspace leakage grows {out['leakage_ratio_first_to_last_p']:.0f}x "
+           "from the smallest to the largest p at fixed n"
+           if out["leakage_ratio_first_to_last_p"] else "")
     )
     out["why"] = (
         "delta, the mean separation, the M2 conditioning, sigma and pi_min are identical "
@@ -460,7 +480,7 @@ def p_sweep_confound_audit() -> dict:
     return out
 
 
-def restart_budget_attribution(seeds=tuple(range(9))) -> dict:
+def restart_budget_attribution(seeds=tuple(range(21))) -> dict:
     """Does n* grow with p because of the rate, or because of a fixed restart budget?
 
     The robust tensor power method is a non-convex search run with a fixed 30 restarts.
