@@ -655,6 +655,30 @@ def c6_confound(v):
     )
 
 
+def c3_transcription(v):
+    r = g(v, "independent_check", "table2_second_transcription", default={})
+    if not r.get("recomputed_winners"):
+        raise SystemExit("c3.transcription: the second transcription is not in the verdict")
+    rows = [
+        ["Cells compared, digit for digit", f"{r.get('cells_compared')} of 54"],
+        ["Mismatches between the two transcriptions",
+         f"**{len(r.get('cell_mismatches_vs_first_transcription') or [])}**"
+         + (f" — {', '.join(r['cell_mismatches_vs_first_transcription'])}"
+            if r.get("cell_mismatches_vs_first_transcription") else "")],
+        ["Column winners recomputed from the second copy",
+         ", ".join(r.get("recomputed_winners") or [])],
+        ["Winners match the paper's bold cells", yesno(r.get("matches_paper_bold_cells"))],
+        ["CARE wins", f"**{r.get('care_wins')} of {r.get('of_datasets')}**"],
+        ["CARE-Tensor leads on", ", ".join(r.get("care_tensor_leads_on") or [])],
+        ["Strongest Summarize baseline",
+         f"{r.get('strongest_summarize_baseline')} at {num(r.get('strongest_summarize_baseline_value'), 3)}"],
+        ["Summarize relative improvement",
+         f"**{num(r.get('summarize_relative_improvement_pct'), 4)} %** "
+         f"(matches the paper's 13.4 %: {yesno(r.get('summarize_matches_13_4'))})"],
+    ]
+    return table(["Check", "Result"], rows)
+
+
 def env_runtimes(v):
     label = {
         "C1_C2_C3_tables": "Claims 1-3 — Table 1/2 arithmetic, audits and cached benchmark reads",
@@ -1183,6 +1207,7 @@ GENERATORS = {
     "c1.comparator": c1_comparator,
     "c6.screen": c6_screen,
     "env.runtimes": env_runtimes,
+    "c3.transcription": c3_transcription,
     "c1.appendix": appendix_consistency,
     "c2.appendix": appendix_consistency,
     "c3.single_config": c3_single_config,

@@ -5,6 +5,8 @@ claim modules, so that a bug in one implementation cannot pass unnoticed:
 
   * Table 1/2 percentages: exact rational arithmetic on a second, hand-typed copy
     of the table, not the one in paper_source.py.
+  * Table 2's full nine-method grid: typed a second time and compared cell by cell, so
+    Claim 3's argmax over 54 cells does not rest on one transcription.
   * Proposition 4.1 counterexample: 60-digit mpmath, not sympy.
   * The first-order eigenvector perturbation used for Theorem D.4's constant:
     central finite differences on the true eigenvector, not the analytic formula.
@@ -33,6 +35,77 @@ _T1_CARE = ["27.629", "0.730", "1.957", "1.325", "0.623", "0.694"]
 _T7_FIRST = ["27.148", "0.753", "1.950", "1.325", "0.622", "0.694"]
 _T7_FIRST_STD = ["0.133", "0.003", "0.006", "0.003", "0.006", "0.005"]
 _T1_CARE_STD = ["0.156", "0.002", "0.018", "0.004", "0.006", "0.004"]
+
+
+# Second, hand-typed copy of Table 2 -- nine methods x six datasets -- typed from the
+# paper independently of paper_source.py. Without this the whole "best on 5 of 6" verdict
+# rested on ONE transcription of a 54-cell grid, in which a single wrong digit could flip
+# a column winner and nothing would catch it. Bold cells are typed separately too, so the
+# recomputed argmax can be checked against what the paper actually typesets.
+_T2_DATASETS = ["Chatbot-Arena", "CivilComments", "PKU-BETTER", "PKU-SAFER", "SHP", "Summarize"]
+_T2 = {
+    "MV":          ["0.517", "0.691", "0.701", "0.698", "0.626", "0.600"],
+    "AVG":         ["0.551", "0.690", "0.726", "0.717", "0.634", "0.683"],
+    "WS":          ["0.543", "0.739", "0.575", "0.570", "0.619", "0.705"],
+    "UWS":         ["0.507", "0.713", "0.703", "0.701", "0.629", "0.713"],
+    "Dawid-Skene": ["0.546", "0.735", "0.551", "0.548", "0.612", "0.705"],
+    "GLAD":        ["0.510", "0.695", "0.697", "0.671", "0.644", "0.718"],
+    "MACE":        ["0.550", "0.732", "0.734", "0.735", "0.580", "0.706"],
+    "CARE-SVD":    ["0.580", "0.778", "0.691", "0.690", "0.543", "0.695"],
+    "CARE-Tensor": ["0.564", "0.749", "0.779", "0.731", "0.695", "0.814"],
+}
+_T2_BOLD = ["CARE-SVD", "CARE-SVD", "CARE-Tensor", "MACE", "CARE-Tensor", "CARE-Tensor"]
+_T2_CARE = ("CARE-SVD", "CARE-Tensor")
+
+
+def table2_second_transcription(verdict: dict | None = None) -> dict:
+    """Recompute Claim 3's structure from an independent copy of the nine-method grid.
+
+    Exact rationals throughout: an accuracy typed to three decimals is a rational, and
+    an argmax over rationals has no tolerance to tune.
+    """
+    grid = {m: [Fraction(x) for x in row] for m, row in _T2.items()}
+    winners, care_wins, tensor_leads = [], 0, []
+    for j in range(len(_T2_DATASETS)):
+        col = {m: v[j] for m, v in grid.items()}
+        w = max(col, key=col.get)
+        winners.append(w)
+        if w in _T2_CARE:
+            care_wins += 1
+        if w == "CARE-Tensor":
+            tensor_leads.append(_T2_DATASETS[j])
+
+    j = _T2_DATASETS.index("Summarize")
+    baselines = {m: grid[m][j] for m in grid if m not in _T2_CARE}
+    strongest = max(baselines, key=baselines.get)
+    rel = (grid["CARE-Tensor"][j] - baselines[strongest]) / baselines[strongest] * 100
+
+    out = {
+        "recomputed_winners": winners,
+        "matches_paper_bold_cells": winners == _T2_BOLD,
+        "care_wins": care_wins,
+        "of_datasets": len(_T2_DATASETS),
+        "care_best_on_5_of_6": care_wins == 5,
+        "care_tensor_leads_on": tensor_leads,
+        "strongest_summarize_baseline": strongest,
+        "strongest_summarize_baseline_value": float(baselines[strongest]),
+        "summarize_relative_improvement_pct": float(rel),
+        "summarize_matches_13_4": abs(float(rel) - 13.4) < 0.1,
+    }
+    if verdict:
+        # Cell-by-cell against the first transcription: this is the check that a wrong
+        # digit cannot survive, and it is stricter than agreeing on the argmax.
+        from paper_source import TABLE2_ACC
+        mismatch = [
+            f"{m}[{_T2_DATASETS[j]}]"
+            for m, row in _T2.items()
+            for j, x in enumerate(row)
+            if m in TABLE2_ACC and abs(float(Fraction(x)) - TABLE2_ACC[m][j]) > 1e-12
+        ]
+        out["cells_compared"] = sum(len(r) for r in _T2.values())
+        out["cell_mismatches_vs_first_transcription"] = mismatch
+        out["two_transcriptions_agree_cell_by_cell"] = not mismatch
+    return out
 
 
 def appendix_consistency_exact() -> dict:
@@ -432,6 +505,7 @@ def run(verdict: dict | None = None) -> dict:
         "table_percentages_exact_rational": table_percentages_exact(),
         "c2_unit_invariance_exact": c2_unit_invariance_exact(),
         "appendix_consistency_exact": appendix_consistency_exact(),
+        "table2_second_transcription": table2_second_transcription(verdict),
         "prop41_counterexample_mpmath": prop41_counterexample_mpmath(),
         "first_order_formula_vs_finite_difference": first_order_by_finite_difference(),
         "davis_kahan_by_principal_angle": davis_kahan_by_principal_angle(),
@@ -485,6 +559,12 @@ def run(verdict: dict | None = None) -> dict:
         and out["davis_kahan_by_principal_angle"]["constant_2_to_the_3_over_2_holds"]
         and out["c2_unit_invariance_exact"]["weighted_mean_identity_exact"]
         and out["c2_unit_invariance_exact"]["unweighted_exactly_invariant_under_unit_change"]
+        # Claim 3's structural verdict is an argmax over a 54-cell grid. Two independent
+        # transcriptions must agree cell by cell, and the recomputed winners must match
+        # the cells the paper typesets bold.
+        and out["table2_second_transcription"]["two_transcriptions_agree_cell_by_cell"]
+        and out["table2_second_transcription"]["matches_paper_bold_cells"]
+        and out["table2_second_transcription"]["summarize_matches_13_4"]
     )
     # A cross-implementation agreement check that does not gate `ok` is decoration: the
     # two implementations could disagree about a published verdict and the run would

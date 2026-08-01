@@ -28,9 +28,15 @@ Three things must be said about that process plainly.
 * **Earlier rounds of this review changed the science, not just the prose.** The largest
   single correction this logbook has made — the withdrawal of a Claim 6 falsification
   that this logbook had promoted to a headline — came from a blind reviewer showing that
-  the falsification's own data did not support it. See
-  [Limitations](#/limitations) for the full list of defects found and the ones
-  deliberately left unrepaired.
+  the falsification's own data did not support it. The round after that found six defects
+  *in the verifier itself*, including a verdict string that read VERIFIED off a sweep the
+  same function excluded, and an independent-checker gate that would have failed the run
+  whenever the paper turned out to be right. See [Limitations items 23–25](#/limitations)
+  for the full lists, including the defects deliberately left unrepaired.
+* **This column is necessarily the last thing filled.** A reviewer reviews the candidate,
+  so every artifact a reviewer sees has this column reading `pending` — two reviewers have
+  now reported that as a defect, correctly, and it is unavoidable. What the gate enforces
+  is that no artifact is *uploaded* in that state.
 
 A reviewer verdict below full credit is left standing rather than argued with. The
 weakest claim is Claim 1: two of its three assertions are arithmetic on figures the claim

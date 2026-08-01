@@ -195,10 +195,29 @@ both Summarize percentages in exact `Fraction` arithmetic, from literals typed
 independently of the claim module, and asserts that the paper's 13.4 % follows from
 GLAD's 0.718 and **not** from the 0.705 quoted in the circulated claim string.
 
-Being exact about the limit of this check: it re-derives the *percentages*, not the
-*argmax*. The nine-method grid is transcribed once, in the claim module; there is no
-second transcription of it, and the 5-of-6 count is therefore not independently
-recomputed. An earlier version of this page claimed otherwise.
+It also transcribes Table 2's **full nine-method grid a second time**, by hand, and
+compares it against the claim module's copy **cell by cell** — all 54 — before
+recomputing the column winners, the 5-of-6 count, CARE-Tensor's three leads and the
+Summarize percentage from its own copy. The recomputed winners are then checked against
+the cells the paper typesets in bold.
+
+This closes a real hole. Two earlier revisions of this page said opposite things about
+it: one claimed the argmax was independently recomputed when it was not, and its
+replacement correctly said the grid was transcribed only once — which meant a single
+wrong digit in 54 could have flipped a column winner with nothing to catch it. A blind
+reviewer named that as the largest thing it could not verify. It is now checked, and the
+check gates the run: `independent_check` fails if the two transcriptions disagree
+anywhere, if the recomputed winners disagree with the paper's bold cells, or if the
+Summarize figure moves.
+
+<!-- FILL:c3.transcription -->
+*(pending release run)*
+<!-- /FILL -->
+
+What remains outside any check here: both transcriptions were made from the same rendered
+source by the same process, so a *systematic* misreading of the paper would survive both.
+Only the paper itself can settle that, and it is not shipped in this Space
+(see [Raw data](#/raw-data)).
 
 The value of transcribing the full grid is not hypothetical here: an earlier draft of
 this reproduction transcribed only four of Table 2's nine methods and consequently

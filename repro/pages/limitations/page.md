@@ -462,11 +462,18 @@ either, and the page previously read as though it were.
 configuration winning 5 of 6 would have been reported as failing to reach the claimed
 count. The comparison is now against the claimed count.
 
-Two further defects are fixed elsewhere in this revision: the shard cache the benchmark
+One further defect is fixed elsewhere in this revision: the shard cache the benchmark
 numbers come from was **not published**, so the campaign's main empirical result could
-not be checked from the artifact at all; and the visibility matrix shipped with every
-reviewer verdict reading `pending`, in exactly the state its own gate documents as
-unpublishable.
+not be checked from the artifact at all.
+
+The same review also reported that the visibility matrix shipped with every reviewer
+verdict reading `pending`, in exactly the state its own gate documents as unpublishable.
+That is a real observation about the *candidate*, and it is unavoidable: the reviewer
+verdicts are produced by reviewing the candidate, so any artifact a reviewer sees
+necessarily has that column empty. What must be true is that the column is filled, from a
+real review, before the artifact is uploaded — and the gate enforces exactly that, since
+`publish_space.py upload` runs behind it. The next review made the same observation, and
+it is the same answer.
 
 ## 24. The Table 1 vs Table 7 consistency audit is post-hoc, and one-sided in a specific way
 
