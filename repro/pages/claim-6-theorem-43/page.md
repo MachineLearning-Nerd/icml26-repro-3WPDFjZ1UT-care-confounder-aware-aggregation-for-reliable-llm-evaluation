@@ -80,8 +80,8 @@ original and the added criterion are in the contract file, with this provenance 
 A reader who discounts post-hoc findings should discount this one accordingly. What
 does not depend on the ordering: the exponent is resolved by two independent estimators,
 `δ`, `σ`, `π_min`, the mean separation and `cond(M₂)` are identical to eight decimal
-places across every `p`, and tripling the solver's restart budget moves `n*` by at most
-1.3 %.
+places across every `p`, and tripling the solver's restart budget does not *lower* `n*`
+at either end of the sweep — see the attribution table below for the measured ratios.
 
 **Scope, stated precisely.** This falsifies the stated `p·log(p/ε)` factor *as tested
 with the algorithm the theorem names* (Anandkumar et al.'s robust tensor power method
@@ -89,6 +89,15 @@ with whitening), on a model family that satisfies the theorem's own hypotheses:
 `K = 4` components, three conditionally independent views, full-column-rank means, and
 `π_min = 0.10 > 0`. It says nothing about the `σ⁶` or `π_min^{-2}` factors, whose
 exponents this campaign reports as **NOT MEASURED**.
+
+**One solver knob was varied, not all of them.** The attribution control varies the
+restart count and nothing else: the 60 power iterations, 30 deflation iterations and the
+rank-`k` whitening are held fixed across the whole `p` sweep. Larger `p` should make the
+statistical problem no harder at fixed component separation, so a `p^{3.6}` growth is
+consistent with the estimator's *conditioning* degrading in `p` as well as with the
+stated rate being wrong. This campaign cannot separate those two, and the falsification
+should be read as "the stated factor does not hold for this algorithm as specified"
+rather than as a statement about the statistical problem itself.
 
 ### Independent refit of the exponent
 

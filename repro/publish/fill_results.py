@@ -320,7 +320,9 @@ def c5_results(v):
         + "".join(
             f"\n\nThe n\\*({nm}) sweep is **NOT INFORMATIVE**: "
             + "; ".join((c.get(f"{k}_sweep_informativeness") or {}).get("not_informative_because", []))
-            + ". It is excluded from the verdict rather than counted as a pass."
+            + ". It can neither satisfy nor violate the contract, and the claim header "
+            "above names it as NOT MEASURED so the overall 'satisfied' is not read as "
+            "covering it."
             for k, nm in (("alpha", "α"), ("delta", "δ"))
             if not (c.get(f"{k}_sweep_informativeness") or {}).get("informative", True)
         )
@@ -458,7 +460,7 @@ def verdicts(v):
             [
                 cid,
                 f"[{title}](#/{slug})",
-                blk.get("verdict", "—"),
+                PAGE_VERDICT.get(cid) or blk.get("verdict", "—"),
                 yesno(blk.get("ok")),
                 f"{num(blk.get('runtime_s'), 1)} s",
             ]

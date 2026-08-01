@@ -177,13 +177,17 @@ contract passed on a constant.
 
 Two changes, both published:
 
-* the grid was extended down to `n = 200`, so the `π_min` search is no longer censored
-  from below;
+* the grid was extended downward (its floor is now `n = 20`, printed on the Claim 6
+  page from the run itself), so the `π_min` search is no longer censored from below;
 * [`repro/src/informativeness.py`](repro/src/informativeness.py) makes admissibility a
   machine-checked precondition — ≥ 3 usable points, ≥ 3 distinct `n*` values, no pinning
   of every `n*` to a grid endpoint, and a fitted trend whose 95 % interval excludes zero.
-  A sweep failing any of these is reported **NOT INFORMATIVE** and excluded from the
-  verdict rather than counted as a pass.
+  A sweep failing any of these is reported **NOT INFORMATIVE**. Precisely what that
+  means, because an earlier wording overstated it: such a sweep can neither satisfy nor
+  violate its contract, so it does not set the claim's boolean to false — and the claim
+  header therefore names it explicitly as NOT MEASURED, so the overall "contract
+  satisfied" is never read as covering it. The boolean alone cannot express "absent",
+  which is why the disclosure is on the header rather than in the flag.
 
 ## 14. The `δ` sweep bounds the exponent but does not isolate `δ`
 

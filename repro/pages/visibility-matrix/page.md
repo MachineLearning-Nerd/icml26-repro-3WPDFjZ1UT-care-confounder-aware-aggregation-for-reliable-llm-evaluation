@@ -20,15 +20,16 @@ reported twenty defects.
 
 Two things must be said about them plainly.
 
-* **They were issued against an earlier revision of this Space**, before the defects it
-  found were repaired. The repairs are listed in
-  [Limitations items 18–20](#/limitations), including the four that were **not** made.
-  The verdicts are therefore *conservative*: they reflect the artifact at its weakest,
-  not as published.
-* **A re-review of the current revision was attempted and did not complete.** Rather than
-  substitute the authors' own assessment into a column whose entire purpose is
-  independence, the pre-fix verdicts are reported unchanged. No verdict in this column was
-  written by the authors of this logbook.
+* **These are second-round verdicts.** The reviewer scored the artifact, twenty defects
+  were repaired (and four deliberately not — see
+  [Limitations items 18–20](#/limitations)), and it then re-reviewed the revised artifact
+  and re-scored. Only Claim 4 moved, to FULL, once both Proposition 4.1 bounds were
+  computed as transcribed. Claim 1 stayed NONE, in the reviewer's words, because the
+  revisions "improved candour, not evidence".
+* **No verdict in this column was written by the authors of this logbook.**
+* The re-review also reported one defect that was **not** real — it read an unrendered
+  page source rather than the published page and concluded this matrix was empty. That is
+  recorded here because a review's misses matter as much as its hits.
 
 The reviewer's own summary of where the weakness lies is worth reproducing: Claim 1 is
 weakest because two of its three assertions are arithmetic on figures the claim itself
