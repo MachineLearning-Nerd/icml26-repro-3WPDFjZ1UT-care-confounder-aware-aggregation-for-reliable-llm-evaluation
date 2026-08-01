@@ -80,9 +80,49 @@ direction, and is excluded from the verdict — rather than passing because it f
 disagree. The grid was also extended down to `n = 200` so the `π_min` search is no
 longer censored from below.
 
+### Two estimators of `n*`, and why both are reported
+
+`n*` was first read as the **crossing** of the median error curve with the target. That
+lets a single grid point decide the answer, and where the curve is shallow near the
+target a little noise moves it enormously: raising the seed count from 5 to 7 moved one
+`σ` setting's `n*` from 424 to 3266. `n*` is therefore also estimated by **fitting**
+`log err = a + b·log n` over every computed point and solving for `err = TARGET`, which
+pools all of them.
+
+Both estimates are reported for every setting, and an exponent is admissible only if
+**each estimator individually resolves it** (its own 95 % interval excludes zero) **and
+the two intervals overlap**. Agreement with an unresolved estimator is not evidence —
+a wide enough interval agrees with everything.
+
 ### Results
 
 <!-- FILL:c6.results -->
+*(pending release run)*
+<!-- /FILL -->
+
+## Attributing the p-dependence
+
+A measured `p`-exponent says something about Theorem 4.3 only if nothing else moved.
+Two audits establish that, and both are published.
+
+**Is the growth the solver's, not the rate's?** The robust tensor power method is a
+non-convex search run with a fixed 30 restarts. If a larger `p` simply needs more
+restarts to find all `k` components, `n*` grows for an optimisation reason that may not
+be charged to a statistical bound. The control repeats the smallest and largest `p` at
+three times the restart budget; a fall of more than 20 % (a threshold fixed before the
+numbers were seen) would disqualify the sweep.
+
+<!-- FILL:c6.attribution -->
+*(pending release run)*
+<!-- /FILL -->
+
+**Are `σ`, `δ` and `π_min` really held fixed?** If `δ` shrank as `p` grew, an apparent
+`p`-growth would be the bound's own `δ^{-2}` factor in disguise. These are population
+quantities of the generative model, so they carry no sampling noise: the CP eigenvalues
+are `λ_i = π_i^{-1/2}`, `δ` is their minimum gap, and the component means are columns of
+an orthonormal frame scaled by 3.0.
+
+<!-- FILL:c6.confound -->
 *(pending release run)*
 <!-- /FILL -->
 

@@ -78,11 +78,20 @@ separately and is a statement about our implementation, not about the theorem.
 
 Theorem 4.2 is an `O(·)` upper bound, so both `n*` contracts are one-sided — and a
 one-sided contract is satisfied by a sweep that measured nothing. Each sweep therefore
-passes through the same admissibility test as Claim 6's, in
-[`repro/src/informativeness.py`](repro/src/informativeness.py): ≥ 3 usable points,
-≥ 3 distinct `n*` values, no pinning of every `n*` to a grid endpoint, and a fitted
-trend whose 95 % interval excludes zero. A sweep that fails is marked **NOT INFORMATIVE**
-in the table below and excluded from the verdict, rather than counted as a pass.
+passes through [`repro/src/informativeness.py`](repro/src/informativeness.py) before it
+may count: ≥ 3 usable points, ≥ 3 distinct `n*` values, no pinning of every `n*` to a
+grid endpoint, and a fitted trend whose 95 % interval excludes zero. A sweep that fails
+is marked **NOT INFORMATIVE** in the table below and excluded from the verdict, rather
+than counted as a pass.
+
+Claim 6 applies one further condition that this claim does not: there, `n*` is estimated
+by two independent routes and an exponent counts only if both resolve it and agree. That
+condition was added because Claim 6's `n*` measurements proved unstable, and it is not
+applied here — so the `n*(α)` and `n*(δ)` exponents below rest on a single estimator.
+The `n*(α)` sweep is monotone over five settings and lands 36 standard errors from zero,
+which is why it is reported as evidence; `n*(δ)` is treated as bounding rather than
+confirming, for the reason set out in
+[Limitations item 14](#/limitations).
 
 ### Results
 

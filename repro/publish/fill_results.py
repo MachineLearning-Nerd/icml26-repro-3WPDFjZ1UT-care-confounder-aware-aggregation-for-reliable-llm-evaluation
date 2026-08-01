@@ -311,6 +311,35 @@ def sweep_status(blk):
     return status, ("; ".join(why) if why else "")
 
 
+def c6_attribution(v):
+    a = g(v, "claims", "C6_thm43", "route_d_restart_budget_attribution", default={})
+    rows = [[num(r.get("p_total"), 0), num(r.get("n_star_30_restarts"), 0),
+             num(r.get("n_star_90_restarts"), 0), num(r.get("ratio_90_over_30"), 4)]
+            for r in a.get("rows", [])]
+    return table(["p", "n* at 30 restarts", "n* at 90 restarts", "ratio"], rows) + (
+        f"\n\nSolver-bound: {yesno(a.get('solver_bound'))}. "
+        f"p-exponent attributable to the theorem rather than to the search budget: "
+        f"{yesno(a.get('p_exponent_attributable_to_the_theorem'))}. {a.get('why', '')}"
+    )
+
+
+def c6_confound(v):
+    c = g(v, "claims", "C6_thm43", "route_e_p_sweep_confound_audit", default={})
+    rows = [[num(r.get("p_total"), 0), num(r.get("delta_cp_eigenvalue_gap"), 6),
+             num(r.get("min_pairwise_mean_separation"), 6),
+             num(r.get("m2_condition_number"), 6), num(r.get("sigma_max"), 2),
+             num(r.get("pi_min"), 3)] for r in c.get("rows", [])]
+    held = c.get("held_fixed", {})
+    return table(
+        ["p", "δ (CP gap)", "min ‖μᵢ−μⱼ‖", "cond(M₂)", "σ_max", "π_min"], rows
+    ) + (
+        "\n\nHeld fixed across the sweep: "
+        + ", ".join(f"{k} {yesno(vv)}" for k, vv in held.items())
+        + f"\n\nAll other quantities in the bound held fixed: "
+        f"{yesno(c.get('all_other_quantities_held_fixed'))}. {c.get('why', '')}"
+    )
+
+
 def c6_results(v):
     s = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", default={})
     rows, notes = [], []
@@ -654,6 +683,8 @@ GENERATORS = {
     "c6.symbolic": c6_symbolic,
     "c6.boundary": c6_boundary,
     "c6.results": c6_results,
+    "c6.attribution": c6_attribution,
+    "c6.confound": c6_confound,
     "c6.controls": c6_controls,
     "verdicts": verdicts,
     "c1.header": _header("C1"),
