@@ -25,6 +25,15 @@ datasets on incommensurable scales, so ASSET's 0–100 scale sets nearly the who
 Under the scale-free reading the improvement over AVG is smaller than published and the
 improvement over MV is larger. Both are reported; neither is presented as the other.
 
+**The paper disagrees with itself about the row that headline is computed from.**
+Appendix E.8's Table 7 republishes CARE-SVD's six Table 1 MAEs, under a sentence that
+says the setup is the same. Four columns match; FeedbackQA does not, by more than the
+paper's own reported seed noise allows, and ASSET does not marginally. Recomputed from
+the appendix's own row the average improvement is a different number. The audit needs no
+data, and it is not one-sided: the same comparison **corroborates** Claim 1's
+UltraFeedback value, which is the one quantity in this campaign we have no way to
+measure ourselves.
+
 **The main-text Proposition 4.1 is false as written, and the appendix version is not.**
 The main text asks only for *orthogonal* columns and drops the `‖K_JH‖₂²` factor. Each
 omission admits an exact counterexample that satisfies the main text's own hypotheses,
@@ -34,9 +43,11 @@ than 4 — for its perturbation bound. None of this threatens Algorithm 1, which
 with the eigenvectors of `L̂` regardless.
 
 **Theorem 4.2 is corroborated with named gaps rather than declared closed.** Its
-composition and its cited Davis–Kahan constant are established directly, but its
-`η`-dependence is a tail statement we do not measure and `ξ(T)` has no closed form we
-can evaluate. Recorded as MEDIUM confidence with the reason attached.
+composition and its cited Davis–Kahan constant are established directly, and its
+`η`-dependence — recorded by earlier revisions as unmeasurable — is now measured, by
+reading the error's own quantiles against `η(q) = −log((1−q)/2)`: the bound holds and is
+conservative. What remains genuinely unmeasured is `ξ(T)`, which has no closed form we
+can evaluate.
 
 **Theorem 4.3 is verified in the parts this campaign can reach, with a documented gap in
 its written proof.** Its mean bound is reproduced exactly and its weight bound is not
@@ -56,15 +67,20 @@ contract by default.
 
 ## What this reproduction got wrong
 
-Two findings went against our own hypotheses, and both are published rather than
-dropped — see [Limitations and deviations](#/limitations), items 10 and 11.
+Several findings went against our own hypotheses, and they are published rather than
+dropped — see [Limitations and deviations](#/limitations). Three verdicts this campaign
+reached were later withdrawn on its own evidence, before or without reaching a judged
+revision; each withdrawal is recorded with the reasoning that produced it.
 
 * We predicted the missing `σ³` factor in Theorem 4.3 would be *observable* along the
   sample-complexity boundary. It was not. The verdict was downgraded from FALSIFIED to a
   documented proof gap. Reporting the falsification would have been the more striking
-  result and the wrong one. (The falsification this logbook *does* report is of a
-  different factor, reached by a different route, and gated on three audits written
-  before its outcome was known.)
+  result and the wrong one. A later revision then reported a falsification of a
+  *different* factor of the same theorem, by a different route; that one has since been
+  withdrawn as well, by this logbook's own verifier. **No falsification of Theorem 4.3
+  survives** — what survives is a documented gap in the displayed proof of the weight
+  bound, and the fact that the stated bound is not violated where the gap predicted it
+  would be.
 * An earlier revision of the Claim 6 page passed a sample-complexity check that had
   measured nothing: with the search grid floored at `n = 5 000`, every `π_min` setting
   returned `n* = 5 000`, giving an exponent of `0.000 ± 0.000` that satisfied a one-sided

@@ -59,8 +59,10 @@ agreeing and the solver's restart budget ruled out".
 Two things were wrong with it.
 
 **1. The estimators were not agreeing.** The agreement test compared only the two
-*aggregate* exponents' 95% intervals. Per setting the two `n*` estimators differed by up
-to **8.6×, in opposite directions** (at `p = 18`: 2662 by curve-fitting against 308 by
+*aggregate* exponents' 95% intervals. **The figures in this paragraph are that withdrawn
+revision's, not this run's** — this run's per-setting spreads are rendered further down,
+and they are milder. In it, the two `n*` estimators differed per setting by up to
+**8.6×, in opposite directions** (at `p = 18`: 2662 by curve-fitting against 308 by
 crossing), across decay curves fitted at slopes of −0.076 to −0.260 — against the
 theorem's own −0.5 — with r² as low as 0.38. At `p = 18` the error column was
 `[0.0648, 0.0892, 0.0564, 0.0497, 0.0611, 0.0511]` against a target of 0.05: noise about
@@ -122,14 +124,31 @@ An earlier revision of this page asserted such a check existed when it did not.
 *(pending release run)*
 <!-- /FILL -->
 
-**Why none of these refits rescues the finding.** Every estimate of the exponent
-exceeds 1, and that was the basis of the withdrawn falsification. It is not sufficient.
-The refits all consume the same per-setting `n*` values, and those values are what the
-per-setting screen rejects: the two estimators disagree, the decay curves fit a power law
-imperfectly (`r²` from 0.38 to 0.83), and `n*` is not monotone in `p`. An exponent that
-is stable across four *fitting methods* applied to the same unreliable inputs is not
-thereby a measurement of the system. Independently of all of that, the confound audit
-above shows the exponent is not attributable to the theorem's factor in the first place.
+**Why none of these refits rescues the finding.** Every estimate of the exponent exceeds
+1, and that was the basis of the withdrawn falsification. It is not sufficient. All of
+them are fits to the same per-setting `n*` values, over the same screened settings, and
+those values are what the per-setting screen calls into question — the two `n*`
+estimators disagree per setting, the decay curves fit a power law imperfectly, and `n*`
+is not monotone in `p`. The screen's own measured spreads are rendered below rather than
+typed here, because an earlier revision quoted a previous run's figures as if they were
+this one's:
+
+<!-- FILL:c6.screen -->
+*(pending release run)*
+<!-- /FILL -->
+
+An exponent that is stable across four *fitting methods* applied to the same unreliable
+inputs is not thereby a measurement of the system. Independently of all of that, the
+confound audit above shows the exponent is not attributable to the theorem's factor in
+the first place.
+
+**What the refit is and is not gated on.** The independent checker requires the
+Theil–Sen and least-squares exponents to **agree**, and fails the run if they do not. An
+earlier revision gated instead on the exponent *exceeding* the theorem's stated 1 — which
+would have failed the whole verifier in precisely the case where the paper turned out to
+be right. That is an inverted contract rather than a check, and it is gone. The same
+revision also fed already-logged values into a helper that logs its inputs, so the two
+published "Theil–Sen exponents" were slopes of `log log n`; both are fixed here.
 
 ## Calibrated sample-complexity measurement
 

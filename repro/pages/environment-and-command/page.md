@@ -78,15 +78,21 @@ repository-root files that `uv sync --frozen` actually reads:
 
 ### Measured cost per stage
 
-Recorded from the job log, not estimated after the fact.
+Rendered from this run's own `verdict.json`, not typed. An earlier revision typed this
+table as prose and it drifted out of agreement with every claim page — which is the
+argument for rendering it.
 
-| Stage | Work | Wall clock |
-|---|---|---|
-| Table 1, ASSET | 5 seeds × `fully_gaussian_main.py`, γ-grid of 11 values each | 49–61 s per seed after the first; the first seed additionally fetches the authors' ~71 MB judge data |
-| Table 2, CivilComments + PKU-BETTER | 5 seeds × `gaussian_mixture_main.py`, nine methods including the Dawid–Skene / GLAD / MACE harness | **≈ 6 730 s (112 min) per seed** |
-| Claim 4 | symbolic D.3, exact D.4 supremum, both counterexamples | 53.0 s |
-| Claim 5 | symbolic chain, 4 000-trial Davis–Kahan search, three-stage calibrated sweep | 111.8 s |
-| Claim 6 | symbolic chain, calibrated `n*` sweeps, boundary probe | 331.3 s |
+<!-- FILL:env.runtimes -->
+*(pending release run)*
+<!-- /FILL -->
+
+The benchmark stages are the expensive ones and they run as committed shards rather than
+inside the release run; their measured per-shard runtimes and job ids are in
+`shard_provenance` in the same file, and the shard costs are: Table 1 ASSET, 5 seeds of
+`fully_gaussian_main.py` with a γ-grid of 11 values each, 30–83 s per seed after the
+first (the first additionally fetches the authors' ~71 MB judge data); Table 2
+CivilComments + PKU-BETTER, 5 seeds of `gaussian_mixture_main.py` over nine methods
+including the Dawid–Skene / GLAD / MACE harness, ≈ 112 min per seed.
 
 Table 2 dominates by two orders of magnitude. The per-seed cost is genuine, not an
 artefact of thread starvation: each seed must get its **own** `--cache-path`, because

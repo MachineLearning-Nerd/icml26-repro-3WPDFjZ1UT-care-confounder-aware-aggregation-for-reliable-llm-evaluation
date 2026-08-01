@@ -52,7 +52,7 @@ assumption-satisfying counterexample. Finite experiments appear only as calibrat
 searches (binary search for `n*`, independent sweeps of each parameter), never by
 substituting into the formula under test.
 
-## Six results that cut against a flattering story, and one that does not
+## What cuts against a flattering story, and what cuts for it
 
 They are stated here rather than buried, because a reproduction that only ever confirms
 its own hypotheses is not measuring anything -- and the one that came out in the paper's
@@ -88,9 +88,20 @@ not measuring anything either.
   1, ASSET absorbs 84.4% of the weight. The statistic is therefore not invariant to a
   unit change on a single benchmark: report ASSET on 0–10 and the figure moves, and the
   paper's ordering — a larger gain over AVG than over MV — **reverses**. The
-  unit-invariant across-benchmark average is 15.19%. The 2026-08-01 revision of that
-  page had these numbers and still called it "a finding … not an error"; that was an
-  error of nerve, and it is recorded rather than quietly fixed.
+  unit-invariant across-benchmark average is 15.19%. A later revision over-corrected and
+  called this a **falsification**; a blind reviewer showed the invariance test it rested
+  on is an algebraic identity that cannot fail. Both framings are recorded rather than
+  quietly fixed. The stable statement is the one above: a quantified scope qualification
+  on a summary statistic, with the underlying benchmark comparison untouched.
+* **The paper reports CARE-SVD's Table 1 row twice, and the two reports do not
+  reconcile.** Appendix E.8's Table 7 republishes the same six MAEs under the name "1st
+  Factor", stating "We use the same scoring-task setup as in Table 1". Four of the six
+  columns agree within the paper's own combined error bars; **FeedbackQA** does not, by
+  a margin its own reported seed noise cannot absorb, and ASSET does not marginally.
+  Recomputed from the appendix's own row, the 17.37% headline is a different number.
+  This needs no data and no compute, and it cuts both ways: it also **corroborates**
+  Claim 1's UltraFeedback value, which the two tables do agree on — the one number in
+  this campaign we cannot measure ourselves.
 * A check that ran **in the paper's favour**. Asking whether any single CARE
   configuration attains "best on 5 of 6" found that none does — the best is CARE-Tensor
   at 3 — but also that CARE-Tensor held fixed across all six datasets is never worse

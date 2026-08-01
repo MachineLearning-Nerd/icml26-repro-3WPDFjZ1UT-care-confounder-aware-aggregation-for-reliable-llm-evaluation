@@ -620,8 +620,12 @@ def run() -> dict:
             "xi(T) is Chandrasekaran et al.'s curvature constant and has no closed form "
             "we can evaluate; it is held fixed across each sweep, so the xi(T)^-1 factor "
             "is reconstructed from the derivation but not measured.",
-            "The eta-dependence is a tail-probability statement; the calibrated sweep "
-            "reports medians over seeds rather than a high-probability envelope.",
+            "The eta-dependence IS measured, by route D: quantile(q) is the tightest "
+            "bound holding with probability q, so reading the error's quantiles against "
+            "eta(q) = -log((1-q)/2) gives the tail exponent at fixed n with no constant "
+            "fitted. Its residual limit is scope, not absence: one model, one n, one "
+            "estimator, so it is corroboration rather than a statement about all "
+            "instances. Earlier revisions recorded this as unmeasurable.",
         ],
     }
 

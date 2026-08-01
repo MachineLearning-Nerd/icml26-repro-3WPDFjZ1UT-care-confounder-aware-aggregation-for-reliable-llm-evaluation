@@ -34,6 +34,34 @@ shasum -a 256 ar5iv.html
 | UWS | 33.928 ± 0.000 | 0.875 ± 0.000 | 2.602 ± 0.000 | 1.362 ± 0.000 | 0.680 ± 0.000 | 0.987 ± 0.000 |
 | **CARE-SVD** | **27.629 ± 0.156** | **0.730 ± 0.002** | **1.957 ± 0.018** | **1.325 ± 0.004** | **0.623 ± 0.006** | **0.694 ± 0.004** |
 
+### Table 7 — the same quantity, published again (Appendix E.8)
+
+Appendix E.8 ablates which recovered latent factor is used as the quality direction. Its
+setup sentence is quoted verbatim because the whole cross-table comparison depends on it:
+
+> We use the same scoring-task setup as in Table 1. Beyond the default heuristic
+> (choosing the first factor), we also evaluate all recovered latent factors with
+> non-negligible eigenvalues (eigenvalue > 10⁻⁸).
+
+So the **1st Factor** row is CARE-SVD under its default heuristic, on the same six
+datasets, under the same metric — a second publication of Table 1's CARE-SVD row.
+`–` marks a dataset with no further factor above the 10⁻⁸ eigenvalue floor.
+
+| Factor | ASSET | FeedbackQA | Review-5K | Summarize | UltraFeedback | Yelp |
+|---|---|---|---|---|---|---|
+| **1st Factor** | **27.148 ± 0.133** | **0.753 ± 0.003** | **1.950 ± 0.006** | **1.325 ± 0.003** | **0.622 ± 0.006** | **0.694 ± 0.005** |
+| 2nd Factor | 31.757 ± 0.100 | – | 2.222 ± 0.007 | – | 0.781 ± 0.045 | 1.067 ± 0.062 |
+| 3rd Factor | 32.399 ± 0.159 | – | 3.115 ± 0.006 | – | 0.939 ± 0.010 | 0.955 ± 0.023 |
+| 4th Factor | 30.529 ± 0.144 | – | 2.667 ± 0.004 | – | 0.996 ± 0.005 | 1.125 ± 0.012 |
+| 5th Factor | 31.807 ± 0.170 | – | 3.369 ± 0.004 | – | 1.040 ± 0.062 | 1.099 ± 0.003 |
+
+Compare the bold row here against the bold row of Table 1 above: on **FeedbackQA** and
+**ASSET** they are not the same numbers. The audit of that is on
+[Claim 1](#/claim-1-ultrafeedback) and [Claim 2](#/claim-2-average-improvement), with its
+post-hoc provenance in [Limitations item 24](#/limitations). Appendix E.8's own claim
+that the leading factor is best on every dataset is checkable from this table alone and
+is checked.
+
 ### Table 2 — Accuracy, classification / preference (Section 5.1)
 
 | Method | Chatbot-Arena | CivilComments | PKU-BETTER | PKU-SAFER | SHP | Summarize |

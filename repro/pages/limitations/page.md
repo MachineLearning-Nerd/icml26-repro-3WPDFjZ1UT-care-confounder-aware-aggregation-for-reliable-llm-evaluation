@@ -234,10 +234,12 @@ statement of what was and was not measurable:
   admissibility test in `informativeness.py`, and neither is reported as evidence in
   either direction.
 * The `p`-exponent is **not usable at all**, and the falsification that rested on it has
-  been withdrawn — see item 23b. Per-setting curve fits score `r²` as low as 0.38, `n*`
-  is non-monotone in `p`, the two `n*` estimators disagree per setting by up to 8.6× in
-  opposite directions, and the rebuilt confound audit shows the exponent is not
-  attributable to the theorem's own factor.
+  been withdrawn — see item 23b. Three independent reasons: the per-setting screen drops
+  half the settings (its measured `r²` range and estimator-disagreement ratios are
+  rendered from this run on the [Claim 6 page](#/claim-6-theorem-43), not typed here —
+  an earlier draft of this item quoted a *previous* run's figures as if they were
+  current); `n*` is non-monotone in `p`; and the rebuilt confound audit shows the
+  exponent is not attributable to the theorem's own factor.
 * The `δ^{-2}` factor cannot be tested at all here: `δ` is the CP eigenvalue gap
   `min_i≠j |π_i^{-1/2} − π_j^{-1/2}|`, so it is not variable independently of `π`.
 
@@ -465,3 +467,112 @@ numbers come from was **not published**, so the campaign's main empirical result
 not be checked from the artifact at all; and the visibility matrix shipped with every
 reviewer verdict reading `pending`, in exactly the state its own gate documents as
 unpublishable.
+
+## 24. The Table 1 vs Table 7 consistency audit is post-hoc, and one-sided in a specific way
+
+Appendix E.8's Table 7 publishes CARE-SVD's MAE on all six Table 1 datasets a second
+time, under the name "1st Factor". Comparing the two rows is
+[recorded on Claim 1](#/claim-1-ultrafeedback) and
+[on Claim 2](#/claim-2-average-improvement). Four caveats, none of them convenient:
+
+* **It is post-hoc.** The pre-registered contracts for C1 and C2 contain no element about
+  cross-table consistency; this one was added after the appendix was read, and
+  [`raw/claim_contract.json`](raw/claim_contract.json) marks it POST-HOC under both
+  claims. What was fixed *before* the numbers were computed is the criterion: two
+  published reports of one quantity must agree within `z ≤ 2` of their own combined
+  reported standard deviations.
+* **It cannot say which row is right.** The audit establishes that the paper disagrees
+  with itself on two columns. It does not establish which value is correct, and this
+  campaign has no way to find out: FeedbackQA — the column where the disagreement is far
+  outside the reported noise — has no released judge-score matrix. ASSET, the other
+  disputed column, is reproduced here and the reproduction excludes neither value.
+* **It rests on a reading of the appendix's own wording.** The comparison is only valid
+  because Appendix E.8 states "We use the same scoring-task setup as in Table 1" and
+  calls the first factor the default heuristic. If either sentence means something
+  narrower than it says — a different split, a different `γ` grid — the two rows are not
+  reports of one quantity and the finding evaporates. Both sentences are quoted verbatim
+  on the claim pages so a reader can judge that for themselves. We have no way to test it.
+* **The reproduced ASSET column is noisier than either table admits.** Our five seeds
+  span a wider range than either published standard deviation. That is a limitation of
+  our own reproduction as much as an observation about the paper's, and it is one reason
+  the ASSET row of the audit is reported as marginal rather than decisive.
+
+The audit is not vacuous — four of six columns pass it, and the appendix's own assertion
+that the leading factor beats every other factor is checked and **holds** — but a check
+that finds two defects and confirms five other things is being reported as exactly that.
+
+## 25. A second blind reviewer found twenty defects, and six of them were in the verifier
+
+The candidate for this revision was given to a second reviewer under the same rules as
+the first: only the artifact, only the rubric, no knowledge of how any of it was built,
+instructed to recompute rather than trust. It returned twenty defects. They are listed
+here because the list is itself information about how far to trust the rest, and because
+several of them were in code that this logbook had already presented as a gate.
+
+**In the verifier, and load-bearing:**
+
+* **Claim 6's header said VERIFIED for a condition the run recorded as unmeasured.** The
+  branch that selects the verdict string asked whether *any* sweep was informative; the
+  only informative one was `p`, which the same function excludes as unattributable. So
+  the page published "VERIFIED (sample-complexity condition…)" on the strength of the one
+  sweep it had already ruled inadmissible, while its own table forty lines below read
+  "contract satisfied: no". `measured` is now computed over the gating sweeps only, and
+  the verdict degrades to **NOT MEASURED** — which is what the evidence supports. This
+  is the vacuous-pass failure mode `informativeness.py` exists to prevent, reintroduced
+  one level above it.
+* **The independent checker failed the run unless the paper looked wrong.** Its Claim 6
+  gate was `both_estimators_exceed_stated_exponent` — so a future run measuring an
+  exponent *consistent* with Theorem 4.3 would have exited nonzero and reported a failed
+  contract. An inverted gate cannot tell "the theorem holds" from "the verifier broke".
+  It now gates on the two estimators **agreeing**, which is direction-neutral.
+* **Two published "Theil–Sen exponents" were not exponents.** The helper logs its own
+  inputs; that call site passed values already logged, so the figures were slopes of
+  `log log n` against `log log(p log(p/ε))`. Corrected, the robust estimates *bracket*
+  the least-squares one instead of falling below it — which reverses the inference the
+  page drew from them.
+* **The robust refit did not read the same data as the fit it was checking.** It fitted
+  all six settings while the claim module fitted the three that survive the per-setting
+  screen, and the difference was labelled "estimator". Both now use the screened set.
+* **Two `ok` flags could not fail** — one gated on a quantity that is constant by
+  construction, one was hard-coded `True`. Item 23c called this fixed; it was fixed in
+  one of three places. Both now assert something that can be false (that the comparison
+  had enough data to mean anything), and neither is load-bearing.
+* **`single_configuration_audit` had no `ok` and was not gated**, though Claim 3's page
+  presents it as a contract element. It has one now.
+
+**In the record:**
+
+* `verdict.json` emitted `"ok": "True"` as a *string* for two Claim 4 blocks, so a
+  downstream reader doing `if block["ok"]` would read `"False"` as true. Fixed at source.
+* The Claim 6 page and item 15 quoted a **previous** run's screen figures as current.
+  They are now rendered from the run.
+* The environment page's per-stage runtimes were typed prose and had drifted from every
+  claim page and from `total_runtime_s`. They are now rendered, and the sum is checked
+  against the published total on the page itself.
+* Claim 2 cited a cross-check field, `falsified_as_worded`, that the code had renamed.
+* The published contract still said Claim 2 was **FALSIFIED** under conditions the run
+  satisfies, while the page published VERIFIED-with-qualification. The contract now says
+  what the code measures, and records the reframing.
+* The confound audit's "259× from the smallest to the largest `p`" was measured from the
+  *second* smallest — leakage is undefined at the smallest. The audit now names the two
+  `p` values it used.
+* Claims 1 and 2 printed two different "CARE on ASSET" numbers two tables apart with no
+  explanation. They are different quantities (five-seed γ-searched reproduction versus a
+  single fixed configuration for the permutation control) and the page now says so.
+
+**Judged and left standing, with reasons:**
+
+* **Claim 3's negative control cannot fail** and is now marked `◐ arithmetic only` in the
+  visibility matrix rather than `✓`. There is still no permutation control on the Table 2
+  accuracy path; see item 18.
+* **Claim 5's Route A composition check is true by construction** — it compares an
+  expression against the same expression written twice in one function. It is a check on
+  our transcription, and item 23d already says so. It is not removed, because a
+  transcription check is worth having as long as it is not mistaken for a theorem check.
+* **Provenance remains asserted for an offline reader.** The SHAs, job ids and paper hash
+  cannot be verified from inside the Space. What was added is a publication-time gate
+  proving the uploaded `repro/src/` files are byte-identical to the recorded SHA; the
+  full boundary is tabulated on [Raw data](#/raw-data).
+* **Claim 1's headline is arithmetic on the paper's own printed table**, and the verdict
+  cell now leads with BLOCKED rather than VERIFIED so that a reader scanning the summary
+  is not told the stronger half first.

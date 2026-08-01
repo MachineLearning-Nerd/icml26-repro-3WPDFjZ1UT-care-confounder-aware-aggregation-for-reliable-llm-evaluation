@@ -44,5 +44,20 @@ produced `verdict.json`:
 | Authors' code and judge-score matrices | `https://github.com/SprocketLab/CARE` @ `72f5b29a822d9934d31777c10a5c38369884c9dc` |
 
 The judge-score CSVs are not copied into this Space — they are ~71 MB of the
-authors' data and this Space is text-only — but they are pinned by commit SHA, so
-the reproduction is byte-reproducible from the public source.
+authors' data and this Space is text-only — but they are pinned by commit SHA, so the
+reproduction is byte-reproducible **from the public source, with network access**.
+
+**Exactly how far an offline reader can get, stated plainly.** Every pin above is a
+promise this artifact cannot keep on its own:
+
+| Pin | Checkable from inside this Space? |
+|---|---|
+| Paper SHA-256 | **No** — the ar5iv HTML is not shipped. The table transcriptions are checkable against each other (`paper_source.py` versus the second, hand-typed copy in `independent_check.py`), not against the paper. |
+| Authors' code SHA | **No** — checked at run time against a checkout that is not in this Space; the result is recorded as `official_repo_sha_matches_pin`. |
+| `environment.git_sha` | **No** — there is no `.git` here. What *is* checked, at publication time, is that every `repro/src/*.py` file uploaded is byte-identical to the same path at that SHA; the gate is [`repro/publish/publish_space.py`](repro/publish/publish_space.py) and it refuses the upload on any drift. That makes the SHA a claim about *this* file set rather than an unattached string, but it is still not verifiable offline. |
+| Shard `hf_job_id`s and their SHA | **No** — job records live on Hugging Face. |
+| `repro/cache/bench/*.json` | **Yes** — the benchmark shard outputs are shipped, so every Table 1/2 number on these pages can be traced to the JSON it came from. Below that layer, the authors' judge CSVs are the boundary. |
+
+Anything marked **No** should be read as asserted. That is a real limit on what a
+network-isolated reviewer can conclude, and no amount of internal consistency substitutes
+for it.

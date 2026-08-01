@@ -317,14 +317,26 @@ def recheck_c6_p_exponent(verdict: dict) -> dict:
           .get("route_b_calibrated_sample_complexity", {}).get("p", {}))
     rows = sw.get("rows", [])
     eps = 0.1
-    out = {"available": False}
+    # Two bugs lived here and both mattered.
+    #
+    # 1. `theil_sen` logs its own inputs. This call site passed values that were ALREADY
+    #    logged, so the published figure was the median slope of log(log n) against
+    #    log(log(p log(p/eps))) -- not an exponent at all, and systematically too small.
+    # 2. The claim module fits over the settings its per-setting screen accepts; this
+    #    refit read every row. A 3-point least-squares fit was being compared against a
+    #    6-point Theil-Sen fit and the difference was labelled "estimator".
+    #
+    # Both are fixed: raw inputs, and the same screened settings.
+    usable = sw.get("per_setting_screen", {}).get("usable")
+    out = {"available": False, "fitted_over_settings": usable}
     for tag, key in (("fitted", "n_star"), ("crossing", "n_star_crossing")):
-        pts = [(r["p_total"], r.get(key)) for r in rows if r.get(key)]
+        pts = [(r["p_total"], r.get(key)) for r in rows
+               if r.get(key) and (usable is None or r["p_total"] in usable)]
         if len(pts) < 3:
             out[f"{tag}_theil_sen_slope"] = None
             continue
-        x = [math.log(p * math.log(p / eps)) for p, _ in pts]
-        y = [math.log(n) for _, n in pts]
+        x = [p * math.log(p / eps) for p, _ in pts]
+        y = [n for _, n in pts]
         out[f"{tag}_theil_sen_slope"] = theil_sen(x, y)
         out[f"{tag}_n_points"] = len(pts)
     slopes = [out.get("fitted_theil_sen_slope"), out.get("crossing_theil_sen_slope")]
@@ -333,10 +345,17 @@ def recheck_c6_p_exponent(verdict: dict) -> dict:
         out["available"] = True
         out["least_squares_slope_from_claim_module"] = sw.get("exponent_vs_p_log_p")
         out["stated_exponent"] = 1.0
-        # The whole falsification is "the exponent exceeds 1". If a Theil-Sen refit does
-        # not agree, the finding is an artefact of least squares and must not stand.
-        out["both_estimators_exceed_stated_exponent"] = bool(min(slopes) > 1.0)
         out["min_theil_sen_slope"] = min(slopes)
+        out["max_theil_sen_slope"] = max(slopes)
+        ls = sw.get("exponent_vs_p_log_p")
+        # What this refit is for is estimator-robustness: does a median-of-slopes
+        # estimator land where least squares did? It must NOT be a test of whether the
+        # exponent exceeds the theorem's 1 -- gating on that would fail the whole run
+        # whenever the paper looked correct, which is an inverted contract, not a check.
+        out["theil_sen_agrees_with_least_squares"] = bool(
+            ls and abs(min(slopes) - ls) <= 1.0 and abs(max(slopes) - ls) <= 1.0
+        )
+        out["both_estimators_exceed_stated_exponent"] = bool(min(slopes) > 1.0)
     return out
 
 
@@ -474,11 +493,12 @@ def run(verdict: dict | None = None) -> dict:
     if agree:
         out["ok"] = bool(out["ok"] and all(agree.values()))
 
-    # If the p exponent was refit at all, the falsification it supports must survive the
-    # refit; otherwise the finding is a property of least squares and this checker fails.
+    # The refit gates on the two estimators AGREEING, not on the exponent exceeding the
+    # theorem's stated 1. An earlier revision gated on the latter, which meant the whole
+    # verifier exited nonzero in exactly the case where the paper turned out to be right.
     pr = out.get("c6_p_exponent_recheck") or {}
     if pr.get("available"):
-        out["ok"] = bool(out["ok"] and pr["both_estimators_exceed_stated_exponent"])
+        out["ok"] = bool(out["ok"] and pr["theil_sen_agrees_with_least_squares"])
     return out
 
 

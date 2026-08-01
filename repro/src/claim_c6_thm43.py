@@ -444,16 +444,32 @@ def p_sweep_confound_audit() -> dict:
     # Leakage outside the top-k subspace is expected to GROW with p at fixed n. That is
     # the honest finding this audit exists to surface, so it is reported as a number
     # rather than folded into a pass/fail.
-    leak = [r["empirical_m2_leakage_outside_topk"] for r in rows
-            if r["empirical_m2_leakage_outside_topk"] is not None]
+    # Leakage is undefined at the smallest p (there is no subspace outside the top k
+    # there), so the ratio below is between the smallest and largest p at which it is
+    # DEFINED. An earlier revision described it as "smallest to largest p", which named
+    # a p the ratio was not taken from.
+    measured_leak = [(r["p_total"], r["empirical_m2_leakage_outside_topk"]) for r in rows
+                     if r["empirical_m2_leakage_outside_topk"] is not None]
+    leak = [x for _, x in measured_leak]
     out = {
         "rows": rows,
         "fixed_by_construction": by_construction,
         "held_fixed": held,
         "measured_quantities_held_fixed": all(held.values()),
-        "leakage_ratio_first_to_last_p": (float(leak[-1] / leak[0]) if len(leak) >= 2 and leak[0] > 0 else None),
+        "leakage_ratio_first_to_last_measured_p": (
+            float(leak[-1] / leak[0]) if len(leak) >= 2 and leak[0] > 0 else None),
+        "leakage_measured_between_p": (
+            [measured_leak[0][0], measured_leak[-1][0]] if len(measured_leak) >= 2 else None),
+        "leakage_undefined_at_p": [r["p_total"] for r in rows
+                                   if r["empirical_m2_leakage_outside_topk"] is None],
         "leakage_grows_with_p": (bool(leak[-1] > leak[0]) if len(leak) >= 2 else None),
-        "ok": bool(held["min_pairwise_mean_separation"]),
+        # `min_pairwise_mean_separation` is constant by construction (the means are a
+        # QR-orthonormal frame scaled by MEAN_SCALE), so gating on it would be a flag
+        # that cannot fail. What this audit must guarantee instead is that it actually
+        # measured something at more than one p -- an audit run on one row would report
+        # "held fixed" vacuously.
+        "ok": bool(len(rows) >= 3 and sum(r["empirical_m2_leakage_outside_topk"] is not None
+                                          for r in rows) >= 2),
     }
     # Growing leakage is itself a confound: at fixed n the empirical second moment
     # degrades with p, so part of any measured n*(p) growth is the moment estimate
@@ -465,9 +481,10 @@ def p_sweep_confound_audit() -> dict:
     )
     out["why_not_attributable"] = "" if out["all_other_quantities_held_fixed"] else (
         "the empirical M2 top-k condition number is not constant across p"
-        + (f", and subspace leakage grows {out['leakage_ratio_first_to_last_p']:.0f}x "
-           "from the smallest to the largest p at fixed n"
-           if out["leakage_ratio_first_to_last_p"] else "")
+        + (f", and subspace leakage grows {out['leakage_ratio_first_to_last_measured_p']:.0f}x "
+           f"between p = {out['leakage_measured_between_p'][0]} and "
+           f"p = {out['leakage_measured_between_p'][1]} at fixed n"
+           if out["leakage_ratio_first_to_last_measured_p"] else "")
     )
     out["why"] = (
         "delta, the mean separation, the M2 conditioning, sigma and pi_min are identical "
@@ -517,7 +534,16 @@ def restart_budget_attribution(seeds=tuple(range(21))) -> dict:
         "tripling the restart budget did not materially lower n*, so the measured "
         "p-growth is not an artefact of the non-convex search's budget"
     )
-    out["ok"] = True
+    # This probe reports; it cannot "fail". What it must not do is report a conclusion
+    # from an empty comparison, so `ok` asserts that the comparison actually happened at
+    # both restart budgets on enough settings to mean anything.
+    out["ok"] = bool(len(ratios) >= 3)
+    if not out["ok"]:
+        out["p_exponent_attributable_to_the_theorem"] = False
+        out["why"] = (
+            f"only {len(ratios)} setting(s) produced an n* at both restart budgets; the "
+            "solver cannot be ruled out, so the p-exponent is treated as unattributable"
+        )
     return out
 
 
@@ -625,6 +651,29 @@ def run() -> dict:
     sweeps["contract_violations"] = violations
     sweeps["p_sweep_excluded_because_not_attributable"] = not p_decides
 
+    # `sweeps[k]["ok"]` is `(not informative) or (consistent with the theorem)`, so a
+    # sweep that measured nothing passes it. That is correct for deciding whether the
+    # verifier failed, and WRONG for deciding whether the sample-complexity condition was
+    # verified: a blank sheet is not a pass. `measured` must therefore be computed over
+    # the gating set only -- the p sweep, which is excluded from gating precisely because
+    # its exponent is not attributable, cannot be what makes the condition "measured".
+    # An earlier revision took `measured` from the union of all informative sweeps and
+    # consequently published "VERIFIED (sample-complexity condition ...)" off the back of
+    # the one sweep it had already ruled inadmissible.
+    gating_informative = {
+        k: bool(sweeps[k].get("informative")) for k in ("sigma", "pi_min", "p") if k in gating
+    }
+    sweeps["gating_sweeps_informative"] = gating_informative
+    sweeps["sample_complexity_condition_measured"] = bool(
+        gating_informative and all(gating_informative.values())
+    )
+    sweeps["why_condition_not_measured"] = None if sweeps["sample_complexity_condition_measured"] else (
+        "the gating sweeps "
+        + ", ".join(k for k, v in gating_informative.items() if not v)
+        + " are NOT INFORMATIVE at this budget, so the sample-complexity condition is "
+        "unmeasured rather than satisfied"
+    )
+
     # A measured, attributable violation is a RESULT, not a broken verifier: the
     # p-exponent was resolved by both estimators, the solver was ruled out, and every
     # other quantity in the bound was held fixed. The verifier therefore succeeds and
@@ -634,7 +683,7 @@ def run() -> dict:
     # An unmeasured exponent is absent evidence, not failed evidence: it must not fail
     # the verifier, and it must not be reported as a verified sample-complexity
     # condition either. The verdict is downgraded to say exactly what was measured.
-    measured = sweeps.get("exponents_measured", False)
+    measured = sweeps["sample_complexity_condition_measured"]
     proof_gap = sym["ok"]
     stated_weight_bound_violated = bool(boundary.get("ok"))
 

@@ -19,6 +19,20 @@ import re
 import sys
 from pathlib import Path
 
+# A "Control" cell used to be a presence check: does the page have a negative-control
+# block? Presence is not discrimination. A control that runs the method on corrupted
+# input can fail; an arithmetic non-equality between two fixed rationals cannot, however
+# correctly it is reported. The distinction is declared per claim here and rendered, so
+# the column a judge scans cannot read the same for both.
+CONTROL_IS_DISCRIMINATING = {
+    "C1": True,   # CARE re-run on column-permuted ASSET judge scores
+    "C2": True,   # same permutation control
+    "C3": False,  # arithmetic only: 0.705 must not reproduce 13.4%. See Limitations 18.
+    "C4": True,   # exact counterexamples; the appendix form is checked and survives
+    "C5": True,   # stage decomposition + oracle-sparse control, either could fail
+    "C6": True,   # NC1 over-sampling and NC2 frozen-n, both re-run the estimator
+}
+
 CLAIMS = [
     ("C1", "claim-1-ultrafeedback", "claim_c123_benchmarks.py"),
     ("C2", "claim-2-average-improvement", "claim_c123_benchmarks.py"),
@@ -91,7 +105,10 @@ def main(staging: str, redteam: str | None) -> int:
             "| "
             + " | ".join(
                 [cid, f"[{slug}](#/{slug})"]
-                + ["✓" if checks[c] else "✗" for c in cols]
+                + [("✗" if not checks[c] else
+                    "✓" if c != "Control" or CONTROL_IS_DISCRIMINATING[cid] else
+                    "◐ arithmetic only")
+                   for c in cols]
                 + [verdict]
             )
             + " |"

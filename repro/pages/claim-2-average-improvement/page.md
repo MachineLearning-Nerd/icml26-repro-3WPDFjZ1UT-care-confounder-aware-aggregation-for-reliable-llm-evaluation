@@ -194,8 +194,12 @@ statistic being *exactly* invariant while another is not, and floating point is 
 wrong instrument for confirming an exact invariance — `spread == 0.0` in `float64`
 could be rounding. Over `Fraction`s the invariance is set-equality of exact rationals,
 and the weighted-mean identity is an exact `==` rather than a residual below a
-threshold. The checker fails if the two implementations disagree on
-`falsified_as_worded`, so the verdict cannot rest on one implementation.
+threshold. The checker fails the whole run if the two implementations disagree on
+`scope_qualification_established` or on the unweighted average — see
+`agreement_with_claim_module` in [`raw/verdict.json`](raw/verdict.json) — so the verdict
+cannot rest on one implementation. (An earlier revision of this sentence named a field,
+`falsified_as_worded`, that the code had already renamed; a reader checking it would have
+found nothing.)
 
 ## Reproduce
 

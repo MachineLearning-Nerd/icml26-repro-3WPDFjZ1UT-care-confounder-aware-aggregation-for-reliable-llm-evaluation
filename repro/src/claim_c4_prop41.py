@@ -233,7 +233,7 @@ def thm_d4_exact_constant(seed: int = 20260801) -> dict:
             )
     sup = max(r["sup_over_spectral_ball"] for r in rows)
     return {
-        "ok": sup <= 4.0,
+        "ok": bool(sup <= 4.0),
         "claimed_constant": 4.0,
         "derived_upper_bound": 2.0,
         "attained_sup_ratio": sup,
@@ -279,7 +279,7 @@ def thm_d4_adversarial_constant(seed: int = 20260801, n_restarts: int = 24) -> d
             rows.append({"p": p, "h": h, "i": i, "sup_ratio": best})
     sup = max(r["sup_ratio"] for r in rows)
     return {
-        "ok": sup <= 4.0,
+        "ok": bool(sup <= 4.0),
         "claimed_constant": 4.0,
         "attained_sup_ratio": sup,
         "derived_tight_constant": 2.0,
@@ -350,7 +350,7 @@ def thm_d4_finite_perturbation(seed: int = 7, n_trials: int = 400) -> dict:
             worst = max(worst, err / bound)
             rows.append({"trial": trial, "i": i, "err": err, "bound": bound})
     return {
-        "ok": worst <= 1.0,
+        "ok": bool(worst <= 1.0),
         "n_eigenpairs_checked": len(rows),
         "worst_err_over_bound": worst,
         "bound_never_violated": bool(worst <= 1.0),

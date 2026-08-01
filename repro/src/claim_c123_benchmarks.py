@@ -455,6 +455,14 @@ def single_configuration_audit() -> dict:
     top_baseline = max(baseline_best, key=baseline_best.get) if baseline_best else None
 
     return {
+        # The audit is descriptive, but it is presented on the Claim 3 page as a contract
+        # element, so it needs an `ok` the stage can gate on. What must hold for it to
+        # mean anything is that it actually ranked every CARE variant on every dataset.
+        "ok": bool(
+            len(per_config) == len(TABLE2_CARE)
+            and all(len(c["rank_per_dataset"]) == n_ds for c in per_config.values())
+            and top_baseline is not None
+        ),
         "methods_compared": all_methods,
         "per_care_configuration": per_config,
         "family_count_taking_best_variant_per_dataset": family_wins,
@@ -980,7 +988,7 @@ def run(outdir: Path | None = None) -> dict:
         "table1_asset": t1,
         "table2_civilcomments_pku_better": t2,
         "negative_controls": nc,
-        "ok": bool(sha_ok and arith["ok"] and conv["ok"] and comparator["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
+        "ok": bool(sha_ok and arith["ok"] and conv["ok"] and comparator["ok"] and single["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
     }
 
 

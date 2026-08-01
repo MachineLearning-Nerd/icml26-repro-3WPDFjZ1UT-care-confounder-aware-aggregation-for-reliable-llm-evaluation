@@ -128,6 +128,15 @@ def _control(v):
         )
         + f"\n\nControl behaves as intended: {yesno(nc.get('control_behaves_as_intended'))}. "
         + (nc.get("why") or "")
+        + "\n\n**Why the first row differs from the reproduction table above.** The "
+          "reproduction runs the authors' full Table 1 procedure — five seeds, each with "
+          "the paper's validation-based γ grid — and reports the mean over seeds. This "
+          "control runs a single fixed configuration at γ = 1.0 with no seed averaging, "
+          "because what it has to hold constant is the aggregator, not the tuning: the "
+          "only thing allowed to differ between its two rows is whether the judge matrix "
+          "has been column-permuted. The two numbers are therefore different quantities "
+          "and are not expected to match; only the gap between the rows of this table is "
+          "evidence."
     )
 
 
@@ -621,7 +630,8 @@ def c6_confound(v):
     ]
     fixed = c.get("fixed_by_construction", {})
     held = c.get("held_fixed", {})
-    ratio = c.get("leakage_ratio_first_to_last_p")
+    ratio = c.get("leakage_ratio_first_to_last_measured_p")
+    between = c.get("leakage_measured_between_p") or []
     body = table(
         ["p", "min ‖μᵢ−μⱼ‖", "empirical cond(M̂₂) on top-k", "leakage outside top-k"], rows
     )
@@ -633,11 +643,80 @@ def c6_confound(v):
         f"{fixed.get('why_these_cannot_drift', '')}\n\n"
         f"**Measured, and held fixed across the sweep:** "
         + ", ".join(f"{k} {yesno(vv)}" for k, vv in held.items())
-        + (f"\n\nLeakage outside the signal subspace grows **{num(ratio, 0)}×** from the "
-           f"smallest to the largest `p` at fixed `n`. " if ratio else "\n\n")
+        + (f"\n\nLeakage outside the signal subspace grows **{num(ratio, 0)}×** between "
+           f"`p` = {between[0]} and `p` = {between[1]} at fixed `n` — the smallest and "
+           f"largest `p` at which it is defined; it is undefined at "
+           f"`p` = {', '.join(str(x) for x in c.get('leakage_undefined_at_p') or [])}, "
+           f"where there is no subspace outside the top `k`. "
+           if ratio and len(between) == 2 else "\n\n")
         + f"A measured p-exponent is attributable to the theorem's own factor: "
           f"{yesno(c.get('all_other_quantities_held_fixed'))}."
         + (f" {c.get('why_not_attributable')}." if c.get("why_not_attributable") else "")
+    )
+
+
+def env_runtimes(v):
+    label = {
+        "C1_C2_C3_tables": "Claims 1-3 — Table 1/2 arithmetic, audits and cached benchmark reads",
+        "C4_prop41": "Claim 4 — symbolic D.3, exact D.4 supremum, both counterexamples",
+        "C5_thm42": "Claim 5 — symbolic chain, Davis-Kahan search, calibrated sweep, η tail",
+        "C6_thm43": "Claim 6 — symbolic chain, calibrated n* sweeps, boundary probe, confound audit",
+    }
+    claims = v.get("claims", {})
+    rows, total = [], 0.0
+    for cid, name in label.items():
+        rt = (claims.get(cid) or {}).get("runtime_s")
+        if rt is None:
+            continue
+        total += rt
+        rows.append([name, f"{num(rt, 2)} s"])
+    if not rows:
+        raise SystemExit("env.runtimes: no per-stage runtime_s in the verdict")
+    published = v.get("total_runtime_s")
+    env = v.get("environment", {})
+    rows.append(["**Sum of stages**", f"**{num(total, 2)} s**"])
+    rows.append(["Published `total_runtime_s`", f"{num(published, 2)} s"])
+    agree = published is not None and abs(total - published) < 1.0
+    return table(["Stage", "Wall clock"], rows) + (
+        f"\n\nStages sum to the published total: {yesno(agree)} · "
+        f"{env.get('cgroup_cpu_quota', '—')} vCPU on `{env.get('hf_flavor', 'cpu-upgrade')}` · "
+        f"thread pools pinned to {env.get('threads_pinned_to', '—')} · "
+        f"Git SHA `{env.get('git_sha', '—')}`."
+    )
+
+
+def c6_screen(v):
+    """Render the per-setting screen for the p sweep, so its spreads cannot be typed."""
+    sc = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", "p",
+           "per_setting_screen", default={})
+    recs = (sc.get("usable") or []) + (sc.get("dropped") or [])
+    recs = [r for r in recs if r.get("r2") is not None]
+    if not recs:
+        raise SystemExit("c6.screen: per_setting_screen carries no scored settings")
+    recs.sort(key=lambda r: r.get("p_total") or 0)
+    rows = [
+        [
+            r.get("p_total"),
+            num(r.get("n_star_fit"), 1),
+            num(r.get("n_star_crossing"), 1),
+            num(r.get("ratio"), 2) + "×",
+            num(r.get("r2"), 3),
+            num(r.get("decay_slope"), 3),
+            "usable" if r.get("usable") else "**dropped**",
+        ]
+        for r in recs
+    ]
+    r2s = [r["r2"] for r in recs]
+    ratios = [r["ratio"] for r in recs if r.get("ratio") is not None]
+    return table(
+        ["p", "n* (fitted)", "n* (crossing)", "estimator ratio", "r²", "decay slope", "screen"],
+        rows,
+    ) + (
+        f"\n\nAcross the {len(recs)} settings: `r²` ranges **{num(min(r2s), 3)} to "
+        f"{num(max(r2s), 3)}** against the screen's floor of 0.5, and the two `n*` "
+        f"estimators disagree by up to **{num(max(ratios), 2)}×** against a limit of 3×. "
+        f"**{sc.get('n_usable')} of {sc.get('n_settings')}** settings survive; the fit "
+        f"that produces the exponent uses only those."
     )
 
 
@@ -970,17 +1049,29 @@ CLAIM_KEY = {
 
 # For C1-C3 the run reports one combined verdict, so each page states its own.
 PAGE_VERDICT = {
-    "C1": "**VERIFIED** (the 26.8 % arithmetic, exactly, and a comparator-selection audit "
-          "over the full 6 × 4 grid finding no cherry-picking — the headline leaves "
-          "6.28 pp unclaimed) / **BLOCKED** (the UltraFeedback MAE pair — the authors "
-          "released no UltraFeedback judge-score matrix)",
+    "C1": "**BLOCKED on the claim's empirical content** — the UltraFeedback MAE pair "
+          "0.623 / 0.851 is never re-measured here, because the authors released no "
+          "UltraFeedback judge-score matrix and regenerating one needs GPU inference "
+          "(Appendix E.2). What is **VERIFIED** is arithmetic on figures the paper "
+          "printed: the 26.8 % reduction follows exactly from those two entries, and a "
+          "comparator-selection audit over the full 6 × 4 grid finds no cherry-picking — "
+          "the headline leaves 6.28 pp unclaimed. Both halves can only fail if the paper "
+          "divided wrongly. Added to that is an internal-consistency "
+          "audit against Appendix E.8 Table 7, which republishes the same CARE-SVD row: "
+          "Claim 1's own UltraFeedback value **is** corroborated by the paper's second "
+          "report of it, while two other columns of that row (FeedbackQA, ASSET) do not "
+          "reconcile with Table 1",
     "C2": "**VERIFIED with a quantified scope qualification** — 17.37 % and 12.75 % are "
           "reproduced exactly, and the definition that yields them is identified "
           "uniquely: it is an MAE-weighted mean of the per-dataset improvements placing "
           "84.4 % of its weight on ASSET. The unit-invariant average across the six "
           "benchmarks is 15.19 %. This is a scope qualification, **not a falsification** "
           "— an earlier revision of this page wrongly called it one / **BLOCKED** (five "
-          "of six Table 1 columns have no released judge outputs)",
+          "of six Table 1 columns have no released judge outputs). A second, independent "
+          "defect: Appendix E.8 Table 7 republishes the CARE-SVD row this statistic is "
+          "computed from, and disagrees with Table 1 on FeedbackQA well outside the "
+          "paper's own reported seed noise; recomputed from the appendix's own row the "
+          "headline is not 17.37 %",
     "C3": "**VERIFIED** as arithmetic over the paper's published nine-method grid (best on "
           "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure), with the "
           "scope qualification that the count of 5 is a two-variant family count — no "
@@ -1090,6 +1181,8 @@ GENERATORS = {
     "c1.control": c1_control,
     "c2.definitions": c2_definitions,
     "c1.comparator": c1_comparator,
+    "c6.screen": c6_screen,
+    "env.runtimes": env_runtimes,
     "c1.appendix": appendix_consistency,
     "c2.appendix": appendix_consistency,
     "c3.single_config": c3_single_config,
