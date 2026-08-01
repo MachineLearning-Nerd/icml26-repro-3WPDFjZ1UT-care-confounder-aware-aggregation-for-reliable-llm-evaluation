@@ -724,3 +724,83 @@ defect *in the verifier* that the previous round's repairs had introduced or mis
 rate is falling and the severity is falling with it — this round found one conclusion-level
 error against six in the round before — but the honest reading is that a fourth review
 would find more, not none.
+
+## 28. A fourth blind reviewer found twenty defects, and the worst one was introduced by the repair for the third
+
+The candidate built after item 27's repairs was reviewed blind again. The reviewer scored
+Claim 4 at full credit and the other five partial, and listed twenty defects. Two things
+about that round are worth stating before the list.
+
+**The worst defect was mine, and it was new.** Repairing item 27's σ-probe finding meant
+giving the probe an `ok` field that means "the fit produced finite numbers" — deliberately,
+because a probe that decides nothing must not fail the verifier. But a renderer read that
+same field and printed, in the Claim 6 results block:
+
+> σ³ violation hypothesis supported by the data: **yes**
+
+That is an affirmative empirical falsification of Theorem 4.3, asserted on the strength of
+"the least-squares fit returned two finite floats". It could not have read **no** unless the
+probe crashed. It contradicted the verdict header at the top of the same page, the
+machine-generated discrimination block forty lines below it, and item 16. `verdict.json`
+carried the same inverted boolean under `stated_weight_bound_empirically_violated`, so a
+machine reader keying on it got the opposite of the published verdict.
+
+This is the fourth time this campaign has shipped a check that cannot fail, and the first
+time one was created by the fix for the previous one. The probe now publishes
+`excludes_sigma3_hypothesis`, `excludes_theorem_hypothesis` and `discriminates`; the
+finding is `None` rather than `true`; and the `ok` field carries an `ok_means` string
+saying what it does and does not assert.
+
+**A rendering bug was corrupting numbers across three pages.** `num()` stripped trailing
+zeros, so `num(100.0, 0)` returned `"1"`, `num(0.0, 0)` returned the empty string — a slope
+of 0 vanished mid-table — and measured differences of 3×10⁻⁴ printed as an exact `0`,
+showing readers exact agreement where the run had measured approximate agreement. Stripping
+is removed.
+
+**Two statistical errors, one of which was under-claiming.** The Table 1 vs Table 7 z-test
+divided by the per-seed standard deviation while comparing two *means*. The paper never
+states its seed count, so rather than assume one, the sensitivity is now published: the
+"four of six columns agree" headline holds at every plausible seed count, but ASSET is a
+decisive disagreement rather than a marginal one. Our own ASSET adjudication had the same
+error, and there the seed count *is* known — corrected, our reproduction excludes Table 7's
+value and sides with Table 1. That is a stronger result than was published, and it is still
+**not** claimed, because the reviewer also found that two of our five ASSET seeds return
+bit-identical values: at four independent draws the exclusion fails. It is reported as not
+adjudicating, with both arithmetics shown.
+
+**Three more gates that could not fail.** Claim 5's η contract tested the *lower* endpoint
+of its interval, so a tail exponent of 2.0 — a fourfold violation of √η — would have passed;
+it now tests the upper endpoint. The independent checker's Claim 6 gate had regressed to the
+inverted form item 25 records removing, failing the run precisely when the paper turns out to
+be right; it now gates on the two derivations *agreeing*. And a gate reading
+`"key" in result` was constant-true, because the writer always writes that key.
+
+**Two claims weaker than their names.** `mean_bound_reproduced_exactly` tested only that the
+derived-over-stated ratio is free of σ — a bound carrying δ⁻² against a stated δ⁻¹ would have
+passed. It now tests constancy in σ, δ, p, ε and n; the ratio is `√3·C_dec·C/C₁`, so the name
+is earned. And the Claim 6 negative controls used different seed offsets at the one
+configuration they share, reporting medians 5.2× apart there — a fact about seed noise that
+read as a fact about the estimator. They now share a seed stream, publish min/max per point
+and an effect-versus-noise ratio, and the shared-point identity gates the run.
+
+**Numbers that were typed rather than generated.** Claim 3's PKU-BETTER section opened with
+accuracies of "exactly 0.0 and exactly 1.0" and cited the authors' `class_balance: 100.0`.
+None of it is in `verdict.json`; they were exploratory observations this artifact does not
+ship. They are removed, and the section now rests entirely on the label-integrity audit,
+which *is* in the record. ASSET's improvement was published as 17.93 % on two pages and
+17.92 % on a third; 17.92 is correct, and the cause was a pre-rounded intermediate rounded a
+second time by the renderer. The source audit said eight blocked columns where every other
+page says nine.
+
+**One structural gap.** The shard cache is offered on the Raw data page as the artifact's
+one independently checkable layer, and no page linked to any of its fifteen files — so a
+reviewer following the links-only rule this logbook sets for itself could not reach the
+evidence it was being pointed at. All fifteen are now linked.
+
+**What this round says about the process.** Four blind reviews have found 19, 20, 13 and 20
+defects. The count is not falling. What has changed is where they are: this round found one
+conclusion-level error, and it was in a repair rather than in the original work. The correct
+inference is not that the artifact is converging on correct — it is that a self-reviewed
+change to this codebase has a meaningful chance of introducing a defect of the same class it
+is fixing, and that the only thing that has reliably caught those is an adversarial reader
+who was told nothing about where to look.
