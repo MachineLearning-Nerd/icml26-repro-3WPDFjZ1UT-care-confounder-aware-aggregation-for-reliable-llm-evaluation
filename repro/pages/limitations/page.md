@@ -267,6 +267,9 @@ how far to trust the rest.
   at all.
 * The Claim 6 boundary table **labelled a ratio as an error**. The values shown were
   `error_over_stated_unit`; the median weight errors are an order of magnitude smaller.
+  The table now prints `n`, the raw weight error, the bound unit and the ratio as
+  separate labelled columns. (This item itself was briefly wrong: an earlier version of
+  this list said the mislabel was fixed before the renderer had actually been changed.)
 * The restart-budget control ran **5 seeds against the sweep's 9**. That difference alone
   moves `n*` by 31–37 %, larger than the control's own 20 % threshold, so it was
   measuring its seed count. Both now use the same seeds.

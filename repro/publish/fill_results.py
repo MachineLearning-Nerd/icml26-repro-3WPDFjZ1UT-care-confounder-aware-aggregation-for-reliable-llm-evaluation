@@ -610,18 +610,33 @@ def c6_symbolic(v):
 def c6_boundary(v):
     b = g(v, "claims", "C6_thm43", "route_c_boundary_sigma_probe", default={})
     rows = [
-        [num(r.get("sigma_max"), 2), num(r.get("error_over_stated_unit"), 4)]
+        [num(r.get("sigma_max"), 2), num(r.get("n"), 0),
+         num(r.get("median_max_abs_pi_error"), 4),
+         num(r.get("stated_bound_unit_sqrt_plogp_over_n"), 4),
+         num(r.get("error_over_stated_unit"), 4)]
         for r in b.get("rows", [])
     ]
     ci = b.get("slope_ci95") or [None, None]
-    return table(["σ_max", "weight error along the boundary `n = 20 000·σ⁶`"], rows) + (
+    # An earlier revision printed ONLY the last column and headed it "weight error".
+    # Those are ratios, an order of magnitude larger than the errors, and the mislabel
+    # made this table appear to contradict the negative controls below.
+    return table(
+        ["σ_max", "n on the boundary", "median weight error `max|π̂−π|`",
+         "stated bound unit `√(p log(p/ε)/n)`", "ratio error / bound unit"],
+        rows,
+    ) + (
         f"\n\nFitted exponent **{num(b.get('loglog_slope_error_over_stated_bound_vs_sigma'), 4)} "
         f"± {num(b.get('slope_stderr'), 4)}** "
         f"(95 % CI {num(ci[0], 3)} to {num(ci[1], 3)}). "
         f"Predicted if the σ³ factor were genuinely missing: "
         f"{num(b.get('predicted_slope_if_sigma3_is_missing'), 1)}; predicted if the theorem is "
         f"correct as stated: {num(b.get('predicted_slope_if_theorem_correct'), 1)}. "
-        f"σ³ violation hypothesis supported by the data: {yesno(b.get('ok'))}."
+        f"σ³ violation hypothesis supported by the data: {yesno(b.get('ok'))}.\n\n"
+        "The exponent is fitted to the **ratio** column, which is the quantity the "
+        "theorem bounds by a constant; the raw weight error itself falls with σ because "
+        "n rises as σ⁶ along the boundary. Both columns are shown so the two cannot be "
+        "confused, and so this table can be compared with the negative controls below — "
+        "which report raw errors, not ratios."
     )
 
 
