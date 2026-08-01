@@ -682,6 +682,7 @@ def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2, 3, 4)) 
             return {"sigma_max": sigma, "n": n, "median_err": None, "n_seeds_usable": 0}
         return {
             "sigma_max": sigma, "n": n,
+            "errs": [float(e) for e in errs],
             "median_err": float(np.median(errs)),
             "min_err": float(np.min(errs)),
             "max_err": float(np.max(errs)),
@@ -697,21 +698,38 @@ def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2, 3, 4)) 
     frozen = [point(sigma, n_base, "nc2") for sigma in (1.0, 2.0, 3.0)]
     nc2 = frozen[-1]["median_err"] > frozen[0]["median_err"]
 
-    def effect_vs_noise(rows, lo_i, hi_i):
-        """Is the control's claimed effect larger than the seed spread it sits in?"""
-        a, b = rows[lo_i], rows[hi_i]
-        if not (a.get("median_err") and b.get("median_err")):
+    def effect_vs_noise(a_errs, b_errs, expect_b_larger):
+        """Does the control's effect survive seed-to-seed variation?
+
+        Comparing the ratio of medians against the max/min spread within a setting -- the
+        first thing tried here -- is the wrong instrument, and its own output showed why:
+        the tensor power method fails to converge on an occasional seed, so one run at
+        n = 2.56M returned 0.248 against a median of 0.00044 and made max/min read 749x.
+        A single non-convergent seed then swamps a clean, monotone trend in the medians.
+
+        The robust question is a rank question: across all seed pairs (one from each
+        endpoint), how often does the difference go the way the control requires? That is
+        the Mann-Whitney statistic scaled to [0, 1], it is immune to one wild value, and
+        it says directly how reliable the control is rather than how noisy the runs are.
+        """
+        if not a_errs or not b_errs:
             return None
-        effect = max(a["median_err"], b["median_err"]) / min(a["median_err"], b["median_err"])
-        noise = max(r.get("spread_max_over_min") or 1.0 for r in rows)
+        pairs = [(x, y) for x in a_errs for y in b_errs]
+        agree = sum(1 for x, y in pairs if (y > x) == expect_b_larger and y != x)
+        frac = agree / len(pairs)
         return {
-            "effect_ratio": round(float(effect), 3),
-            "worst_within_setting_seed_spread": round(float(noise), 3),
-            "effect_exceeds_seed_spread": bool(effect > noise),
+            "n_seed_pairs": len(pairs),
+            "pairs_in_the_expected_direction": agree,
+            "fraction_in_the_expected_direction": round(float(frac), 3),
+            "interpretation": (
+                "the fraction of endpoint seed pairs whose difference goes the way this "
+                "control requires (the Mann-Whitney statistic on [0,1]); 0.5 is chance"
+            ),
+            "control_is_reliable_across_seeds": bool(frac >= 0.8),
         }
 
-    nc1_power = effect_vs_noise(over, 0, -1)
-    nc2_power = effect_vs_noise(frozen, 0, -1)
+    nc1_power = effect_vs_noise(over[0]["errs"], over[-1]["errs"], expect_b_larger=False)
+    nc2_power = effect_vs_noise(frozen[0]["errs"], frozen[-1]["errs"], expect_b_larger=True)
     shared = {
         "configuration": {"sigma_max": 1.0, "n": n_base},
         "nc1_median": over[0]["median_err"],

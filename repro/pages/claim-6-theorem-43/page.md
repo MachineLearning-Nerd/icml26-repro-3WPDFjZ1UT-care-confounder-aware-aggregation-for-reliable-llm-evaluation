@@ -304,24 +304,45 @@ Measured:
 *(pending release run)*
 <!-- /FILL -->
 
-Both are medians over three seeds. NC2 is the discriminating one: it fails exactly when
-the `σ`-dependence the theorem asserts is genuinely present in the estimator. Had NC2
-been flat, the σ-sweep in the boundary probe above would have been measuring nothing,
-and the null result reported there would have been uninformative rather than evidence.
+Both are medians over five seeds, with each point's seed range shown beside it. NC2 is the
+one that bears on the σ probe: it fails exactly when the `σ`-dependence the theorem asserts
+is absent from the estimator. Had NC2 been flat, the σ-sweep above would have been sweeping
+a parameter the estimator does not respond to, and its null result would have been
+uninformative for that reason as well as the one given there.
 
-**How far NC2's pass reaches, which is less far than "discriminating" suggests.** Its
-contract compares only the endpoints, `σ = 3` against `σ = 1`, and the block above reports
-separately whether the error rises at *every* step of the grid. It does not: the error
-climbs from `σ = 1` to `σ = 2` and then falls back slightly at `σ = 3`. A blind reviewer
-raised this, and it is a real qualification. The reversal is the signature of the
-estimator saturating at large `σ` — beyond some noise level the weight error stops
-tracking `σ` because the recovery has already degraded to near-chance — so NC2
-establishes that a `σ`-dependence exists in this estimator near `σ = 1`, and does **not**
-establish that it is monotone across the whole grid. That distinction matters here
-because the σ boundary probe operates over `σ ∈ [1.0, 2.0]`, inside the region where the
-dependence is present; had the probe extended to `σ = 3` it would have been reading a
-saturated regime. It is one more reason the probe's null result is reported as
-uninformative rather than as evidence of absence.
+An earlier revision called NC2 "**the** discriminating one" on three seeds and bare
+medians. That was stronger than the evidence: the reliability figures in the block above
+are what decide whether either control discriminates, and they are measured rather than
+claimed.
+
+**How far NC2's pass reaches.** Its contract compares only the endpoints, `σ = 3` against
+`σ = 1`, so a non-monotone interior would satisfy it. The block above therefore reports
+separately whether the error rises at *every* step of the grid, and whether each control's
+direction survives seed-to-seed variation at all — both rendered from the run, not asserted
+here.
+
+This section has been rewritten twice for reasons worth recording, because both were
+measurement errors of ours rather than facts about the estimator.
+
+* A blind reviewer found that NC1 and NC2 used **different seed offsets** at the one
+  configuration they share — `σ = 1`, `n = 20 000` — and reported medians 5.2× apart
+  there. That is a statement about seed noise, not about either control. They now draw
+  from one seed stream, the shared point is literally the same measurement, and the
+  identity of the two medians **gates the run**.
+* An earlier revision of this paragraph then reported NC2 as **non-monotone**, rising from
+  `σ = 1` to `σ = 2` and falling back at `σ = 3`, and attributed it to the estimator
+  saturating at large `σ`. With the seeds unified and the count raised from three to five,
+  it is monotone. The reversal was an artefact of three seeds and a mismatched offset, and
+  the saturation story built on it is withdrawn — it was an explanation for something that
+  was not happening.
+
+What remains true, and is the honest limit on both controls: the tensor power method does
+not always converge, so an occasional seed returns an error two orders of magnitude above
+the median for its setting. That is why the block reports a **rank** statistic — the
+fraction of endpoint seed pairs that move the way the control requires — rather than a
+ratio of medians against a spread. A single non-convergent seed destroys any max/min
+measure while leaving the median trend intact, and an intermediate revision of this page
+used exactly such a measure and drew the wrong conclusion from it.
 
 ## Independent check
 
