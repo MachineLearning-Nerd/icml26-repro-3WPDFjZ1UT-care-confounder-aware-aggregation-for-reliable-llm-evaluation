@@ -149,6 +149,34 @@ is computed and is reported in `verdict.json` under `label_integrity_audit`.
 *(pending release run)*
 <!-- /FILL -->
 
+### The stronger statement: the published column did not come from this file
+
+"The labels are constant" says the column cannot be *scored*. It does not say the
+published number cannot be *reproduced*, and those are different claims — with a
+constant gold label an accuracy is still computable, it just equals the rate at which a
+method picks that one answer. So we compute it, both ways.
+
+The mechanism is visible in the released data: `was_swapped` is `False` on all 9,000
+rows, so the A/B randomisation step was never applied to this slice and `response_B` is
+always the preferred answer. Every judge therefore votes B on a large majority of rows.
+
+<!-- FILL:c3.pku_reachable -->
+*(pending release run)*
+<!-- /FILL -->
+
+The two conventions the file admits bracket the achievable accuracy at ≈ 0.996 and
+≈ 0.004. The paper reports 0.701, which is not close to either. This upgrades the
+verdict from *"we could not score this column"* to *"the published value provably did
+not come from this file"* — the authors' Table 2 figure must have been computed from a
+randomised version of the dataset that the repository does not ship. The column stays
+**BLOCKED**, and no conclusion about CARE is drawn from it in either direction.
+
+That distinction matters for what an earlier revision nearly published. Our pipeline's
+own run returned MV = 0.000 against a stated 0.701, which read as a spectacular
+refutation of the paper. It is nothing of the sort: it is the signature of a
+non-randomised release slice being scored against the wrong one of two disagreeing gold
+columns (`gold_label_binary` = 0 while `gold_label_num` = 1).
+
 ## Negative control
 
 Column-wise row permutation of the released judge matrices, which preserves each

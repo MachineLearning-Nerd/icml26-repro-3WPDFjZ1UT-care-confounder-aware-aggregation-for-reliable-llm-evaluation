@@ -216,6 +216,25 @@ def c1_comparator(v):
     )
 
 
+def c3_pku_reachable(v):
+    r = g(v, "claims", "C1_C2_C3_tables", "label_integrity_audit", "datasets",
+          "PKU-BETTER", "reachable_accuracy_under_each_convention", default={})
+    if not r.get("available"):
+        return "The released PKU-BETTER archive was not present in this run."
+    per = r.get("fraction_predicting_B_per_judge", {})
+    rows = [[k, f"{num(x * 100, 2)} %"] for k, x in sorted(per.items(), key=lambda kv: -kv[1])]
+    body = table(["Released judge model", "Rows on which it answers B"], rows)
+    return body + (
+        f"\n\nAcross {r.get('n_judges')} judges and {r.get('n_rows')} rows, majority vote "
+        f"reaches **{num(r.get('majority_vote_accuracy_if_gold_is_B'), 4)}** if the gold "
+        f"answer is B everywhere and **{num(r.get('majority_vote_accuracy_if_gold_is_A'), 4)}** "
+        f"if it is A everywhere — the only two conventions the file admits. The paper "
+        f"reports **{num(r.get('paper_reported_mv_accuracy'), 3)}**. The closest reachable "
+        f"value is **{num(r.get('closest_reachable_gap'), 4)}** away, and the published "
+        f"figure is reachable: {yesno(r.get('published_value_reachable'))}."
+    )
+
+
 def c3_single_config(v):
     s = g(v, "claims", "C1_C2_C3_tables", "single_configuration_audit", default={})
     cfg = s.get("per_care_configuration", {})
@@ -962,6 +981,7 @@ GENERATORS = {
     "c2.definitions": c2_definitions,
     "c1.comparator": c1_comparator,
     "c3.single_config": c3_single_config,
+    "c3.pku_reachable": c3_pku_reachable,
     "c2.weights": c2_weights,
     "c2.invariance": c2_invariance,
     "c2.per_dataset": c2_per_dataset,

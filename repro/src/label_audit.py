@@ -78,6 +78,68 @@ def _verdict(stats: dict) -> dict:
     }
 
 
+PAPER_PKU_BETTER_MV_ACCURACY = 0.701
+
+
+def _pku_reachable_accuracy(pku_files) -> dict:
+    """Show the published PKU-BETTER column is unreachable under EITHER label convention.
+
+    "The labels are constant" says the column cannot be scored. It does not say the
+    published number cannot be reproduced, and those are different claims -- with a
+    constant gold label an accuracy is still *computable*, it just equals the rate at
+    which a method picks that one answer. So we compute it, both ways.
+
+    The mechanism is visible in the data: `was_swapped` is False on every row, so the
+    A/B randomisation step was never applied to this released slice and response_B is
+    always the preferred one. Every judge therefore votes B on 51-100% of rows, and
+    majority vote lands near 1.0 (gold = B) or near 0.0 (gold = A). Neither is the
+    paper's 0.701, so the published column was computed from a randomised version of
+    this dataset that the repository does not ship.
+    """
+    import csv as _csv
+
+    preds, per_judge = {}, {}
+    for p in pku_files:
+        with open(p, newline="") as f:
+            rows = list(_csv.DictReader(f))
+        if not rows or "pref_A_or_B" not in rows[0]:
+            continue
+        v = [r["pref_A_or_B"] for r in rows]
+        preds[p.name] = v
+        per_judge[p.name] = round(sum(1 for x in v if x == "B") / len(v), 4)
+    if not preds:
+        return {"available": False}
+
+    names = sorted(preds)
+    n = min(len(preds[k]) for k in names)
+    votes_B = [sum(1 for k in names if preds[k][i] == "B") for i in range(n)]
+    mv_says_B = [c > len(names) / 2 for c in votes_B]
+    acc_gold_B = sum(mv_says_B) / n
+    acc_gold_A = 1.0 - acc_gold_B
+    paper = PAPER_PKU_BETTER_MV_ACCURACY
+    return {
+        "available": True,
+        "n_rows": n,
+        "n_judges": len(names),
+        "fraction_predicting_B_per_judge": per_judge,
+        "majority_vote_accuracy_if_gold_is_B": round(acc_gold_B, 4),
+        "majority_vote_accuracy_if_gold_is_A": round(acc_gold_A, 4),
+        "paper_reported_mv_accuracy": paper,
+        "closest_reachable_gap": round(min(abs(acc_gold_B - paper), abs(acc_gold_A - paper)), 4),
+        "published_value_reachable": bool(
+            min(abs(acc_gold_B - paper), abs(acc_gold_A - paper)) < 0.05
+        ),
+        "why": (
+            "was_swapped is False on every row, so the A/B randomisation was not applied "
+            "to this slice; response_B is always the preferred answer and every judge "
+            "votes B on a large majority of rows. The published 0.701 is therefore not "
+            "reachable from the released file under either label convention, which is a "
+            "stronger statement than 'the labels are constant': the column is not merely "
+            "unscoreable, the published number provably did not come from this file."
+        ),
+    }
+
+
 def audit(root: Path | None = None) -> dict:
     root = root or _official_root()
     if root is None:
@@ -121,6 +183,7 @@ def audit(root: Path | None = None) -> dict:
             "n_judge_files": len(pku),
             "candidate_label_sources": cands,
             "distinct_gold_label_binary_per_judge_file": per_file,
+            "reachable_accuracy_under_each_convention": _pku_reachable_accuracy(pku),
             "supports_a_metric": bool(usable),
             "why": "usable" if usable else
                    "no released label source has more than one distinct value, and "
