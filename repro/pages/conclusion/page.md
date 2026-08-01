@@ -35,7 +35,9 @@ UltraFeedback value, which is the one quantity in this campaign we have no way t
 measure ourselves.
 
 **The main-text Proposition 4.1 is false as written, and the appendix version is not.**
-The main text asks only for *orthogonal* columns and drops the `‖K_JH‖₂²` factor. Each
+The main text asks only for *orthogonal* columns, and asserts a stability bound free of
+`‖K_JH‖₂` that the appendix earns only by assuming orthonormality (its proof carries
+`‖K_JH‖₂` and discharges it with `‖K_JH‖₂ = 1`). Each
 omission admits an exact counterexample that satisfies the main text's own hypotheses,
 and the second grows without bound, so no hidden constant in the `≲` rescues it. The
 appendix statement survives both, and we derive a strictly tighter constant — 2 rather
@@ -49,10 +51,13 @@ reading the error's own quantiles against `η(q) = −log((1−q)/2)`: the bound
 conservative. What remains genuinely unmeasured is `ξ(T)`, which has no closed form we
 can evaluate.
 
-**Theorem 4.3 is verified in the parts this campaign can reach, with a documented gap in
-its written proof.** Its mean bound is reproduced exactly and its weight bound is not
-violated along its own `σ` boundary, but the displayed proof of that weight bound loses a
-`σ³` factor.
+**Theorem 4.3's displayed proof is defective; the theorem itself is not thereby decided.**
+Composing the paper's own cited results reproduces its mean bound exactly and overshoots
+its stated weight bound by exactly `σ³` — an unbounded factor no universal constant can
+absorb. That is reached twice, by independent routes, and is exact. Whether the stated
+weight bound *itself* fails is **undecided here**: the boundary probe meant to settle it
+turns out to be uninformative, and the earlier revisions that read it as corroborating
+the bound were relying on a normal quantile applied to a five-point fit.
 
 A previous revision of this logbook additionally reported the stated `p·log(p/ε)`
 sample-complexity factor as **FALSIFIED**. **That finding has been withdrawn.** Its
@@ -78,9 +83,15 @@ revision; each withdrawal is recorded with the reasoning that produced it.
   result and the wrong one. A later revision then reported a falsification of a
   *different* factor of the same theorem, by a different route; that one has since been
   withdrawn as well, by this logbook's own verifier. **No falsification of Theorem 4.3
-  survives** — what survives is a documented gap in the displayed proof of the weight
-  bound, and the fact that the stated bound is not violated where the gap predicted it
-  would be.
+  survives** — what survives is a documented gap in its displayed proof.
+* **And the corroboration we replaced that falsification with was also wrong.** Having
+  withdrawn the `σ` falsification on the strength of a boundary probe whose interval
+  "excluded" the slope a missing `σ³` predicts, we then found the interval had been built
+  with the normal 1.96 on a five-point, three-degrees-of-freedom fit. At its correct width
+  it excludes neither hypothesis, and the probe's two estimators disagree eightfold. The
+  probe decides nothing in either direction. Every interval in this campaign now uses
+  `t(0.975, n−2)` from a single helper — the fix is one line, and it removes a published
+  conclusion rather than adding one.
 * An earlier revision of the Claim 6 page passed a sample-complexity check that had
   measured nothing: with the search grid floored at `n = 5 000`, every `π_min` setting
   returned `n* = 5 000`, giving an exponent of `0.000 ± 0.000` that satisfied a one-sided

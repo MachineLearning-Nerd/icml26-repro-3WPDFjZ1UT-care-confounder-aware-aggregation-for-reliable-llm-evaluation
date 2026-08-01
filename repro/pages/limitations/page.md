@@ -243,14 +243,33 @@ statement of what was and was not measurable:
 * The `δ^{-2}` factor cannot be tested at all here: `δ` is the CP eigenvalue gap
   `min_i≠j |π_i^{-1/2} − π_j^{-1/2}|`, so it is not variable independently of `π`.
 
-## 16. The σ boundary probe discriminates, but only just
+## 16. The σ boundary probe does not discriminate, and two revisions said it did
 
-The probe along `n = 20000·σ⁶` returns a slope of 0.0605 ± 1.1149. Its 95 % interval
-excludes the slope of 3 that a genuinely missing `σ³` factor would produce, and includes
-the 0 the theorem predicts, so it does discriminate between the two hypotheses. But the
-interval is wide, and a narrower one would need more `σ` settings than the one-hour job
-cap allows. The claim page states the discrimination in exactly these terms rather than
-calling the hypothesis refuted outright.
+The probe along `n = 20000·σ⁶` returns a slope near zero with a standard error above 1.
+Two revisions reported its 95 % interval as *excluding* the slope of 3 a genuinely missing
+`σ³` factor predicts while *including* the 0 the theorem predicts — and concluded that the
+defect was confined to the written proof.
+
+That interval was `slope ± 1.96·se`. It is a five-point fit of two parameters, so it has
+**three residual degrees of freedom** and the correct two-sided multiplier is
+`t(0.975, 3) = 3.182`. At the correct width the interval includes 3 as well as 0. The
+probe excludes neither hypothesis and therefore decides nothing.
+
+Two further signals agreed and were not acted on: an independent Theil–Sen refit of the
+same five points gives a slope about **eight times** the least-squares value, and the
+one-sided check that the refit "agrees there is no `σ` growth" passed only by clearing its
+threshold by about 0.02.
+
+This is now fixed at the source rather than in prose. `informativeness.t_crit` is the
+single place a 95 % multiplier is computed, every interval in the campaign calls it, and
+the boundary probe emits `discriminates` as a measured field so the question cannot be
+settled by an adjective. The numbers themselves are rendered on the
+[Claim 6 page](#/claim-6-theorem-43).
+
+Narrowing the interval enough to decide the question would need more `σ` settings than
+the one-hour job cap allows. So the `σ` question is left **undecided**, which is the third
+time this campaign has had to replace a Theorem 4.3 conclusion with an admission — and the
+first time the replaced conclusion was one that flattered the paper rather than us.
 
 ## 17. The `p`-factor test was post-hoc
 
@@ -288,6 +307,12 @@ how far to trust the rest.
   refit of the `p` sweep for Claim 6. The first two claims were removed; the third was
   implemented, because the `p` sweep carries a falsification and had no independent check
   at all.
+  **Read this bullet with item 25.** As written it says Claim 3's second transcription
+  does not exist, and that is no longer true: a later round reinstated it as a real
+  check — all 54 cells transcribed a second time by hand and compared before the argmax
+  is recomputed — and it now gates the run. A reviewer noted that item 18 alone reads as
+  though the check is absent. What was removed in this round was the *false description*
+  of a check; what item 25 records is the check being built.
 * The Claim 6 boundary table **labelled a ratio as an error**. The values shown were
   `error_over_stated_unit`; the median weight errors are an order of magnitude smaller.
   The table now prints `n`, the raw weight error, the bound unit and the ratio as
@@ -614,3 +639,63 @@ The general lesson, stated once: **every gate in this logbook needs a companion 
 that the gate had something to look at.** Where that assertion exists it is named in the
 verdict JSON (`informative`, `n_usable`, `refit_expected`, `measurement_resolves_a_nonzero_exponent`,
 `leakage_measured_between_p`); where it does not, the check should be read as unproven.
+
+## 27. A third blind reviewer found thirteen defects, one of which reversed a headline
+
+The candidate that passed every gate at revision `0d16b9c` was reviewed blind again. The
+reviewer scored Claims 2, 3 and 4 at full credit and Claims 1, 5 and 6 partial, and
+listed thirteen defects. The one that mattered most was not in any page's prose.
+
+**It changed a published conclusion.** Every 95% interval in this logbook was
+`estimate ± 1.96·stderr`. Every one of them comes from a log-log least-squares fit over a
+handful of grid settings, and a handful of settings is not the normal limit: a five-point
+fit of two parameters has **three residual degrees of freedom**, where the correct
+two-sided multiplier is `t(0.975, 3) = 3.182`. Using 1.96 reported intervals 38% narrower
+than they are. The consequence was concrete. Claim 6's σ boundary probe published the
+interval `[-2.1247, 2.2457]` and drew from it the conclusion that the data **exclude** the
+slope of 3 that a missing σ³ factor predicts. At the correct width the interval is
+`[-3.4876, 3.6086]` and includes 3 as well as 0. The probe excludes neither hypothesis and
+decides nothing. That conclusion is withdrawn on the Claim 6 page, in the conclusion, and
+in item 16 — the third Theorem 4.3 conclusion this campaign has had to withdraw, and the
+second withdrawn because a reviewer checked the statistics rather than the prose.
+`t_crit()` in [`repro/src/informativeness.py`](repro/src/informativeness.py) is now the
+single place any 95% interval is computed, and it takes the point count.
+
+**A claimed second route that did not exist.** Four pages and `verdict.json` said the σ³
+finding had been "re-derived by a second route". No such route was implemented. Rather
+than delete the sentence, the route was built: each factor in the bound is a monomial in
+`(σ, δ, p·log(p/ε), n)`, so composition is exponent-vector addition and "what is missing"
+is a vector difference in exact `Fraction`s, computed without `sympy` and therefore
+sharing no machinery with the original. It reproduces bound (I) with a zero residual and
+bound (II) with a residual of exactly σ³.
+
+**The rest, grouped by what they were.** Three were checks weaker than their description:
+the visibility matrix's Checker column was a link plus a substring (it now also requires
+the checker's own output for that claim to exist and to have decided something); the
+Table 7 leading-factor check was vacuous on the two columns where the paper prints "–";
+and two cross-estimator rechecks were computed and then not gated. Two were records
+disagreeing with the code: `verdict.json` emitted boolean `true` for contract elements the
+pages call NOT MEASURED (they are now tri-state, with `"NOT MEASURED"` published as a
+string), and the seeds table understated Claim 6's main sweeps by 4× — that table is now
+generated by `inspect.signature` from the functions the run actually calls, and the run
+aborts rather than publish it if a call site ever overrides a seed. Two were prose that
+over-promised: "contracts written before any result was measured" was asserted on eight
+pages and is false for four elements marked POST-HOC, and the overview credited Theorem
+4.3 with re-validated lemmas that only Theorem 4.2 has. One was a real measurement error:
+the η-tail interval was computed from OLS residuals over seven **order statistics of one
+sample**, which are strongly dependent, so the interval was far too narrow; it is now a
+nonparametric bootstrap over the 240 independent replicates, with the old interval shown
+beside it for comparison. The conclusion it carried survives; its stated precision did not.
+
+**What is disclosed rather than fixed.** Claim 6's NC2 control rises from σ=1 to σ=2 and
+falls back at σ=3. Its contract compares only the endpoints, so it passes, and the
+reversal is the estimator saturating at large σ. The control therefore shows a
+σ-dependence exists near σ=1; it does not show the dependence is monotone, and the Claim 6
+page now says so where it calls NC2 "the discriminating one".
+
+**What this round says about the process.** Three blind reviews have now found,
+respectively, nineteen, twenty and thirteen defects, and each round found at least one
+defect *in the verifier* that the previous round's repairs had introduced or missed. The
+rate is falling and the severity is falling with it — this round found one conclusion-level
+error against six in the round before — but the honest reading is that a fourth review
+would find more, not none.

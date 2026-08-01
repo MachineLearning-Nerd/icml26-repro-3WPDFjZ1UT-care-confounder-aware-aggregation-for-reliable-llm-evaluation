@@ -178,7 +178,7 @@ extract [`raw/c5_rate.csv`](raw/c5_rate.csv). Code:
 
 ## Contract
 
-This claim's machine-checkable contract — written **before** any result was measured —
+This claim's machine-checkable contract — written **before** any result was measured, except for the elements that entry itself marks `POST-HOC` —
 is entry `C5` of [`raw/claim_contract.json`](raw/claim_contract.json): the exact
 statement, its anchor in the paper, the paper's own assumptions, the condition that
 decides it, and the criterion that would falsify it. The paper's verbatim wording and

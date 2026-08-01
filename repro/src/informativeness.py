@@ -92,7 +92,31 @@ def screen_settings(rows, key) -> dict:
     }
 
 
-def estimators_agree(a_slope, a_se, b_slope, b_se) -> dict:
+def t_crit(n_points: int, n_params: int = 2) -> float:
+    """Two-sided 95% critical value for a fit with `n_points - n_params` residual df.
+
+    Every interval in this campaign comes from a log-log least-squares fit over a handful
+    of settings, and a handful of settings is not the normal limit. A 5-point, 2-parameter
+    fit has 3 residual degrees of freedom, where t(0.975, 3) = 3.182 -- using 1.96 there
+    reports an interval 38% narrower than it is.
+
+    That is not a presentational detail. A blind reviewer showed that Claim 6's boundary
+    probe was published as EXCLUDING the slope of 3 that a missing sigma^3 factor predicts;
+    at the correct width its interval INCLUDES 3, so the probe discriminates nothing and
+    the conclusion drawn from it had to be withdrawn. Anything that reports a 95% interval
+    must call this.
+    """
+    df = max(int(n_points) - int(n_params), 1)
+    from scipy import stats
+    return float(stats.t.ppf(0.975, df))
+
+
+def ci95(slope: float, stderr: float, n_points: int, n_params: int = 2) -> list:
+    k = t_crit(n_points, n_params)
+    return [float(slope - k * stderr), float(slope + k * stderr)]
+
+
+def estimators_agree(a_slope, a_se, b_slope, b_se, a_n=None, b_n=None) -> dict:
     """Do two independent estimators of the same exponent overlap at 95%?
 
     n* can be read as the crossing of the decay curve with the target, or by fitting
@@ -103,8 +127,10 @@ def estimators_agree(a_slope, a_se, b_slope, b_se) -> dict:
     vals = (a_slope, a_se, b_slope, b_se)
     if not all(isinstance(v, float) and math.isfinite(v) for v in vals):
         return {"agree": False, "why": "an estimator produced no finite exponent"}
-    lo_a, hi_a = a_slope - 1.96 * a_se, a_slope + 1.96 * a_se
-    lo_b, hi_b = b_slope - 1.96 * b_se, b_slope + 1.96 * b_se
+    ka = t_crit(a_n) if a_n else 1.96
+    kb = t_crit(b_n) if b_n else 1.96
+    lo_a, hi_a = a_slope - ka * a_se, a_slope + ka * a_se
+    lo_b, hi_b = b_slope - kb * b_se, b_slope + kb * b_se
     overlap = max(lo_a, lo_b) <= min(hi_a, hi_b)
     # Both must individually resolve an exponent first. Otherwise a garbage estimator
     # with a very wide interval "agrees" with everything, and agreement becomes another
@@ -131,7 +157,7 @@ def estimators_agree(a_slope, a_se, b_slope, b_se) -> dict:
     }
 
 
-def informativeness(ys, slope, stderr, grid, agreement=None) -> dict:
+def informativeness(ys, slope, stderr, grid, agreement=None, n_points=None) -> dict:
     ys = [y for y in ys if y is not None and math.isfinite(y)]
     why = []
     if len(ys) < 3:
@@ -146,12 +172,16 @@ def informativeness(ys, slope, stderr, grid, agreement=None) -> dict:
         )
     if not (isinstance(slope, float) and math.isfinite(slope)):
         why.append("no finite slope")
-    elif isinstance(stderr, float) and math.isfinite(stderr) and abs(slope) <= 2 * stderr:
-        why.append(
-            f"the fitted trend {slope:.4f} +/- {stderr:.4f} has a 95% interval "
-            f"[{slope - 1.96 * stderr:.4f}, {slope + 1.96 * stderr:.4f}] covering zero; "
-            "no exponent was resolved"
-        )
+    elif isinstance(stderr, float) and math.isfinite(stderr):
+        k = t_crit(n_points) if n_points else 1.96
+        lo, hi = slope - k * stderr, slope + k * stderr
+        if lo * hi <= 0:
+            why.append(
+                f"the fitted trend {slope:.4f} +/- {stderr:.4f} has a 95% interval "
+                f"[{lo:.4f}, {hi:.4f}] covering zero; no exponent was resolved "
+                f"(interval width uses t(0.975, {max((n_points or 4) - 2, 1)}) = {k:.3f}, "
+                "not the normal 1.96)"
+            )
     if agreement is not None and not agreement.get("agree"):
         why.append(agreement.get("why") or "the two n* estimators disagree")
     return {
@@ -162,6 +192,20 @@ def informativeness(ys, slope, stderr, grid, agreement=None) -> dict:
         "n_usable_points": len(ys),
         "n_distinct_n_star": len(set(ys)),
     }
+
+
+def tristate(informative: bool, passed: bool):
+    """Publish a contract's outcome as True / False / "NOT MEASURED".
+
+    A one-sided contract evaluated on a sweep that resolved no exponent is *satisfied*,
+    and writing that satisfaction into the record as `true` is how a reader ends up
+    believing an exponent was measured when the page next to it says NOT MEASURED. The
+    verifier still treats such a sweep as non-failing -- absence of evidence is not
+    failed evidence -- but the published value must say which of the two it is.
+    """
+    if not informative:
+        return "NOT MEASURED"
+    return bool(passed)
 
 
 def with_screen(info: dict, screen: dict) -> dict:

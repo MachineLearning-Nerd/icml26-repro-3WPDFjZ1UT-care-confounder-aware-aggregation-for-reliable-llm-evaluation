@@ -33,6 +33,21 @@ CONTROL_IS_DISCRIMINATING = {
     "C6": True,   # NC1 over-sampling and NC2 frozen-n, both re-run the estimator
 }
 
+# A "Checker" cell used to be `a link to independent_check.py` plus the substring
+# "ndependent check" somewhere on the page. That passes for a claim the checker never
+# looks at, and it is how C3's cell read green while the page's own header said the
+# checker did not recompute the argmax. The cell now additionally requires that the
+# staged run's `independent_check` actually produced the named outputs for this claim,
+# and that each one carries a boolean-valued key -- i.e. it decided something.
+CHECKER_KEYS = {
+    "C1": ["table_percentages_exact_rational", "appendix_consistency_exact"],
+    "C2": ["c2_unit_invariance_exact", "agreement_with_claim_module"],
+    "C3": ["table2_second_transcription", "table_percentages_exact_rational"],
+    "C4": ["prop41_counterexample_mpmath", "first_order_formula_vs_finite_difference"],
+    "C5": ["davis_kahan_by_principal_angle", "c5_stage_slope_recheck"],
+    "C6": ["c6_p_exponent_recheck", "c6_slope_recheck"],
+}
+
 CLAIMS = [
     ("C1", "claim-1-ultrafeedback", "claim_c123_benchmarks.py"),
     ("C2", "claim-2-average-improvement", "claim_c123_benchmarks.py"),
@@ -51,7 +66,22 @@ def links(text):
     return set(LINK.findall(text))
 
 
-def check_page(root: Path, slug: str, src_name: str):
+def checker_ran_for(root: Path, cid: str) -> bool:
+    """Did the independent checker produce a decided output for THIS claim?"""
+    vf = root / "raw" / "verdict.json"
+    if not vf.exists():
+        return False
+    chk = (json.loads(vf.read_text()).get("independent_check") or {})
+    for key in CHECKER_KEYS[cid]:
+        block = chk.get(key)
+        if not isinstance(block, dict):
+            return False
+        if not any(isinstance(x, bool) for x in block.values()):
+            return False
+    return True
+
+
+def check_page(root: Path, slug: str, src_name: str, cid: str):
     page = root / "pages" / slug / "page.md"
     if not page.exists():
         return None, {"missing page": False}
@@ -73,7 +103,9 @@ def check_page(root: Path, slug: str, src_name: str):
         # here would let a claim-specific CSV vanish while verdict.json kept the cell green.
         "Raw link": linked(lambda t: t == "raw/verdict.json")
         and linked(lambda t: t.startswith("raw/") and t.endswith(".csv")),
-        "Checker": linked(lambda t: t.endswith("independent_check.py")) and "ndependent check" in text,
+        "Checker": (linked(lambda t: t.endswith("independent_check.py"))
+                    and "ndependent check" in text
+                    and checker_ran_for(root, cid)),
         "Control": "egative control" in text and any(
             bid.endswith(("control", "controls")) for bid in blocks
         ),
@@ -89,7 +121,7 @@ def main(staging: str, redteam: str | None) -> int:
     cols = ["Code visible", "Data inline", "Raw link", "Checker", "Control", "Exact claim tested"]
     rows, failures = [], []
     for cid, slug, src in CLAIMS:
-        checks, unrendered = check_page(root, slug, src)
+        checks, unrendered = check_page(root, slug, src, cid)
         if checks is None:
             failures.append(f"{cid}: pages/{slug}/page.md missing")
             continue

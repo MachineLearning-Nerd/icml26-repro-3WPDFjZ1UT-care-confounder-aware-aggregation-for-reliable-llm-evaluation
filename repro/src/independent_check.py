@@ -108,6 +108,70 @@ def table2_second_transcription(verdict: dict | None = None) -> dict:
     return out
 
 
+def c6_composition_by_exponent_arithmetic() -> dict:
+    """Re-derive Theorem 4.3's two bounds WITHOUT sympy, from exponents alone.
+
+    The claim module composes the paper's chain in sympy. That is one implementation, and
+    four pages of this logbook claimed the composition was "re-derived by a second route"
+    when no such route existed -- a blind reviewer found the phrase describing work that
+    was never written. This is that route, written.
+
+    It uses no symbolic algebra at all. Each factor is a monomial in
+    (sigma, delta, p_log, n), so a bound is just an exponent vector, composition is vector
+    addition, and "what is missing" is a vector difference in exact `Fraction`s. The
+    equations are typed here from the paper independently of claim_c6_thm43.py.
+
+        (8)   ||M^ - M||_op  ~  sigma^3 (p_log/n)^(1/2)
+        (10)  mean error     ~  ||E||_op / delta
+        (11)  weight error   ~  ||E||_op
+        (I)   stated mean    ~  sigma^3 delta^-1 (p_log/n)^(1/2)
+        (II)  stated weight  ~  (p_log/n)^(1/2)
+    """
+    F = Fraction
+    # exponents of (sigma, delta, p_log, n)
+    eq8 = (F(3), F(0), F(1, 2), F(-1, 2))
+    eq10_over_eq8 = (F(0), F(-1), F(0), F(0))     # divide by delta
+    eq11_over_eq8 = (F(0), F(0), F(0), F(0))      # identity
+    stated_I = (F(3), F(-1), F(1, 2), F(-1, 2))
+    stated_II = (F(0), F(0), F(1, 2), F(-1, 2))
+
+    def add(a, b):
+        return tuple(x + y for x, y in zip(a, b))
+
+    def sub(a, b):
+        return tuple(x - y for x, y in zip(a, b))
+
+    derived_I = add(eq8, eq10_over_eq8)
+    derived_II = add(eq8, eq11_over_eq8)
+    resid_I = sub(derived_I, stated_I)
+    resid_II = sub(derived_II, stated_II)
+    names = ("sigma", "delta", "p_log", "n")
+
+    def show(v):
+        return {k: str(x) for k, x in zip(names, v)}
+
+    return {
+        "route": "exponent-vector arithmetic in exact Fractions; no symbolic algebra",
+        "derived_mean_bound_exponents": show(derived_I),
+        "stated_mean_bound_exponents": show(stated_I),
+        "mean_bound_residual_exponents": show(resid_I),
+        "mean_bound_reproduced_exactly": all(x == 0 for x in resid_I),
+        "derived_weight_bound_exponents": show(derived_II),
+        "stated_weight_bound_exponents": show(stated_II),
+        "weight_bound_residual_exponents": show(resid_II),
+        "weight_bound_reproduced_exactly": all(x == 0 for x in resid_II),
+        "missing_factor_is_sigma_cubed": (
+            resid_II[0] == 3 and all(x == 0 for x in resid_II[1:])
+        ),
+        "why": (
+            "composing the paper's own cited results reproduces bound (I) with a zero "
+            "residual and bound (II) with a residual of exactly sigma^3; because the "
+            "residual is a positive power of sigma it is unbounded, so no universal "
+            "constant C_2 can absorb it"
+        ),
+    }
+
+
 def appendix_consistency_exact() -> dict:
     """Re-decide the Table 1 vs Table 7 comparison from a second transcription.
 
@@ -371,10 +435,30 @@ def recheck_c6_slope(verdict: dict) -> dict:
         "least_squares_slope": verdict["claims"]["C6_thm43"]["route_c_boundary_sigma_probe"][
             "loglog_slope_error_over_stated_bound_vs_sigma"
         ],
-        # The sigma^3 hypothesis predicted a slope near 3 and would need at least 0.5
-        # to be visible at all. Both estimators must agree that no such growth is there,
-        # otherwise the claim module's null result rests on the choice of estimator.
+        # The sigma^3 hypothesis predicts a slope near 3, so a one-sided "slope < 0.5"
+        # test looked like agreement -- Theil-Sen clears it by 0.02. But the two
+        # estimators are 8x apart on the same five points, which is the real signal:
+        # this probe's slope is a property of the estimator, not of the system. That is
+        # reported rather than gated, because an uninformative measurement is absent
+        # evidence, not failed evidence -- and the conclusion the probe used to carry has
+        # been withdrawn for exactly this reason (see also the t-interval correction in
+        # informativeness.t_crit).
         "theil_sen_agrees_no_sigma_growth": bool(slope < 0.5),
+        "abs_difference_between_estimators": abs(
+            float(slope) - float(verdict["claims"]["C6_thm43"]
+                                 ["route_c_boundary_sigma_probe"]
+                                 ["loglog_slope_error_over_stated_bound_vs_sigma"])
+        ),
+        "estimators_agree_on_the_slope": bool(
+            abs(float(slope) - float(verdict["claims"]["C6_thm43"]
+                                     ["route_c_boundary_sigma_probe"]
+                                     ["loglog_slope_error_over_stated_bound_vs_sigma"])) <= 0.15
+        ),
+        "why": (
+            "the two estimators disagree by far more than either one's own claimed "
+            "precision, so the boundary probe resolves no slope and must not be read as "
+            "evidence for or against the missing sigma^3 factor"
+        ),
     }
 
 
@@ -506,6 +590,15 @@ def recheck_c5_stage_slopes(verdict: dict) -> dict:
         # One-sided, matching the claim module: the theorem is an O(.) upper bound.
         "stage_1_agrees_at_least_root_n": bool(ts1 <= -0.42),
         "stage_2_agrees_at_least_root_n": bool(ts2 <= -0.42),
+        # A one-sided contract is not an agreement test -- both estimators could clear it
+        # while disagreeing badly. This is the two-sided question, and it is what gates.
+        "agrees_with_claim_module": bool(
+            cal.get("stage_1_loglog_slope") is not None
+            and cal.get("stage_2_loglog_slope") is not None
+            and abs(ts1 - cal["stage_1_loglog_slope"]) <= 0.15
+            and abs(ts2 - cal["stage_2_loglog_slope"]) <= 0.15
+        ),
+        "agreement_tolerance": 0.15,
     }
 
 
@@ -514,6 +607,7 @@ def run(verdict: dict | None = None) -> dict:
         "table_percentages_exact_rational": table_percentages_exact(),
         "c2_unit_invariance_exact": c2_unit_invariance_exact(),
         "appendix_consistency_exact": appendix_consistency_exact(),
+        "c6_composition_by_exponent_arithmetic": c6_composition_by_exponent_arithmetic(),
         "table2_second_transcription": table2_second_transcription(verdict),
         "prop41_counterexample_mpmath": prop41_counterexample_mpmath(),
         "first_order_formula_vs_finite_difference": first_order_by_finite_difference(),
@@ -574,6 +668,12 @@ def run(verdict: dict | None = None) -> dict:
         and out["table2_second_transcription"]["two_transcriptions_agree_cell_by_cell"]
         and out["table2_second_transcription"]["matches_paper_bold_cells"]
         and out["table2_second_transcription"]["summarize_matches_13_4"]
+        # The second, non-symbolic derivation of Theorem 4.3's chain must reach the same
+        # two conclusions as the sympy route. This is what makes the claim module's
+        # symbolic audit falsifiable: on its own it divides three transcribed expressions
+        # and can only confirm the transcription.
+        and out["c6_composition_by_exponent_arithmetic"]["mean_bound_reproduced_exactly"]
+        and out["c6_composition_by_exponent_arithmetic"]["missing_factor_is_sigma_cubed"]
     )
     # A cross-implementation agreement check that does not gate `ok` is decoration: the
     # two implementations could disagree about a published verdict and the run would
@@ -590,6 +690,20 @@ def run(verdict: dict | None = None) -> dict:
         out["ok"] = False
     elif pr.get("available"):
         out["ok"] = bool(out["ok"] and pr["theil_sen_agrees_with_least_squares"])
+
+    # Two further cross-estimator rechecks were computed and then not wired to anything,
+    # which is the "an agreement check that cannot fail is decoration" defect recurring
+    # in the two places it was not fixed. Both now gate the run.
+    sr = out.get("c5_stage_slope_recheck") or {}
+    if sr.get("available"):
+        out["ok"] = bool(out["ok"] and sr["agrees_with_claim_module"])
+    # Deliberately NOT gated: the sigma boundary probe is reported as uninformative, and
+    # failing the verifier on an uninformative measurement would confuse "we could not
+    # measure this" with "the evidence failed". What IS required is that the recheck ran
+    # and recorded both estimators, so the disagreement cannot vanish silently.
+    cr = out.get("c6_slope_recheck") or {}
+    if cr.get("available"):
+        out["ok"] = bool(out["ok"] and "estimators_agree_on_the_slope" in cr)
     return out
 
 

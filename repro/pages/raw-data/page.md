@@ -8,7 +8,7 @@ extracts of that same file, so any figure quoted on a claim page can be located 
 | File | What it contains |
 |---|---|
 | [`raw/verdict.json`](raw/verdict.json) | Complete output of `uv run python repro/src/run_all.py` — every claim contract, every measured number, the environment record, seeds, runtimes and the independent-checker result |
-| [`raw/claim_contract.json`](raw/claim_contract.json) | The six claim contracts, written before any result was measured: exact statement, anchor, assumptions, decision condition, falsification criterion |
+| [`raw/claim_contract.json`](raw/claim_contract.json) | The six claim contracts: exact statement, anchor, assumptions, decision condition, falsification criterion. Written before any result was measured **except** for the four elements the file itself marks `POST-HOC` — C1 and C2's Table 1 vs Table 7 audits, C2's unit-invariance criterion, and C6's `p` criterion — each of which carries a `provenance` string saying when it was added and why |
 | [`raw/source_audit.md`](raw/source_audit.md) | The frozen source audit: paper URL, SHA-256, Tables 1-2, verbatim theorem wording |
 | [`raw/method.md`](raw/method.md) | How each contract becomes an executable check |
 | [`raw/table1_asset.csv`](raw/table1_asset.csv) | Table 1, ASSET column: per-method MAE reproduced from the authors' released judge-score matrix, per seed and aggregated, next to the published value |

@@ -42,7 +42,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from informativeness import estimators_agree, informativeness, screen_settings, with_screen
+from informativeness import (
+    ci95, estimators_agree, informativeness, screen_settings, t_crit, tristate,
+    with_screen,
+)
 import sympy as sp
 
 from tensor_mom import empirical_moments, recover_weights, sample_mixture
@@ -264,7 +267,8 @@ def _sweep_fits(rows, xs_of, key):
                  if len(fit_rows) >= 3 else nan)
     s_c, se_c = (_fit(xs_of(cross_rows), [r["n_star_crossing"] for r in cross_rows])
                  if len(cross_rows) >= 3 else nan)
-    return fit_rows, s_f, se_f, s_c, se_c, estimators_agree(s_f, se_f, s_c, se_c), screen
+    return (fit_rows, s_f, se_f, s_c, se_c,
+            estimators_agree(s_f, se_f, s_c, se_c, len(fit_rows), len(cross_rows)), screen)
 
 
 def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
@@ -289,7 +293,8 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
     ok_rows, s_sigma, se_sigma, sc_sigma, sec_sigma, agr_sigma, scr_sigma = _sweep_fits(
         rows, lambda rs: [r["sigma_max"] for r in rs], "sigma_max")
     info_sigma = informativeness(
-        [r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID, agr_sigma)
+        [r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID, agr_sigma,
+        n_points=len(ok_rows))
     info_sigma = with_screen(info_sigma, scr_sigma)
     out["sigma"] = {
         "rows": rows, "per_setting_screen": scr_sigma, "exponent": s_sigma, "stderr": se_sigma,
@@ -301,6 +306,9 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
         "stderr_from_crossing_estimator": sec_sigma,
         "informativeness": info_sigma,
         "status": info_sigma["status"],
+        "contract_outcome": tristate(
+            info_sigma["informative"],
+            np.isfinite(s_sigma) and s_sigma <= 6.0 + 2 * se_sigma),
         "ok": bool((not info_sigma["informative"])
                    or (np.isfinite(s_sigma) and s_sigma <= 6.0 + 2 * se_sigma)),
     }
@@ -317,7 +325,8 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
     ok_rows, s_pi, se_pi, sc_pi, sec_pi, agr_pi, scr_pi = _sweep_fits(
         rows, lambda rs: [r["pi_min"] for r in rs], "pi_min")
     info_pi_min = informativeness(
-        [r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID, agr_pi)
+        [r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID, agr_pi,
+        n_points=len(ok_rows))
     info_pi_min = with_screen(info_pi_min, scr_pi)
     out["pi_min"] = {
         "rows": rows, "per_setting_screen": scr_pi, "exponent": s_pi, "stderr": se_pi,
@@ -329,6 +338,9 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
         "stderr_from_crossing_estimator": sec_pi,
         "informativeness": info_pi_min,
         "status": info_pi_min["status"],
+        "contract_outcome": tristate(
+            info_pi_min["informative"],
+            np.isfinite(s_pi) and s_pi >= -2.0 - 2 * se_pi),
         "ok": bool((not info_pi_min["informative"])
                    or (np.isfinite(s_pi) and s_pi >= -2.0 - 2 * se_pi)),
     }
@@ -346,7 +358,8 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
     ok_rows, s_p, se_p, sc_p, sec_p, agr_p, scr_p = _sweep_fits(
         rows, lambda rs: [r["p_total"] * np.log(r["p_total"] / EPS) for r in rs], "p_total")
     info_p = with_screen(
-        informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID, agr_p), scr_p)
+        informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID, agr_p,
+                        n_points=len(ok_rows)), scr_p)
     out["p"] = {
         "rows": rows, "per_setting_screen": scr_p, "exponent_vs_p_log_p": s_p, "stderr": se_p,
         "stated_exponent": 1.0, "requirement": "exponent <= 1 + 2*stderr",
@@ -357,11 +370,17 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
         "stderr_from_crossing_estimator": sec_p,
         "informativeness": info_p,
         "status": info_p["status"],
+        "contract_outcome": tristate(
+            info_p["informative"], np.isfinite(s_p) and s_p <= 1.0 + 2 * se_p),
         "ok": bool((not info_p["informative"])
                    or (np.isfinite(s_p) and s_p <= 1.0 + 2 * se_p)),
     }
 
     out["ok"] = all(out[k]["ok"] for k in ("sigma", "pi_min", "p"))
+    # `ok` is the verifier gate and is True on a sweep that measured nothing; it must
+    # never be read as "the contract was tested and held". `contract_outcome` is the
+    # publishable answer and says NOT MEASURED where that is what happened.
+    out["contract_outcome"] = {k: out[k]["contract_outcome"] for k in ("sigma", "pi_min", "p")}
     out["informative_sweeps"] = [k for k in ("sigma", "pi_min", "p") if out[k]["informativeness"]["informative"]]
     out["exponents_measured"] = bool(out["informative_sweeps"])
     out["uninformative_sweeps"] = [k for k in ("sigma", "pi_min", "p") if not out[k]["informativeness"]["informative"]]
@@ -580,18 +599,43 @@ def sigma_sweep(sigmas=(1.0, 1.25, 1.5, 1.75, 2.0), n_base=20000, seeds=(0, 1, 2
         "rows": rows,
         "loglog_slope_error_over_stated_bound_vs_sigma": float(slope),
         "slope_stderr": se,
-        "slope_ci95": [float(slope - 1.96 * se), float(slope + 1.96 * se)],
+        # A 5-point, 2-parameter fit has 3 residual degrees of freedom. Published with
+        # the normal 1.96 this interval read [-2.12, 2.25] and was reported as EXCLUDING
+        # the slope of 3 that a missing sigma^3 predicts. At its correct width it
+        # includes 3, so the probe does not discriminate between the two hypotheses and
+        # the conclusion that rested on it is withdrawn.
+        "slope_ci95": ci95(float(slope), se, len(x)),
+        "ci95_uses_t_quantile": t_crit(len(x)),
+        "n_points": int(len(x)),
+        "residual_dof": int(max(1, len(x) - 2)),
         "predicted_slope_if_sigma3_is_missing": 3.0,
         "predicted_slope_if_theorem_correct": 0.0,
-        "ok": bool(slope - 1.96 * se > 0.5),
+        "excludes_sigma3_hypothesis": bool(ci95(float(slope), se, len(x))[1] < 3.0),
+        "excludes_theorem_hypothesis": bool(ci95(float(slope), se, len(x))[0] > 0.0),
+        "discriminates": bool(
+            (ci95(float(slope), se, len(x))[1] < 3.0)
+            != (ci95(float(slope), se, len(x))[0] > 0.0)
+        ),
+        "why": (
+            "the interval must exclude exactly one of the two hypotheses to decide "
+            "between them; excluding neither means the probe measured nothing about "
+            "the sigma-dependence in either direction"
+        ),
+        # `ok` asserts that the probe RAN and produced a finite fit, not that it came
+        # out any particular way. Whether it discriminates is reported separately, above,
+        # so a non-discriminating probe cannot be read as a result.
+        "ok": bool(np.isfinite(slope) and np.isfinite(se)),
     }
 
 
-def negative_controls(n_base=20000) -> dict:
-    """Controls that must move the measured error in the intended direction."""
-    rng = np.random.default_rng(20260801)
+def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2)) -> dict:
+    """Controls that must move the measured error in the intended direction.
+
+    The two seeds are parameters rather than literals in the body so that the published
+    seeds table, which is generated from these signatures, can see them.
+    """
+    rng = np.random.default_rng(model_seed)
     mus = _fixed_model(rng)
-    seeds = (0, 1, 2)
 
     # NC1 - over-sample far past the boundary: the error MUST fall.
     over = []
@@ -609,12 +653,27 @@ def negative_controls(n_base=20000) -> dict:
         ]
         frozen.append({"sigma_max": sigma, "n": n_base, "median_err": float(np.median(errs))})
     nc2 = frozen[-1]["median_err"] > frozen[0]["median_err"]
+    # The contract is only the endpoint comparison, so a non-monotone interior passes it.
+    # Whether the interior IS monotone is a different fact about the estimator and is
+    # reported rather than left for a reader to notice in the table: a reversal at large
+    # sigma means the estimator has saturated there, which bounds how much the control
+    # licenses about the sigma-dependence away from sigma = 1.
+    errs_by_sigma = [r["median_err"] for r in frozen]
+    monotone = all(b > a for a, b in zip(errs_by_sigma, errs_by_sigma[1:]))
 
     return {
         "ok": bool(nc1 and nc2),
         "nc1_oversampling_reduces_error": bool(nc1),
         "nc1_rows": over,
         "nc2_frozen_n_larger_sigma_raises_error": bool(nc2),
+        "nc2_monotone_across_the_whole_sigma_grid": bool(monotone),
+        "nc2_saturation_note": (
+            "the contract compares only the endpoints; a reversal in the interior means "
+            "the estimator has saturated at large sigma, so the control establishes that "
+            "a sigma-dependence exists, not that it is monotone across the grid"
+            if not monotone else
+            "the error rises at every step of the sigma grid, not only between endpoints"
+        ),
         "nc2_rows": frozen,
     }
 
@@ -717,24 +776,29 @@ def run() -> dict:
             "VERIFIED (sample-complexity condition and mean bound) with a documented "
             "gap in the displayed proof of the weight bound" if measured else
             # Lead with the result that is exact and decisive -- a symbolic
-            # reconstruction of the paper's own derivation -- rather than with an
-            # empirical sweep that this budget could not resolve. Both are stated.
-            "The paper's derivation is RECONSTRUCTED SYMBOLICALLY and the two displayed "
-            "bounds come out differently. Bound (I), the mean error, is VERIFIED: "
-            "composing the paper's own cited results (8) and (10) reproduces "
-            "C_1 (sigma^3/delta) sqrt(p log(p/eps)/n) exactly, with no residual factor. "
-            "The displayed proof of bound (II), the weight error, is FALSIFIED AS A "
+            # reconstruction of the paper's own derivation, now confirmed by a second,
+            # non-symbolic route -- and say plainly that the empirical probe which used
+            # to qualify it turned out to measure nothing.
+            "The paper's derivation is RECONSTRUCTED and the two displayed bounds come "
+            "out differently. Bound (I), the mean error, is VERIFIED: composing the "
+            "paper's own cited results (8) and (10) reproduces "
+            "C_1 (sigma^3/delta) sqrt(p log(p/eps)/n) exactly, with a zero residual. The "
+            "displayed proof of bound (II), the weight error, is FALSIFIED AS A "
             "DERIVATION: composing (8) with (11) yields a bound larger than the stated "
-            "C_2 sqrt(p log(p/eps)/n) by exactly sigma_max^3, a factor that grows without "
-            "bound and that no universal constant can absorb; this is established in "
-            "sympy and re-derived by a second route. Bound (II) as STATED is not thereby "
-            "false, and is NOT falsified here: probed along the theorem's own boundary "
-            "n = n_0 sigma^6, where the missing factor predicts growth in sigma, the "
-            "measured weight error does not grow -- so the defect is in the written proof, "
-            "not demonstrably in the result. The sample-complexity EXPONENTS in sigma, "
-            "pi_min and p are NOT MEASURED at this budget: two sweeps are NOT INFORMATIVE "
-            "and the third is not attributable to the theorem's own factor (see "
-            "route_e_p_sweep_confound_audit)"
+            "C_2 sqrt(p log(p/eps)/n) by exactly sigma_max^3, an unbounded factor that no "
+            "universal constant can absorb. Both conclusions are reached twice, by "
+            "independent routes -- sympy in the claim module, and exact exponent-vector "
+            "arithmetic with no symbolic algebra in the independent checker. "
+            "Bound (II) AS STATED is NOT decided here in either direction: the boundary "
+            "probe that earlier revisions used to argue it survives is UNINFORMATIVE. "
+            "Its 95% interval, computed with the correct t quantile for a 5-point fit, "
+            "includes both the slope of 0 the theorem predicts and the slope of 3 a "
+            "missing sigma^3 predicts, and its two estimators disagree eightfold. Earlier "
+            "revisions published the same probe as EXCLUDING 3, using a normal quantile "
+            "on 3 residual degrees of freedom; that reading is withdrawn. The "
+            "sample-complexity EXPONENTS in sigma, pi_min and p are likewise NOT MEASURED "
+            "at this budget: two sweeps are NOT INFORMATIVE and the third is not "
+            "attributable to the theorem's own factor (route_e_p_sweep_confound_audit)"
         ),
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],
@@ -747,11 +811,16 @@ def run() -> dict:
                 "Composing the paper's own eq. (11) with eq. (8) yields "
                 "C_pi C sigma_max^3 sqrt(p log(p/eps)/n), while the theorem states "
                 "C_2 sqrt(p log(p/eps)/n) with C_2 universal: the displayed chain does not "
-                "establish the stated weight bound. We then MEASURED the weight error along "
-                "the theorem's own sample-complexity boundary and found no sigma-growth, so "
-                "the stated bound itself is corroborated, not refuted -- eq. (11) is simply a "
-                "loose intermediate step. This is recorded as a proof gap, not a falsification."
-            ),
+                "establish the stated weight bound. That is reached by two independent "
+                "routes and is exact. What we canNOT say is whether the stated bound "
+                "ITSELF fails: the boundary probe intended to decide that is "
+                "uninformative -- its correct 95% interval covers both competing "
+                "hypotheses and its two estimators disagree eightfold. Earlier revisions "
+                "read that probe as corroborating the stated bound; that reading rested "
+                "on a normal quantile applied to a 5-point fit and is withdrawn. This is "
+                "recorded as a proof gap plus an undecided empirical question, and as "
+                "neither a falsification nor a corroboration of the bound as stated."
+                        ),
         },
     }
 

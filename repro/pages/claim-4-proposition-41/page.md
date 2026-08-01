@@ -19,7 +19,14 @@ differences are:
 | | Main text, Section 4 | Appendix D (Theorems D.3 and D.4) |
 |---|---|---|
 | Condition on `K_JH` | columns **orthogonal** | columns **orthonormal** (`K_JHᵀ K_JH = I_h`) |
-| Stability bound | `‖ũ_i − u_i‖ ≤ 4‖E‖₂ / δ_i` | `‖ũ_i − s_i u_i‖₂ ≤ 4‖K_HH⁻¹‖₂‖E‖₂ / δ_i + O(‖E‖₂²)` |
+| Stability bound | `‖û_i − u_i‖₂ ≲ ‖K_HH⁻¹‖₂‖E‖₂ / δ_i` | `‖ũ_i − s_i u_i‖₂ ≤ 4‖K_HH⁻¹‖₂‖E‖₂ / δ_i + O(‖E‖₂²)` |
+| Where `‖K_JH‖₂` appears | nowhere | nowhere in the *statement*; the appendix **proof** passes through `‖Δ‖₂ ≤ 2‖K_JH‖₂‖K_HH⁻¹‖₂‖E‖₂ + …` and then sets `‖K_JH‖₂ = 1` using orthonormality |
+
+Both rows are quoted from [Source audit](#/source-audit), which carries the paper's
+verbatim text. An earlier revision of this table transcribed the main-text bound without
+its `‖K_HH⁻¹‖₂` factor, presenting the two statements as differing in a factor they in
+fact share; the real difference is the hypothesis, and what that hypothesis licenses in
+the proof.
 
 We tested both. **The appendix statement holds. The main-text statement is false
 as written, on both counts, and we give exact counterexamples.**
@@ -94,8 +101,12 @@ numerical comparison.
 
 ### Counterexample 2 — main-text stability bound is unbounded
 
-The main text drops the `‖K_JH‖₂²` factor. Scaling `K_JH` by `c` scales the bound's
-right-hand side not at all while the true error grows linearly:
+Both displayed bounds are free of `‖K_JH‖₂`. The appendix earns that: its proof carries
+`‖K_JH‖₂` explicitly and discharges it with `‖K_JH‖₂ = 1`, which orthonormality
+guarantees. The main text asserts the same `‖K_JH‖₂`-free bound while assuming only
+*orthogonality*, under which `‖K_JH‖₂` may be any value at all. Scaling `K_JH` by `c`
+therefore leaves the main text's right-hand side unchanged while the true error grows
+linearly:
 
 <!-- FILL:c4.bound_scaling -->
 *(pending release run)*
@@ -118,9 +129,17 @@ Both bounds are now evaluated exactly as transcribed on
 which hides an unspecified constant, so a single violated instance would prove nothing.
 What the table shows is that the ratio is *unbounded*: it grows linearly in `c`, so for
 **any** proposed constant `C` there is a `c` at which the bound fails. No choice of
-hidden constant rescues the statement. The `‖K_JH‖₂²` factor the appendix carries is
-exactly what absorbs this growth, which is why the appendix form survives the same
-sweep.
+hidden constant rescues the statement.
+
+**Be precise about what distinguishes the two forms, because the numbers do not.** The
+two bound columns in the table above are numerically *identical* at every `c` — the
+appendix statement contains no `‖K_JH‖₂` factor either, so nothing in its right-hand side
+absorbs the growth. What separates them is entirely the **hypothesis**: the appendix
+assumes orthonormal columns, which pins `‖K_JH‖₂ = 1` and confines it to `c = 1`, where it
+holds. The main text makes the same assertion over a set of models where `‖K_JH‖₂` is
+unbounded. An earlier revision of this paragraph said the appendix "carries a `‖K_JH‖₂²`
+factor… which is why the appendix form survives the same sweep" — that is wrong twice
+over, and it contradicted this page's own table twenty lines above it.
 
 ### Independent check
 
@@ -170,7 +189,7 @@ Full record in [`raw/verdict.json`](raw/verdict.json) under
 
 ## Contract
 
-This claim's machine-checkable contract — written **before** any result was measured —
+This claim's machine-checkable contract — written **before** any result was measured, except for the elements that entry itself marks `POST-HOC` —
 is entry `C4` of [`raw/claim_contract.json`](raw/claim_contract.json): the exact
 statement, its anchor in the paper, the paper's own assumptions, the condition that
 decides it, and the criterion that would falsify it. The paper's verbatim wording and

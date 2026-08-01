@@ -6,10 +6,21 @@ canonical page is and whether every required item is reachable **from
 unpublished branches, no external logs.
 
 Every cell is **machine-checked** against the staged candidate by
-`repro/publish/visibility_matrix.py`, which opens each claim page and verifies that the
-required artifact is actually reachable from it. Rows are not marked complete on the
-basis of knowing where a file lives, and the publication gate refuses to run while any
-cell is `✗` or any reviewer verdict is still `pending`.
+[`repro/publish/visibility_matrix.py`](repro/publish/visibility_matrix.py), which opens
+each claim page and verifies that the required artifact is actually reachable from it.
+Rows are not marked complete on the basis of knowing where a file lives, and the
+publication gate refuses to run while any cell is `✗` or any reviewer verdict is still
+`pending`.
+
+**What a `✓` does and does not certify.** These are *reachability* checks. Five of the six
+columns ask whether an artifact is present and linked; they do not read the artifact and
+judge its scientific quality. A blind reviewer pointed out that the column descriptions
+below used to promise more than the code delivered — "Checker" was described as *output of
+an independent re-derivation* while the gate tested only for a link plus a substring, which
+is how C3's cell read `✓` in the same revision whose own header said the checker did not
+recompute the argmax. Two columns are now stronger than presence, and the descriptions
+below state exactly what each one tests. The scientific quality of the evidence is what the
+reviewer-verdict column and the claim pages are for; this table is only the index.
 
 ## How to read the reviewer-verdict column
 
@@ -49,16 +60,26 @@ BLOCKED for want of a released dataset.
 
 Column meanings:
 
-* **Code visible** — the executable verifier for this claim is published in this
-  Space and linked from the claim page, not merely named.
-* **Data inline** — the numbers that decide the claim are printed on the page, not
-  only in a download.
-* **Raw link** — a downloadable CSV/JSON of the same numbers.
-* **Checker** — output of an independent re-derivation by a different route.
-* **Control** — a negative control that *fails* for the intended reason, plus
-  evidence it actually fails.
-* **Exact claim tested** — the page tests the paper's quantified statement, not a
-  nearby proxy.
+* **Code visible** — the claim's verifier module is published in this Space at a path
+  the claim page links to, and the file exists at that path. *(link + file exists)*
+* **Data inline** — at least one results block on the page rendered a table containing
+  numbers, and no block on the page is still a placeholder. *(rendered, non-empty)*
+* **Raw link** — the page links to **both** `raw/verdict.json` and a claim-specific
+  `raw/*.csv`, and both files exist. *(links + files exist)*
+* **Checker** — the page links to `independent_check.py` **and** the staged run's
+  `independent_check` output contains this claim's named re-derivations, each with at
+  least one boolean-valued result — so the checker demonstrably decided something for
+  *this* claim rather than merely existing. The map from claim to required keys is
+  `CHECKER_KEYS` in the gate. *(link + the checker's own output for this claim)*
+* **Control** — the page carries a rendered negative-control block, **and** a
+  hand-declared table (`CONTROL_IS_DISCRIMINATING`) records whether that control can
+  actually fail. Where it cannot, the cell renders `◐` with the reason, not `✓`. The
+  declaration is a human judgement, published as one; it is the one column no automated
+  check decides.
+* **Exact claim tested** — the page quotes the claim verbatim as a blockquote and links
+  its machine-checkable contract. *(quote present + contract linked)* This is a
+  discoverability test: whether the quoted words match the paper is settled on
+  [Source audit](#/source-audit), which no script can decide.
 
 Shared items, reachable from every claim page:
 [fixed command, pinned environment, Git SHA, seeds, CPU and runtime](#/environment-and-command);

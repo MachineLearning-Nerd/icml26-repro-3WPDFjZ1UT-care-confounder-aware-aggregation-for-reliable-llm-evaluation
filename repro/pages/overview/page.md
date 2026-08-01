@@ -34,9 +34,18 @@ slope to synthetic data. Theorem D.3's exact-recovery argument is re-derived
 symbolically over a parameterised family; Theorem D.4's constant is *derived* (we
 prove a strictly tighter first-order constant of 2 in place of 4) and its supremum
 is then computed exactly as an operator norm; the Theorem 4.2 and 4.3 proof chains
-are recomposed in `sympy` and their cited lemmas independently re-validated. Where
-a finite experiment is used it is calibrated by search, never by substituting into
-the formula under test.
+are recomposed in `sympy`. Where a finite experiment is used it is calibrated by
+search, never by substituting into the formula under test.
+
+The two proof chains are **not** reached to the same depth, and an earlier version of
+this paragraph blurred them by saying "their cited lemmas independently re-validated"
+of both. For Theorem 4.2 that is true: the Davis–Kahan variant it cites is re-validated
+by two independent routes — an adversarial search over 4,000 random symmetric
+perturbations and a principal-angle re-derivation. For Theorem 4.3 no cited lemma is
+independently re-validated; its chain is recomposed from the paper's own equations (8),
+(10) and (11) taken as given, which is what lets that recomposition establish where the
+displayed derivation loses a factor without establishing the cited results themselves.
+A blind reviewer caught the conflation.
 
 All research compute ran on Hugging Face `cpu-upgrade` (8 vCPU). No GPU was used, and
 no single job exceeded one hour: the benchmark stage is split into 15 shards, the

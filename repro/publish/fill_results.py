@@ -252,9 +252,13 @@ def appendix_consistency(v):
         f"paper's own combined error bars (threshold z ≤ {num(a.get('consistency_threshold_z'), 1)}, "
         f"fixed before the z-scores were computed). Disagreeing: "
         f"**{', '.join(a.get('inconsistent_datasets') or ['none'])}**.\n\n"
-        f"The appendix's own assertion that the leading factor beats every other factor on "
-        f"every dataset: **{yesno(a.get('leading_factor_claim_holds'))}** — that part of "
-        f"Table 7 checks out.\n\n"
+        f"The appendix's own assertion that the leading factor beats every other factor: "
+        f"**{yesno(a.get('leading_factor_claim_holds_where_testable'))}** on the "
+        f"**{a.get('leading_factor_n_informative_columns')} of 6** columns where it is "
+        f"testable at all. On "
+        f"{', '.join(a.get('leading_factor_untestable_columns') or [])} Table 7 lists a "
+        f"single factor, so the assertion is true there by having nothing to compare "
+        f"against and is not counted.\n\n"
         f"| Headline figure | using Table 1 | using Table 7 | shift |\n|---|---|---|---|\n"
         f"| Claim 1's UltraFeedback reduction vs MV | {num(t1.get('claim1_ultrafeedback_reduction_vs_MV_pct'), 3)} % "
         f"| {num(t7.get('claim1_ultrafeedback_reduction_vs_MV_pct'), 3)} % | "
@@ -609,11 +613,15 @@ def c5_eta(v):
                             e.get("error_quantile", []))
     ]
     ci = e.get("ci95", [None, None])
+    ols = e.get("ci95_ols_treating_quantiles_as_independent", [None, None])
     return table(["confidence q", "η(q) = −log((1−q)/2)", "stage-2 error quantile"], rows) + (
-        f"\n\nFitted tail exponent: **{num(e.get('loglog_slope_error_vs_eta'), 4)} ± "
-        f"{num(e.get('stderr'), 4)}**, 95 % interval "
-        f"[{num(ci[0], 4)}, {num(ci[1], 4)}], over {e.get('n_replicates')} independent "
-        f"replicates at n = {e.get('n')}.\n\n"
+        f"\n\nFitted tail exponent: **{num(e.get('loglog_slope_error_vs_eta'), 4)}**, "
+        f"95 % interval [{num(ci[0], 4)}, {num(ci[1], 4)}], over "
+        f"{e.get('n_replicates')} independent replicates at n = {e.get('n')}.\n\n"
+        f"Interval method: {e.get('ci95_method', '—')}. For comparison, treating the "
+        f"quantiles as independent observations and using the OLS residual standard "
+        f"error {num(e.get('stderr_ols_understated'), 4)} would report "
+        f"[{num(ols[0], 4)}, {num(ols[1], 4)}] — {e.get('ols_interval_is_too_narrow_because', '')}\n\n"
         f"- Bound holds (tail grows no faster than √η): "
         f"{yesno(e.get('bound_holds_tail_no_faster_than_sqrt_eta'))}\n"
         f"- Measurement resolves a non-zero exponent: "
@@ -723,6 +731,65 @@ def env_runtimes(v):
     )
 
 
+def env_seeds(v):
+    rec = v.get("seed_record") or {}
+    rows_in = rec.get("rows") or []
+    if not rows_in:
+        raise SystemExit("env.seeds: the verdict carries no seed_record")
+
+    def fmt(seeds):
+        out = []
+        for k, val in seeds.items():
+            if isinstance(val, list):
+                span = f"`{val[0]}…{val[-1]}` ({len(val)} seeds)" if len(val) > 2 else \
+                       "`" + ", ".join(str(x) for x in val) + "`"
+            else:
+                span = f"`{val}`"
+            out.append(f"{k} = {span}")
+        return "; ".join(out) or "—"
+
+    rows = [[r["claim"], r["stage"], f"`{r['function'].split('.')[-1]}`", fmt(r["seeds"])]
+            for r in rows_in]
+    bench = rec.get("benchmark_shards") or {}
+    if bench.get("seeds"):
+        rows.insert(0, [
+            "Claims 1–3", "Table 1 ASSET and Table 2 CivilComments / PKU-BETTER shards",
+            "authors' `--seed`",
+            "`" + ", ".join(str(s) for s in bench["seeds"]) + f"` ({len(bench['seeds'])} seeds)",
+        ])
+    over = rec.get("call_sites_override_a_seed")
+    return table(["Claim", "Stage", "Function", "Seeds actually used"], rows) + (
+        f"\n\nGenerated from {rec.get('generated_from', '—')}. "
+        f"A call site overrides a seed: {yesno(bool(over))} — if one ever did, the run "
+        f"would abort rather than publish this table. "
+        f"`PYTHONHASHSEED={rec.get('pythonhashseed', 'unset')}`."
+    )
+
+
+def c6_discrimination(v):
+    b = g(v, "claims", "C6_thm43", "route_c_boundary_sigma_probe", default={})
+    r = g(v, "independent_check", "c6_slope_recheck", default={})
+    if "discriminates" not in b:
+        raise SystemExit("c6.discrimination: the boundary probe recorded no discrimination flag")
+    lo, hi = (b.get("slope_ci95") or [None, None])[:2]
+    rows = [
+        ["Measured slope (least squares)", num(b.get("loglog_slope_error_over_stated_bound_vs_sigma"), 4)],
+        ["Standard error", num(b.get("slope_stderr"), 4)],
+        ["Points fitted / residual dof", f"{b.get('n_points')} / {b.get('residual_dof')}"],
+        ["95 % multiplier used", f"t(0.975, {b.get('residual_dof')}) = {num(b.get('ci95_uses_t_quantile'), 3)}"],
+        ["95 % interval", f"[{num(lo, 4)}, {num(hi, 4)}]"],
+        [f"Excludes the σ³ hypothesis (slope {num(b.get('predicted_slope_if_sigma3_is_missing'), 0)})",
+         yesno(b.get("excludes_sigma3_hypothesis"))],
+        [f"Excludes the theorem's prediction (slope {num(b.get('predicted_slope_if_theorem_correct'), 0)})",
+         yesno(b.get("excludes_theorem_hypothesis"))],
+        ["**Discriminates between them**", yesno(b.get("discriminates"))],
+        ["Same points, Theil–Sen", num(r.get("theil_sen_slope"), 4)],
+        ["Gap between the two estimators", num(r.get("abs_difference_between_estimators"), 4)],
+        ["Estimators agree", yesno(r.get("estimators_agree_on_the_slope"))],
+    ]
+    return table(["Quantity", "Value"], rows) + f"\n\n{b.get('why', '')}. {r.get('why', '')}."
+
+
 def c6_screen(v):
     """Render the per-setting screen for the p sweep, so its spreads cannot be typed."""
     sc = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", "p",
@@ -751,10 +818,14 @@ def c6_screen(v):
         rows,
     ) + (
         f"\n\nAcross the {len(recs)} settings: `r²` ranges **{num(min(r2s), 3)} to "
-        f"{num(max(r2s), 3)}** against the screen's floor of 0.5, and the two `n*` "
-        f"estimators disagree by up to **{num(max(ratios), 2)}×** against a limit of 3×. "
+        f"{num(max(r2s), 3)}** against the screen's floor of 0.5, the two `n*` "
+        f"estimators disagree by up to **{num(max(ratios), 2)}×** against a limit of 3×, "
+        f"and every decay slope clears the |slope| ≥ 0.15 floor "
+        f"(shallowest {num(min(abs(r['decay_slope']) for r in recs), 3)}). "
         f"**{sc.get('n_usable')} of {sc.get('n_settings')}** settings survive; the fit "
-        f"that produces the exponent uses only those."
+        f"that produces the exponent uses only those. Reasons the rest were dropped: "
+        + "; ".join(f"`p` = {r.get('p_total')} — {r.get('why')}"
+                    for r in recs if not r.get("usable")) + "."
     )
 
 
@@ -1036,7 +1107,10 @@ def c6_controls(v):
     return table(["Setting", "Median weight error"], rows) + (
         f"\n\nNC1 (over-sampling reduces error): {yesno(nc.get('nc1_oversampling_reduces_error'))} · "
         f"NC2 (frozen n, larger σ raises error): {yesno(nc.get('nc2_frozen_n_larger_sigma_raises_error'))} · "
-        f"overall {yesno(nc.get('ok'))}."
+        f"NC2 monotone across the whole σ grid: "
+        f"{yesno(nc.get('nc2_monotone_across_the_whole_sigma_grid'))} · "
+        f"overall {yesno(nc.get('ok'))}.\n\n"
+        f"{nc.get('nc2_saturation_note', '')}"
     )
 
 
@@ -1055,16 +1129,17 @@ CONFIDENCE = {
                    "simultaneously, in exact rational arithmetic, and confirmed against a "
                    "second independent transcription."),
     "C3": ("HIGH", "Every arithmetic assertion is decided exactly over all nine Table 2 "
-                   "methods, from a single transcription -- the independent checker "
-                   "re-derives the Summarize percentages but NOT the argmax. Of Table 2's six "
-                   "columns exactly ONE -- CivilComments -- is reproduced at full scale "
-                   "over five seeds; PKU-BETTER ships judge outputs but its released "
-                   "labels are degenerate and it is BLOCKED, and the other four ship no "
-                   "judge outputs at all. The arithmetic assertions are therefore decided "
-                   "against the paper's own published grid, not against re-measured "
-                   "accuracies for those four columns."),
-    "C4": ("HIGH", "Symbolic over a parameterised family, plus exact counterexamples that "
-                   "satisfy the paper's own hypotheses. Deterministic; no seeds to vary."),
+                   "methods, and the nine-method grid is transcribed TWICE by hand and "
+                   "compared cell by cell before the argmax is recomputed from the second "
+                   "copy, so the 5-of-6 count does not rest on one transcription. The "
+                   "recomputed winners are also checked against the cells the paper "
+                   "typesets bold. An earlier revision of this line said the argmax was "
+                   "NOT independently recomputed; that was true of that revision and is "
+                   "no longer true. What remains outside any check: both transcriptions "
+                   "were taken from the same rendered source, so a systematic misreading "
+                   "would survive both. Empirically, one of six Table 2 columns is "
+                   "reproduced end-to-end; four ship no judge outputs and PKU-BETTER's "
+                   "released labels are degenerate."),
     "C5": ("MEDIUM", "The cited Davis-Kahan constant is validated adversarially over 4,000 "
                      "perturbations, and the eta-dependence -- which earlier revisions "
                      "reported as NOT MEASURED -- is now measured directly from the error's "
@@ -1220,7 +1295,9 @@ GENERATORS = {
     "c2.definitions": c2_definitions,
     "c1.comparator": c1_comparator,
     "c6.screen": c6_screen,
+    "c6.discrimination": c6_discrimination,
     "env.runtimes": env_runtimes,
+    "env.seeds": env_seeds,
     "c3.transcription": c3_transcription,
     "c1.appendix": appendix_consistency,
     "c2.appendix": appendix_consistency,

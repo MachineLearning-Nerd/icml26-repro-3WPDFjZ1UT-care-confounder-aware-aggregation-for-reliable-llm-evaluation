@@ -46,7 +46,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from informativeness import informativeness
+from informativeness import ci95, informativeness, t_crit, tristate
 import sympy as sp
 
 
@@ -358,9 +358,11 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         else (float("nan"), float("nan"))
     )
 
-    alpha_info = informativeness([n for _, n in stars], slope_alpha, se_alpha, ns)
+    alpha_info = informativeness([n for _, n in stars], slope_alpha, se_alpha, ns,
+                                 n_points=len(stars))
     delta_info = informativeness(
-        [r["n_star_alpha_0.30"] for r in ok_rows], slope_delta, se_delta, ns)
+        [r["n_star_alpha_0.30"] for r in ok_rows], slope_delta, se_delta, ns,
+        n_points=len(ok_rows))
 
     theta_ok = abs(slope_theta + 0.5) < 0.12
     # A one-sided contract (slope <= -0.42) passes for -0.472 and equally for -0.9, so
@@ -369,8 +371,8 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     # exponent statistically consistent with the theorem's -1/2? -- is answered
     # separately rather than folded into a pass.
     oracle_at_least_as_fast = bool(np.isfinite(slope_oracle) and slope_oracle <= -0.42)
-    lo_o = slope_oracle - 1.96 * se_oracle
-    hi_o = slope_oracle + 1.96 * se_oracle
+    # t(0.975, n-2), not the normal 1.96: these are fits over a handful of grid points.
+    lo_o, hi_o = ci95(float(slope_oracle), float(se_oracle), len(ns))
     oracle_consistent_with_half = bool(
         np.isfinite(slope_oracle) and np.isfinite(se_oracle) and lo_o <= -0.5 <= hi_o
     )
@@ -385,6 +387,8 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     # resolved no exponent.
     a_ok = (not alpha_info["informative"]) or (np.isfinite(slope_alpha) and slope_alpha >= -2.6)
     d_ok = (not delta_info["informative"]) or (np.isfinite(slope_delta) and slope_delta >= -2.4)
+    a_state = tristate(alpha_info["informative"], np.isfinite(slope_alpha) and slope_alpha >= -2.6)
+    d_state = tristate(delta_info["informative"], np.isfinite(slope_delta) and slope_delta >= -2.4)
     not_measured = ([n for n, i in (("n*(alpha)", alpha_info), ("n*(delta)", delta_info))
                      if not i["informative"]])
     n_ok = np.isfinite(slope_n) and slope_n <= -0.42
@@ -439,9 +443,13 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
             "stage1_precision_exponent": bool(theta_ok),
             "stage2_oracle_spectral_exponent": bool(oracle_ok),
             "stage3_full_pipeline_exponent": bool(n_ok),
-            "alpha_exponent": bool(a_ok),
-            "delta_exponent": bool(d_ok),
+            "alpha_exponent": a_state,
+            "delta_exponent": d_state,
         },
+        "checks_are_tristate": (
+            "A sweep that resolved no exponent is published as the string 'NOT MEASURED', "
+            "never as true. Only True/False here mean a contract was tested."
+        ),
     }
 
 
@@ -559,16 +567,49 @@ def eta_tail_measurement(n=12800, n_seeds=240, p=40, h=3, seed0=90210) -> dict:
     if len(pairs) < 3:
         return {"available": False, "why": "fewer than three usable quantiles"}
     slope, se = _loglog_fit([e for e, _ in pairs], [y for _, y in pairs])
-    lo, hi = slope - 1.96 * se, slope + 1.96 * se
+    lo_ols, hi_ols = ci95(float(slope), float(se), len(pairs))
+
+    # The OLS standard error above treats the seven points as independent observations.
+    # They are not: they are order statistics of ONE sample of `errs`, so they move
+    # together and the residuals are strongly dependent. A blind reviewer flagged the
+    # published +/-t interval as far too narrow, and it was. The honest interval comes
+    # from resampling the thing that is actually independent -- the replicates -- and
+    # re-reading the whole quantile-to-slope pipeline on each resample. Nothing about the
+    # estimate changes; only the uncertainty attached to it becomes truthful.
+    boot = np.random.default_rng(seed0 + 1)
+    slopes = []
+    for _ in range(400):
+        r = boot.choice(errs, size=errs.size, replace=True)
+        qv = [float(np.quantile(r, q)) for q in qs]
+        pr = [(e, y) for e, y in zip(etas, qv) if e > 0 and y > 0]
+        if len(pr) < 3:
+            continue
+        s, _se = _loglog_fit([e for e, _ in pr], [y for _, y in pr])
+        if np.isfinite(s):
+            slopes.append(float(s))
+    if len(slopes) < 100:
+        return {"available": False, "why": "the bootstrap resolved too few slopes"}
+    lo, hi = (float(np.quantile(slopes, 0.025)), float(np.quantile(slopes, 0.975)))
     return {
         "available": True,
+        "ci95_method": (
+            "nonparametric bootstrap over the 240 independent replicates, 400 resamples; "
+            "the quantiles are recomputed inside each resample"
+        ),
+        "n_bootstrap": len(slopes),
+        "ci95_ols_treating_quantiles_as_independent": [float(lo_ols), float(hi_ols)],
+        "ols_interval_is_too_narrow_because": (
+            "the seven fitted points are order statistics of one sample and are strongly "
+            "dependent, so residual-based standard errors understate the uncertainty; the "
+            "bootstrap interval below is the one every verdict on this page uses"
+        ),
         "n": n,
         "n_replicates": int(errs.size),
         "quantiles": qs,
         "eta_of_quantile": [float(e) for e in etas],
         "error_quantile": quants,
         "loglog_slope_error_vs_eta": float(slope),
-        "stderr": float(se),
+        "stderr_ols_understated": float(se),
         "ci95": [float(lo), float(hi)],
         "predicted_slope": 0.5,
         # Theorem 4.2 is an upper bound, so the contract is one-sided: the tail must

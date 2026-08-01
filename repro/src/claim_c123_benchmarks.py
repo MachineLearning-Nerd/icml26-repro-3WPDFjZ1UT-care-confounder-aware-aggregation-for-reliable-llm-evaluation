@@ -269,9 +269,13 @@ def appendix_consistency_audit() -> dict:
     inconsistent = [r["dataset"] for r in rows if not r["consistent"]]
 
     # Does the leading factor really win every column, as Appendix E.8 asserts?
-    leading_best = {}
+    # On two datasets Table 7 lists ONE factor, so "the leading factor is best" is true
+    # of them by having nothing to compare against. Counting those as passes would inflate
+    # a 4-column check into a 6-column one, so they are separated out.
+    leading_best, leading_informative = {}, {}
     for i, ds in enumerate(TABLE1_DATASETS):
         col = [TABLE7_MAE[f][i] for f in TABLE7_FACTORS if TABLE7_MAE[f][i] is not None]
+        leading_informative[ds] = len(col) > 1
         leading_best[ds] = bool(len(col) == 1 or min(col) == col[0])
 
     def _headline(care: np.ndarray) -> dict:
@@ -300,7 +304,14 @@ def appendix_consistency_audit() -> dict:
         "inconsistent_datasets": inconsistent,
         "tables_agree_everywhere": not inconsistent,
         "leading_factor_is_best_per_dataset": leading_best,
-        "leading_factor_claim_holds": all(leading_best.values()),
+        "leading_factor_column_is_informative": leading_informative,
+        "leading_factor_n_informative_columns": sum(leading_informative.values()),
+        "leading_factor_claim_holds_where_testable": all(
+            v for k, v in leading_best.items() if leading_informative[k]
+        ),
+        "leading_factor_untestable_columns": [
+            k for k, v in leading_informative.items() if not v
+        ],
         "headline_using_table1": using_t1,
         "headline_using_table7": using_t7,
         "headline_shift_pp": shifts,
@@ -956,10 +967,7 @@ def run(outdir: Path | None = None) -> dict:
             "claim": "C1/C2/C3 - Tables 1 and 2",
             "table_arithmetic": arith,
             "aggregation_convention_audit": conv,
-        "single_configuration_audit": single,
-        "comparator_selection_audit": comparator,
             "single_configuration_audit": single,
-        "comparator_selection_audit": comparator,
             "comparator_selection_audit": comparator,
             "coverage_audit": cov,
             "ok": False,

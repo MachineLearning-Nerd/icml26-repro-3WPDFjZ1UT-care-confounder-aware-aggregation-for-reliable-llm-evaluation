@@ -61,9 +61,82 @@ def environment() -> dict:
     }
 
 
+def seed_record() -> dict:
+    """The seeds table, read out of the code rather than typed onto a page.
+
+    A blind reviewer found the published seeds table understating Claim 6's main sweeps
+    by 4x: it said `0...4` where `sample_complexity_sweeps` runs 21 seeds. Prose drifts
+    from code; a table generated from `inspect.signature` cannot. Every seed parameter is
+    reported with the value the run actually used.
+
+    The `run()` of each module calls these with no arguments, so the defaults *are* what
+    ran. That premise is checked below rather than assumed -- if a call site ever starts
+    overriding a seed, this raises instead of publishing a table that has quietly become
+    false.
+    """
+    import ast
+    import inspect
+
+    sources = [
+        ("Claim 4", "exact Davis-Kahan constant", claim_c4_prop41.thm_d4_exact_constant),
+        ("Claim 4", "adversarial supremum", claim_c4_prop41.thm_d4_adversarial_constant),
+        ("Claim 4", "finite-perturbation sweep", claim_c4_prop41.thm_d4_finite_perturbation),
+        ("Claim 4", "negative controls", claim_c4_prop41.negative_controls),
+        ("Claim 5", "Davis-Kahan adversarial search", claim_c5_thm42.davis_kahan_constant_check),
+        ("Claim 5", "calibrated rate", claim_c5_thm42.calibrated_rate),
+        ("Claim 5", "negative controls", claim_c5_thm42.negative_controls),
+        ("Claim 5", "eta tail measurement", claim_c5_thm42.eta_tail_measurement),
+        ("Claim 6", "sample-complexity sweeps (sigma, pi_min, p)",
+         claim_c6_thm43.sample_complexity_sweeps),
+        ("Claim 6", "sigma boundary probe", claim_c6_thm43.sigma_sweep),
+        ("Claim 6", "restart-budget attribution", claim_c6_thm43.restart_budget_attribution),
+        ("Claim 6", "negative controls", claim_c6_thm43.negative_controls),
+    ]
+
+    overridden = []
+    for mod in (claim_c4_prop41, claim_c5_thm42, claim_c6_thm43):
+        tree = ast.parse(inspect.getsource(mod.run))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                for kw in node.keywords:
+                    if kw.arg and "seed" in kw.arg:
+                        overridden.append(f"{mod.__name__}.run passes {kw.arg}=")
+    if overridden:
+        raise AssertionError(
+            "a seed is set at the call site, so the signature defaults published as the "
+            "seeds table would be wrong: " + "; ".join(overridden)
+        )
+
+    rows = []
+    for claim, what, fn in sources:
+        params = inspect.signature(fn).parameters
+        # Exactly the seed parameters. `n_seeds` is a replicate count, not a seed, and
+        # listing it in a seeds table would misreport what was fixed.
+        used = {k: v.default for k, v in params.items()
+                if k in ("seed", "seeds", "seed0", "model_seed")}
+        rows.append({
+            "claim": claim,
+            "stage": what,
+            "function": f"{fn.__module__}.{fn.__name__}",
+            "seeds": {k: (list(v) if isinstance(v, tuple) else v) for k, v in used.items()},
+            "n_seeds": sum(len(v) if isinstance(v, tuple) else 1 for v in used.values()),
+        })
+    return {
+        "generated_from": "inspect.signature of the functions run() actually calls",
+        "call_sites_override_a_seed": bool(overridden),
+        "rows": rows,
+        "benchmark_shards": {
+            "note": "passed to the authors' --seed; drives their validation split and numpy RNG",
+            "seeds": [2024, 2025, 2026, 2027, 2028],
+        },
+        "pythonhashseed": os.environ.get("PYTHONHASHSEED", "unset"),
+    }
+
+
 def main() -> int:
     t0 = time.time()
     out = {"paper": "3WPDFjZ1UT", "arxiv": "2603.00039", "environment": environment(), "claims": {}}
+    out["seed_record"] = seed_record()
 
     stages = [
         ("C1_C2_C3_tables", claim_c123_benchmarks.run),

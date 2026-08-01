@@ -33,17 +33,45 @@ measured weight error did not grow:
 *(pending release run)*
 <!-- /FILL -->
 
-The honest reading of *this* probe is therefore **not** a falsification. What the fit
-supports precisely: the measured slope's 95 % interval **excludes the value 3** that a
-genuinely missing `σ³` factor predicts, and **includes 0**, the value the theorem
-predicts. It is a marginal discrimination — the interval is wide — but it is a real one,
-and it points at the derivation rather than at the result. What is defective is the
-*displayed derivation*, which loses a `σ³` factor that the stated result nonetheless
-survives. A bound whose own quantity is never observed to be violated has not been
-falsified in `σ`, however flawed its written proof.
+The honest reading of *this* probe is **not** a falsification. Nor, it turns out, is it a
+corroboration — and saying so costs this logbook its tidiest sentence.
+
+**What two earlier revisions said.** That the measured slope's 95 % interval *excludes*
+the value 3 a missing `σ³` predicts while *including* 0, so the probe discriminates
+between the two hypotheses and points at the derivation rather than the result.
+
+**Why that is withdrawn.** The interval was `slope ± 1.96·se`. This is a five-point fit of
+two parameters — **three residual degrees of freedom** — where the two-sided 95 % multiplier
+is `t(0.975, 3) = 3.182`, not 1.96. At its correct width the interval **includes 3 as well
+as 0**. It excludes neither hypothesis, so it decides nothing. A blind reviewer found this;
+it was not caught by any gate here, because no gate checked which quantile was used.
+
+Two further facts point the same way, and neither was load-bearing before:
+
+* The independent checker's Theil–Sen refit of the same five points gives a slope roughly
+  **eight times** the least-squares value. Two estimators that far apart on one small
+  sample are not measuring a slope.
+* The old one-sided check that the refit "agrees there is no `σ` growth" passed by
+  clearing its 0.5 threshold by about 0.02 — a margin that is itself inside the noise.
+
+Every interval in this campaign now uses `t(0.975, n−2)`, from a single helper
+(`informativeness.t_crit`), and the boundary probe reports **whether it discriminates** as
+a separate measured field rather than leaving that to prose.
+
+<!-- FILL:c6.discrimination -->
+*(pending release run)*
+<!-- /FILL -->
+
+**What survives.** The symbolic finding — that composing the paper's own eq. (8) and
+eq. (11) overshoots the stated bound by exactly `σ³` — is untouched by any of this, and is
+now reached by **two** independent routes. What does not survive is the claim that the
+stated bound was empirically observed to hold in `σ`. That question is **undecided here**,
+and reporting it as decided was an error of the same kind as the two falsifications this
+logbook has already withdrawn: a conclusion outrunning a small sample.
 
 This is recorded rather than quietly dropped because a reproduction that only reports
-confirmations of its own hypotheses is not measuring anything.
+confirmations of its own hypotheses is not measuring anything — and because the correction
+runs *against* this logbook's convenience, removing a result it had already published.
 
 ## The `p·log(p/ε)` factor: a falsification we published, then withdrew
 
@@ -127,11 +155,14 @@ An earlier revision of this page asserted such a check existed when it did not.
 **Why none of these refits rescues the finding.** Every estimate of the exponent exceeds
 1, and that was the basis of the withdrawn falsification. It is not sufficient. All of
 them are fits to the same per-setting `n*` values, over the same screened settings, and
-those values are what the per-setting screen calls into question — the two `n*`
-estimators disagree per setting, the decay curves fit a power law imperfectly, and `n*`
-is not monotone in `p`. The screen's own measured spreads are rendered below rather than
-typed here, because an earlier revision quoted a previous run's figures as if they were
-this one's:
+those values are what the per-setting screen calls into question. In this run the screen
+drops half the settings, and it drops all of them for **one** reason: the two `n*`
+estimators disagree by more than 3×. Every setting clears the `r²` floor and every decay
+slope is steep enough to extrapolate from, so this run is *better behaved* than the one
+the withdrawn falsification was computed on — and the finding still does not survive,
+because half the sweep cannot be used and what remains is not attributable. The measured
+spreads are rendered below rather than typed here, since an earlier revision quoted a
+previous run's figures as if they were this one's:
 
 <!-- FILL:c6.screen -->
 *(pending release run)*
@@ -264,6 +295,20 @@ the `σ`-dependence the theorem asserts is genuinely present in the estimator. H
 been flat, the σ-sweep in the boundary probe above would have been measuring nothing,
 and the null result reported there would have been uninformative rather than evidence.
 
+**How far NC2's pass reaches, which is less far than "discriminating" suggests.** Its
+contract compares only the endpoints, `σ = 3` against `σ = 1`, and the block above reports
+separately whether the error rises at *every* step of the grid. It does not: the error
+climbs from `σ = 1` to `σ = 2` and then falls back slightly at `σ = 3`. A blind reviewer
+raised this, and it is a real qualification. The reversal is the signature of the
+estimator saturating at large `σ` — beyond some noise level the weight error stops
+tracking `σ` because the recovery has already degraded to near-chance — so NC2
+establishes that a `σ`-dependence exists in this estimator near `σ = 1`, and does **not**
+establish that it is monotone across the whole grid. That distinction matters here
+because the σ boundary probe operates over `σ ∈ [1.0, 2.0]`, inside the region where the
+dependence is present; had the probe extended to `σ = 3` it would have been reading a
+saturated regime. It is one more reason the probe's null result is reported as
+uninformative rather than as evidence of absence.
+
 ## Independent check
 
 [`independent_check.py`](repro/src/independent_check.py) refits every sweep with a
@@ -285,7 +330,7 @@ extract [`raw/c6_sigma_sweep.csv`](raw/c6_sigma_sweep.csv). Code:
 
 ## Contract
 
-This claim's machine-checkable contract — written **before** any result was measured —
+This claim's machine-checkable contract — written **before** any result was measured, except for the elements that entry itself marks `POST-HOC` —
 is entry `C6` of [`raw/claim_contract.json`](raw/claim_contract.json): the exact
 statement, its anchor in the paper, the paper's own assumptions, the condition that
 decides it, and the criterion that would falsify it. The paper's verbatim wording and
