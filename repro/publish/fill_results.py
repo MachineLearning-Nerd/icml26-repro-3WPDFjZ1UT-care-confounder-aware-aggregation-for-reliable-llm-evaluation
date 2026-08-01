@@ -542,7 +542,16 @@ def c4_bound_scaling(v):  # noqa: C901
         f"{num(ce.get('appendix_ratio_at_c_equals_1'), 3)} and the bound is satisfied: "
         f"{yesno(ce.get('appendix_bound_holds_where_applicable'))}. The column is shown at "
         f"every `c` for transparency, but rows with `c ≠ 1` fall outside Theorem D.4's own "
-        f"hypotheses and are not evidence for or against it."
+        f"hypotheses and are not evidence for or against it.\n\n"
+        "**Why the two bound columns are numerically equal.** In this construction "
+        "`K_HH = diag(3, 2, 1)`, so `‖K_HH⁻¹‖₂ = 1` and the appendix bound "
+        "`4‖K_HH⁻¹‖₂‖E‖₂/δ_i` reduces to the main-text `4‖E‖₂/δ_i`. The two statements are "
+        "therefore *not* separated by their formulas here — they are separated by their "
+        "**hypotheses**, and that is exactly what this counterexample exploits. At `c = 1` "
+        "both hypotheses hold and both bounds hold. At `c > 1` the columns are still "
+        "orthogonal but no longer orthonormal, so the main text still claims its bound "
+        "while the appendix does not — and it is the main text's claim that fails, by a "
+        "factor growing linearly in `c`."
     )
 
 
