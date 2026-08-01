@@ -363,7 +363,18 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         [r["n_star_alpha_0.30"] for r in ok_rows], slope_delta, se_delta, ns)
 
     theta_ok = abs(slope_theta + 0.5) < 0.12
-    oracle_ok = np.isfinite(slope_oracle) and slope_oracle <= -0.42
+    # A one-sided contract (slope <= -0.42) passes for -0.472 and equally for -0.9, so
+    # it never tested that the rate IS n^{-1/2}; it tested that decay was at least that
+    # fast. Both bounds are now reported, and the two-sided question -- is the measured
+    # exponent statistically consistent with the theorem's -1/2? -- is answered
+    # separately rather than folded into a pass.
+    oracle_at_least_as_fast = bool(np.isfinite(slope_oracle) and slope_oracle <= -0.42)
+    lo_o = slope_oracle - 1.96 * se_oracle
+    hi_o = slope_oracle + 1.96 * se_oracle
+    oracle_consistent_with_half = bool(
+        np.isfinite(slope_oracle) and np.isfinite(se_oracle) and lo_o <= -0.5 <= hi_o
+    )
+    oracle_ok = oracle_at_least_as_fast
     # A sweep counts only when it is informative. If it is, it must satisfy its
     # contract; if it is not, it is reported NOT INFORMATIVE and contributes no
     # evidence either way, rather than passing because it failed to disagree.
@@ -388,6 +399,9 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         "stage_1_loglog_slope_stderr": se_theta,
         "stage_1_check": bool(theta_ok),
         "stage_2_oracle_spectral_error_vs_n": oracle_curve,
+        "stage_2_exponent_at_least_as_fast_as_stated": oracle_at_least_as_fast,
+        "stage_2_exponent_statistically_consistent_with_minus_half": oracle_consistent_with_half,
+        "stage_2_loglog_slope_ci95": [lo_o, hi_o],
         "stage_2_loglog_slope": slope_oracle,
         "stage_2_loglog_slope_stderr": se_oracle,
         "stage_2_check": bool(oracle_ok),

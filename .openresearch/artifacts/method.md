@@ -6,8 +6,11 @@ One fixed run command, inherited unchanged by every node of the experiment tree:
 uv run python repro/src/run_all.py
 ```
 
-All variants live in committed code. Nothing is switched by an environment variable
-or an alternate command line. All research compute runs on Hugging Face
+All variants live in committed code. Two environment variables do affect what runs, and
+an earlier version of this sentence wrongly denied it: `CARE_OFFICIAL_DIR` selects the
+authors' checkout, and `CARE_ENTRY` selects the shard entrypoint inside the job
+bootstrap. Neither changes a claim's result; both are recorded here rather than left as
+a false absolute (see Limitations item 19). All research compute runs on Hugging Face
 `cpu-upgrade` (8 vCPU, 32 GB); the local machine is used only to read and edit the
 repository. `repro/src/threads.py` is imported before numpy/scipy/torch and pins
 every BLAS/OpenMP pool to the container's real cgroup quota, without which these

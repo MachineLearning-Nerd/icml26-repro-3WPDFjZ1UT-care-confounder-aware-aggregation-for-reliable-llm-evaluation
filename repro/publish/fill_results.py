@@ -845,11 +845,13 @@ PAGE_VERDICT = {
           "over the full 6 × 4 grid finding no cherry-picking — the headline leaves "
           "6.28 pp unclaimed) / **BLOCKED** (the UltraFeedback MAE pair — the authors "
           "released no UltraFeedback judge-score matrix)",
-    "C2": "**FALSIFIED as worded** — the average across the six benchmarks of CARE-SVD's "
-          "improvement over AVG is 15.19 %, not 17.37 %. The published figure is an "
-          "MAE-weighted mean that puts 84.4 % of its weight on one benchmark and is not "
-          "invariant to that benchmark's unit of measurement / **BLOCKED** (five of six "
-          "Table 1 columns have no released judge outputs)",
+    "C2": "**VERIFIED with a quantified scope qualification** — 17.37 % and 12.75 % are "
+          "reproduced exactly, and the definition that yields them is identified "
+          "uniquely: it is an MAE-weighted mean of the per-dataset improvements placing "
+          "84.4 % of its weight on ASSET. The unit-invariant average across the six "
+          "benchmarks is 15.19 %. This is a scope qualification, **not a falsification** "
+          "— an earlier revision of this page wrongly called it one / **BLOCKED** (five "
+          "of six Table 1 columns have no released judge outputs)",
     "C3": "**VERIFIED** as arithmetic over the paper's published nine-method grid (best on "
           "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure), with the "
           "scope qualification that the count of 5 is a two-variant family count — no "

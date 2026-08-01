@@ -126,7 +126,7 @@ def c2_unit_invariance_exact() -> dict:
         "asset_weight_share": float(w[0]),
         "paper_headline_pct": 17.37,
         "discrepancy_pp": abs(float(unw_avg[0]) - 17.37),
-        "falsified_as_worded": bool(
+        "scope_qualification_established": bool(
             unweighted_exactly_invariant
             and identity_exact
             and pooled_spread > 1.0
@@ -380,8 +380,8 @@ def run(verdict: dict | None = None) -> dict:
         conv = verdict["claims"]["C1_C2_C3_tables"].get("aggregation_convention_audit")
         if conv is not None:
             e = out["c2_unit_invariance_exact"]
-            out["agreement_with_claim_module"]["c2_falsified_as_worded"] = bool(
-                conv["falsified_as_worded"] == e["falsified_as_worded"]
+            out["agreement_with_claim_module"]["c2_scope_qualification"] = bool(
+                conv["scope_qualification_established"] == e["scope_qualification_established"]
             )
             out["agreement_with_claim_module"]["c2_unweighted_average"] = bool(
                 abs(conv["unweighted_across_benchmark_average_vs_AVG_pct"]

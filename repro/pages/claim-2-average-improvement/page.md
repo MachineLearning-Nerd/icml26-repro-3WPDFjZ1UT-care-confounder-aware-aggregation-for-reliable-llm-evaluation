@@ -54,7 +54,7 @@ selection: ASSET's judges score on a 0–100 scale, so its MAE is ≈ 30 while t
 benchmarks sit near 1, and ASSET therefore absorbs **84.4%** of the weight. The published
 "average across scoring datasets" is, to within a rounding error, ASSET's number alone.
 
-### The test that decides it: invariance to units
+### Quantifying the dependence: units
 
 Any statistic that deserves to be called an average *across benchmarks* must be
 unchanged when one benchmark is re-expressed in different units — reporting ASSET on
@@ -65,7 +65,16 @@ nothing about CARE. So we rescale ASSET's whole column by a constant and recompu
 *(pending release run)*
 <!-- /FILL -->
 
-The paper's statistic is not invariant, and the failure is not marginal. It ranges over
+**First, what this test is and is not.** It cannot fail. `(c·a − c·k)/(c·a) = (a − k)/a`
+identically, so the unweighted mean is *necessarily* unit-invariant; and the pooled mean
+is *necessarily* unit-dependent unless all six benchmarks improve by the same fraction.
+An earlier revision of this page called the criterion "a property any across-benchmark
+average must have … it could have exonerated the paper's statistic and did not." The
+first half is true; the second is false, and a blind reviewer was right to flag it. The
+sweep does not *decide* anything — it **quantifies** how large the dependence is and in
+which direction, which is the part that is not predictable from the algebra.
+
+With that stated, the size is not marginal. It ranges over
 several percentage points under unit changes well inside the range of scales the six
 benchmarks actually use, and — the substantive consequence — **the qualitative
 conclusion reverses.** The paper reports a larger gain over AVG (17.37%) than over MV
@@ -79,26 +88,32 @@ rescaling (exactly, as set-equality over rationals, not to a tolerance).
 
 ### Verdict
 
-The claim under test asserts *"an average 17.37% improvement over simple averaging
-across continuous-scoring benchmarks."* The quantity it names is unit-invariant and
-equals **15.19%**. The published 17.37% is a different, unit-dependent statistic that
-the paper does not define and that places 84.4% of its weight on one benchmark. This
-claim is therefore **FALSIFIED as worded**, with the exact alternative statistic
-identified and reproduced to four significant figures.
+Both published figures are **reproduced exactly**, and the definition that yields them is
+identified uniquely: an MAE-weighted mean of the per-dataset improvements, with 84.4% of
+the weight on ASSET. The unit-invariant average across the six benchmarks is **15.19%**.
 
-Two things this verdict does *not* say, to keep its scope honest. It does not allege an
-arithmetic error: every number the paper prints is correct under the definition it
-used. And it does not say CARE fails to beat AVG — CARE improves on AVG on all six
-benchmarks, by 15.19% on average. What is falsified is the specific published
-figure's status as an across-benchmark average.
+This is a **scope qualification on the headline statistic, not a falsification**, and an
+earlier revision of this page wrongly recorded it as `FALSIFIED as worded`. That verdict
+does not survive scrutiny: it refutes no measurement, every number the paper prints is
+correct under the definition it used, and what remains is a disagreement about which
+statistic the phrase "averaged across scoring datasets" denotes — a genuinely ambiguous
+sentence. Calling that a refutation would be claiming a result the evidence does not
+support, which is the specific failure this logbook is supposed to guard against.
 
-**How this finding was arrived at, stated plainly.** The discrepancy between the pooled
-and unweighted readings was found by exploration, not predicted in advance, and the
-2026-08-01 revision of this page reported it as "a finding about the paper's headline
-statistic, **not as an error in it**". That framing was too weak, and it was mine. The
-unit-invariance criterion applied here is not fitted to the data — it is a property any
-across-benchmark average must have, stated independently of what the numbers turned out
-to be. See [Limitations item 21](#/limitations).
+What *is* established, and is worth a reader's attention: the published figure places
+84.4% of its weight on a single benchmark because of that benchmark's label scale, and
+the paper's ordering — a larger gain over AVG than over MV — is a consequence of that
+weighting rather than of the methods. It also does not say CARE fails to beat AVG: CARE
+improves on AVG on all six benchmarks, by 15.19% on average.
+
+**How this finding was arrived at, and twice mis-stated.** The discrepancy between the
+pooled and unweighted readings was found by exploration, not predicted in advance. This
+page has now recorded it wrongly in both directions: an earlier revision called it "a
+finding … **not an error**", which was weaker than the evidence supported, and the
+revision after that called it **FALSIFIED**, which was stronger. Both framings were mine.
+The stable statement is the one above — a quantified scope qualification on a summary
+statistic, with the underlying benchmark comparison untouched. See
+[Limitations items 21 and 23](#/limitations).
 
 ## Per-dataset breakdown
 

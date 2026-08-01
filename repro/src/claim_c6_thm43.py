@@ -42,7 +42,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from informativeness import estimators_agree, informativeness
+from informativeness import estimators_agree, informativeness, screen_settings, with_screen
 import sympy as sp
 
 from tensor_mom import empirical_moments, recover_weights, sample_mixture
@@ -240,8 +240,18 @@ def _fit(x, y):
     return float(s), se
 
 
-def _sweep_fits(rows, xs_of):
-    """Fit the exponent twice, once per n* estimator, and test whether they agree."""
+def _sweep_fits(rows, xs_of, key):
+    """Fit the exponent twice, once per n* estimator, and test whether they agree.
+
+    Settings are screened individually first. Comparing only the two aggregate slopes
+    let a sweep pass in which the estimators disagreed by up to 8.6x at every point and
+    in opposite directions, over decay curves too shallow and too noisy to extrapolate
+    from -- agreement between two fits through noise, reported as corroboration.
+    """
+    screen = screen_settings(rows, key)
+    usable_keys = {u[key] for u in screen["usable"]}
+    rows = [r for r in rows if r.get(key) in usable_keys]
+
     fit_rows = [r for r in rows if r.get("n_star")]
     cross_rows = [r for r in rows if r.get("n_star_crossing")]
     nan = (float("nan"), float("nan"))
@@ -249,7 +259,7 @@ def _sweep_fits(rows, xs_of):
                  if len(fit_rows) >= 3 else nan)
     s_c, se_c = (_fit(xs_of(cross_rows), [r["n_star_crossing"] for r in cross_rows])
                  if len(cross_rows) >= 3 else nan)
-    return fit_rows, s_f, se_f, s_c, se_c, estimators_agree(s_f, se_f, s_c, se_c)
+    return fit_rows, s_f, se_f, s_c, se_c, estimators_agree(s_f, se_f, s_c, se_c), screen
 
 
 def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
@@ -271,12 +281,13 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
         f = _n_star_fit(NS_GRID, c)
         rows.append({"sigma_max": sigma, "errors": c, "n_star": f["n_star"],
                      "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
-    ok_rows, s_sigma, se_sigma, sc_sigma, sec_sigma, agr_sigma = _sweep_fits(
-        rows, lambda rs: [r["sigma_max"] for r in rs])
+    ok_rows, s_sigma, se_sigma, sc_sigma, sec_sigma, agr_sigma, scr_sigma = _sweep_fits(
+        rows, lambda rs: [r["sigma_max"] for r in rs], "sigma_max")
     info_sigma = informativeness(
         [r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID, agr_sigma)
+    info_sigma = with_screen(info_sigma, scr_sigma)
     out["sigma"] = {
-        "rows": rows, "exponent": s_sigma, "stderr": se_sigma,
+        "rows": rows, "per_setting_screen": scr_sigma, "exponent": s_sigma, "stderr": se_sigma,
         "stated_exponent": 6.0, "requirement": "exponent <= 6 + 2*stderr",
         "n_settings_used": len(ok_rows),
         "n_settings_censored": len(rows) - len(ok_rows),
@@ -298,12 +309,13 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
         f = _n_star_fit(NS_GRID, c)
         rows.append({"pi_min": pmin, "errors": c, "n_star": f["n_star"],
                      "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
-    ok_rows, s_pi, se_pi, sc_pi, sec_pi, agr_pi = _sweep_fits(
-        rows, lambda rs: [r["pi_min"] for r in rs])
+    ok_rows, s_pi, se_pi, sc_pi, sec_pi, agr_pi, scr_pi = _sweep_fits(
+        rows, lambda rs: [r["pi_min"] for r in rs], "pi_min")
     info_pi_min = informativeness(
         [r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID, agr_pi)
+    info_pi_min = with_screen(info_pi_min, scr_pi)
     out["pi_min"] = {
-        "rows": rows, "exponent": s_pi, "stderr": se_pi,
+        "rows": rows, "per_setting_screen": scr_pi, "exponent": s_pi, "stderr": se_pi,
         "stated_exponent": -2.0, "requirement": "exponent >= -2 - 2*stderr",
         "n_settings_used": len(ok_rows),
         "n_settings_censored": len(rows) - len(ok_rows),
@@ -326,11 +338,12 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
         f = _n_star_fit(NS_GRID, c)
         rows.append({"p_total": pt, "errors": c, "n_star": f["n_star"],
                      "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
-    ok_rows, s_p, se_p, sc_p, sec_p, agr_p = _sweep_fits(
-        rows, lambda rs: [r["p_total"] * np.log(r["p_total"] / EPS) for r in rs])
-    info_p = informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID, agr_p)
+    ok_rows, s_p, se_p, sc_p, sec_p, agr_p, scr_p = _sweep_fits(
+        rows, lambda rs: [r["p_total"] * np.log(r["p_total"] / EPS) for r in rs], "p_total")
+    info_p = with_screen(
+        informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID, agr_p), scr_p)
     out["p"] = {
-        "rows": rows, "exponent_vs_p_log_p": s_p, "stderr": se_p,
+        "rows": rows, "per_setting_screen": scr_p, "exponent_vs_p_log_p": s_p, "stderr": se_p,
         "stated_exponent": 1.0, "requirement": "exponent <= 1 + 2*stderr",
         "n_settings_used": len(ok_rows),
         "n_settings_censored": len(rows) - len(ok_rows),
@@ -372,31 +385,70 @@ def p_sweep_confound_audit() -> dict:
     """
     lam = np.sort(1.0 / np.sqrt(np.asarray(PI_TRUE, float)))
     delta_cp = float(np.min(np.diff(lam)))
+
+    # Quantities fixed by CONSTRUCTION, not by measurement. sigma and pi_min are
+    # arguments of the sweep; the CP eigenvalues are lambda_i = pi_i^{-1/2}, a function
+    # of PI_TRUE alone; and the population M2 = sum_i pi_i mu_i mu_i^T has nonzero
+    # eigenvalues pi_i * MEAN_SCALE^2 because the means are an orthonormal frame scaled
+    # by MEAN_SCALE. Reporting these in a table of "measurements that came out constant"
+    # would be a vacuous control -- they are p-free before any code runs, and an earlier
+    # revision of this page did exactly that and called it an audit.
+    by_construction = {
+        "sigma_max": 1.0,
+        "pi_min": float(min(PI_TRUE)),
+        "delta_cp_eigenvalue_gap": delta_cp,
+        "population_m2_condition_number": float(max(PI_TRUE) / min(PI_TRUE)),
+        "why_these_cannot_drift": (
+            "sigma and pi_min are sweep arguments; lambda_i = pi_i^{-1/2} depends only "
+            "on PI_TRUE; population M2 eigenvalues are pi_i * MEAN_SCALE^2 for an "
+            "orthonormal mean frame. None is a function of p."
+        ),
+    }
+
+    # Quantities that genuinely COULD drift with p, measured from the model actually
+    # built at each p and from moments estimated at a fixed sample size.
     rows = []
+    n_probe = 5000
     for ppv in (4, 5, 6, 8, 10, 12):
         mus = _model(np.random.default_rng(20260801), ppv)
         mu = mus[0]
         seps = [float(np.linalg.norm(mu[:, i] - mu[:, j]))
                 for i in range(mu.shape[1]) for j in range(i + 1, mu.shape[1])]
-        m2_eigs = np.sort(np.asarray(PI_TRUE, float) * MEAN_SCALE ** 2)[::-1]
+        rng = np.random.default_rng(20260802)
+        (X1, X2, X3), _ = sample_mixture(rng, PI_TRUE, mus, 1.0, n_probe)
+        M2_hat, _ = empirical_moments(X1, X2, X3)
+        ev = np.sort(np.abs(np.linalg.eigvalsh((M2_hat + M2_hat.T) / 2)))[::-1]
+        top = ev[:K_COMPONENTS]
         rows.append({
             "p_total": 3 * ppv,
-            "delta_cp_eigenvalue_gap": delta_cp,
             "min_pairwise_mean_separation": min(seps),
-            "m2_condition_number": float(m2_eigs[0] / m2_eigs[-1]),
-            "sigma_max": 1.0,
-            "pi_min": float(min(PI_TRUE)),
+            "empirical_m2_topk_condition_number": float(top[0] / top[-1]),
+            "empirical_m2_leakage_outside_topk": float(ev[K_COMPONENTS] / top[-1]),
+            "n_used_for_this_probe": n_probe,
         })
 
-    def constant(key):
+    def constant(key, tol=1.01):
         vals = [r[key] for r in rows]
-        return bool(max(vals) / min(vals) < 1.01) if min(vals) > 0 else False
+        return bool(max(vals) / min(vals) < tol) if min(vals) > 0 else False
 
-    keys = ("delta_cp_eigenvalue_gap", "min_pairwise_mean_separation",
-            "m2_condition_number", "sigma_max", "pi_min")
-    held = {k: constant(k) for k in keys}
-    out = {"rows": rows, "held_fixed": held, "ok": True,
-           "all_other_quantities_held_fixed": all(held.values())}
+    measured_keys = ("min_pairwise_mean_separation", "empirical_m2_topk_condition_number")
+    held = {k: constant(k) for k in measured_keys}
+    # Leakage outside the top-k subspace is expected to GROW with p at fixed n. That is
+    # the honest finding this audit exists to surface, so it is reported as a number
+    # rather than folded into a pass/fail.
+    leak = [r["empirical_m2_leakage_outside_topk"] for r in rows]
+    out = {
+        "rows": rows,
+        "fixed_by_construction": by_construction,
+        "held_fixed": held,
+        "measured_quantities_held_fixed": all(held.values()),
+        "leakage_ratio_first_to_last_p": float(leak[-1] / leak[0]) if leak[0] > 0 else None,
+        "leakage_grows_with_p": bool(leak[-1] > leak[0]),
+        "ok": bool(held["min_pairwise_mean_separation"]),
+    }
+    out["all_other_quantities_held_fixed"] = bool(
+        out["measured_quantities_held_fixed"]
+    )
     out["why"] = (
         "delta, the mean separation, the M2 conditioning, sigma and pi_min are identical "
         "at every p in the sweep, so a measured p-exponent is attributable to the "
@@ -579,9 +631,13 @@ def run() -> dict:
             "INCONCLUSIVE" if not ok else
             "FALSIFIED (the stated p*log(p/eps) sample-complexity factor is insufficient: "
             f"n* grows as (p log(p/eps))^{sweeps['p'].get('exponent_vs_p_log_p', float('nan')):.2f} "
-            f"+/- {sweeps['p'].get('stderr', float('nan')):.2f} with sigma, delta and pi_min "
-            "held fixed, both n* estimators agreeing, and the solver's restart budget ruled "
-            "out), while the mean bound and the boundary behaviour are VERIFIED and the "
+            f"+/- {sweeps['p'].get('stderr', float('nan')):.2f} over the "
+            f"{sweeps['p'].get('per_setting_screen', {}).get('n_usable', 0)} of "
+            f"{sweeps['p'].get('per_setting_screen', {}).get('n_settings', 0)} settings that "
+            "survive the per-setting screen, with sigma and pi_min fixed by construction "
+            "and the solver's restart budget ruled out; the quoted standard error is that "
+            "of the exponent fit and does NOT propagate per-setting n* uncertainty"
+            "), while the mean bound and the boundary behaviour are VERIFIED and the "
             "displayed proof of the weight bound has a documented gap" if p_falsified else
             "VERIFIED (sample-complexity condition and mean bound) with a documented "
             "gap in the displayed proof of the weight bound" if measured else

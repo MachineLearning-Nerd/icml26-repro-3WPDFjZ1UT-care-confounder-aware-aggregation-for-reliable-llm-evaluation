@@ -25,6 +25,73 @@ from __future__ import annotations
 import math
 
 
+def usable_setting(n_star_fit: dict | None, n_star_crossing, max_ratio=3.0,
+                   min_r2=0.5, min_abs_slope=0.15) -> dict:
+    """Is a single sweep setting's n* trustworthy enough to enter an exponent fit?
+
+    Aggregate-slope agreement is too weak a test. Two estimators can produce
+    overlapping *slope* intervals while disagreeing by an order of magnitude at every
+    individual point, in opposite directions -- which is agreement between two fits
+    through noise, not corroboration.
+
+    Each setting must therefore pass on its own before it may contribute:
+
+      * the two n* estimators agree within `max_ratio`;
+      * the decay fit that produces n* actually describes the curve (r2 >= min_r2);
+      * the decay is steep enough that extrapolating to the target is stable. n* is
+        exp((log target - a)/b), so d log n* / d log err = -1/b: at b = -0.076 a 10%
+        error wobble moves n* by ~3.5x, and the reported n* is then a property of the
+        noise. Requiring |b| >= 0.15 caps that amplification at ~7x per e-fold.
+
+    A setting failing any of these is dropped and named, rather than silently averaged
+    into an exponent that then carries a standard error computed as if n* were exact.
+    """
+    if not isinstance(n_star_fit, dict) or n_star_fit.get("n_star") is None:
+        return {"usable": False, "why": "curve-fitting produced no n*"}
+    nf, nc = n_star_fit.get("n_star"), n_star_crossing
+    r2, slope = n_star_fit.get("r2"), n_star_fit.get("decay_slope")
+    if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in (nf, nc, r2, slope)):
+        return {"usable": False, "why": "an estimator produced no finite value"}
+    if nf <= 0 or nc <= 0:
+        return {"usable": False, "why": "a non-positive n* cannot enter a log fit"}
+    ratio = max(nf, nc) / min(nf, nc)
+    why = []
+    if ratio > max_ratio:
+        why.append(f"the two n* estimators disagree by {ratio:.1f}x (limit {max_ratio}x)")
+    if r2 < min_r2:
+        why.append(f"the decay fit explains little of the curve (r2={r2:.2f} < {min_r2})")
+    if abs(slope) < min_abs_slope:
+        why.append(
+            f"the decay is too shallow to extrapolate (slope={slope:.3f}, "
+            f"|slope| < {min_abs_slope}); n* amplifies noise by ~{1/max(abs(slope),1e-9):.0f}x"
+        )
+    return {
+        "usable": not why,
+        "n_star_fit": nf,
+        "n_star_crossing": nc,
+        "ratio": ratio,
+        "r2": r2,
+        "decay_slope": slope,
+        "why": "; ".join(why),
+    }
+
+
+def screen_settings(rows, key) -> dict:
+    """Apply `usable_setting` across a sweep and report what survives."""
+    kept, dropped = [], []
+    for r in rows:
+        u = usable_setting(r.get("n_star_fit"), r.get("n_star_crossing"))
+        rec = {key: r.get(key), **u}
+        (kept if u["usable"] else dropped).append(rec)
+    return {
+        "n_settings": len(rows),
+        "n_usable": len(kept),
+        "usable": kept,
+        "dropped": dropped,
+        "enough_usable_settings": len(kept) >= 3,
+    }
+
+
 def estimators_agree(a_slope, a_se, b_slope, b_se) -> dict:
     """Do two independent estimators of the same exponent overlap at 95%?
 
@@ -95,3 +162,25 @@ def informativeness(ys, slope, stderr, grid, agreement=None) -> dict:
         "n_usable_points": len(ys),
         "n_distinct_n_star": len(set(ys)),
     }
+
+
+def with_screen(info: dict, screen: dict) -> dict:
+    """Fold a per-setting screen into a sweep's informativeness verdict.
+
+    A sweep whose usable settings have fallen below three has not measured an
+    exponent, however well the surviving points happen to line up.
+    """
+    info = dict(info)
+    info["per_setting_screen"] = {
+        "n_settings": screen["n_settings"],
+        "n_usable": screen["n_usable"],
+        "dropped": [{k: v for k, v in d.items() if k in ("why",) or not isinstance(v, dict)}
+                    for d in screen["dropped"]],
+    }
+    if not screen["enough_usable_settings"]:
+        info["informative"] = False
+        info["status"] = "NOT INFORMATIVE"
+        why = (f"only {screen['n_usable']} of {screen['n_settings']} settings survived "
+               "the per-setting screen; fewer than three usable n* values")
+        info["why"] = (info.get("why") + "; " + why) if info.get("why") else why
+    return info

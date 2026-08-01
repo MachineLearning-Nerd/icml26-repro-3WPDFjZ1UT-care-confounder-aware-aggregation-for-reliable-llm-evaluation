@@ -383,3 +383,60 @@ It is recorded here because the failure mode is the interesting part. Had the tw
 implementations genuinely disagreed about whether Claim 2 is falsified, nothing in the
 release gates would have caught it, and the page would have published a verdict that its
 own second implementation contradicted.
+
+## 23. A blind reviewer found six defects in the previous revision, including two of mine
+
+Before this revision was published, the candidate artifact was given to a reviewer with
+no knowledge of how it was built, who was told only to start at `logbook.json` and score
+every claim. It returned `partial` on five of six claims and found nineteen defects. Six
+changed the published conclusions, and they are listed here because the review is part
+of the evidence, not a step that precedes it.
+
+**23a. Claim 2 was published as FALSIFIED and is not.** The unit-invariance test was
+presented as "a criterion that could have exonerated the paper's statistic and did not."
+That is false: `(c·a − c·k)/(c·a) = (a − k)/a` identically, so the unweighted mean must
+be unit-invariant and the pooled mean must be unit-dependent unless every benchmark
+improves equally. The test cannot fail. The verdict is now a quantified scope
+qualification. The measured quantities behind it — 84.4% weight on ASSET, the ordering
+reversal, 15.19% versus 17.37% — were all re-derived by hand by the reviewer and stand.
+
+**23b. Claim 6's falsification was not supported by its own rows.** The page claimed
+"both `n*` estimators agreeing". Only the two *aggregate* exponent intervals were
+compared. Per setting the estimators differed by up to **8.6×, in opposite directions**
+(p=18: 2662 fitted against 308 by crossing), over decay curves fitted at slopes of
+−0.076 to −0.260 against the theorem's own −0.5, with r² as low as 0.38. At p=18 the
+error column is `[0.0648, 0.0892, 0.0564, 0.0497, 0.0611, 0.0511]` against a target of
+0.05 — noise about the target, not a decay — and `n*` is extrapolated from it. The
+informativeness gate now screens each setting individually before it may enter an
+exponent fit, and the published verdict is whatever that gate returns.
+
+**23c. Claim 6's confound audit could not detect a confound.** All five quantities in
+its table were written from p-independent constants (`delta_cp` computed outside the
+loop, `m2_eigs` from `PI_TRUE * MEAN_SCALE**2`, `sigma_max` and `pi_min` literals), and
+`ok = True` was hard-coded. It is now split: quantities fixed *by construction* are
+labelled as such and not presented as measurements, and the quantities that genuinely
+could drift with p are measured from the model actually built at each p.
+
+**23d. Claim 5's symbolic composition cannot fail.** `composition_reproduces_stated_bound`
+compares `2^{3/2}·C₁√(η/n)/(ξδ)` against the same expression written a second time in
+the same function. It confirms that our transcription of two cited results composes to
+our transcription of the paper's conclusion — a useful consistency check on the
+transcription, and nothing more.
+
+**23e. Claim 5's stage-2 contract was one-sided.** `slope ≤ −0.42` passes for the
+measured −0.472 and equally for −0.9. The measured exponent is −0.4724 ± 0.0098, whose
+95% interval **excludes the theorem's −1/2**. Both the one-sided contract and the
+two-sided consistency question are now reported separately. Over a finite grid this is
+not a violation of an `O(·)` upper bound, but it is not confirmation of the exponent
+either, and the page previously read as though it were.
+
+**23f. Claim 3's scope boolean compared against the wrong number.** It tested
+`best_single_wins < 6` where 6 is the number of datasets; the claimed count is 5. A
+configuration winning 5 of 6 would have been reported as failing to reach the claimed
+count. The comparison is now against the claimed count.
+
+Two further defects are fixed elsewhere in this revision: the shard cache the benchmark
+numbers come from was **not published**, so the campaign's main empirical result could
+not be checked from the artifact at all; and the visibility matrix shipped with every
+reviewer verdict reading `pending`, in exactly the state its own gate documents as
+unpublishable.

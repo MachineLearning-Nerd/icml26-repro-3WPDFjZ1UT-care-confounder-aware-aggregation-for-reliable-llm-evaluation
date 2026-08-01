@@ -303,7 +303,7 @@ def single_configuration_audit() -> dict:
 
     best_single = max(per_config, key=lambda m: per_config[m]["datasets_won"])
     best_single_wins = per_config[best_single]["datasets_won"]
-    family_wins, target = PROSE["table2_best_of_n_datasets"]
+    family_wins, n_total = PROSE["table2_best_of_n_datasets"]
 
     # Best baseline as a single configuration, for a like-for-like comparison.
     baseline_best = {}
@@ -323,7 +323,7 @@ def single_configuration_audit() -> dict:
         "best_single_configuration": best_single,
         "best_single_configuration_wins": best_single_wins,
         "paper_claimed_wins": family_wins,
-        "no_single_configuration_reaches_the_claimed_count": bool(best_single_wins < target),
+        "no_single_configuration_reaches_the_claimed_count": bool(best_single_wins < family_wins),
         "gap_between_family_and_best_single": int(family_wins - best_single_wins),
         "best_single_baseline": top_baseline,
         "best_single_baseline_wins": baseline_best.get(top_baseline),
@@ -331,7 +331,7 @@ def single_configuration_audit() -> dict:
             "The '5 of 6' count is attained by the CARE family only when the better of "
             "CARE-SVD and CARE-Tensor is selected separately for each dataset. Held to a "
             f"single configuration, the strongest is {best_single} at {best_single_wins} "
-            f"of {target}. The paper does disclose the split ('with CARE-Tensor leading "
+            f"of {n_total}, against the claimed {family_wins}. The paper does disclose the split ('with CARE-Tensor leading "
             "on three'), so this is a scope qualification on the headline count rather "
             "than an undisclosed one."
         ),
@@ -426,10 +426,17 @@ def aggregation_convention_audit() -> dict:
         "unweighted_across_benchmark_average_vs_AVG_pct": float(unweighted_1),
         "paper_headline_pct": target_avg,
         "discrepancy_pp": round(float(gap), 4),
-        # The claim under test asserts an average improvement ACROSS BENCHMARKS of
-        # 17.37%. That quantity is unit-invariant and equals 15.19%. FALSIFIED is
-        # asserted only when every leg holds.
-        "falsified_as_worded": bool(
+        # NOT a falsification, and an earlier revision wrongly called it one.
+        #
+        # The invariance leg cannot fail: (c*a - c*k)/(c*a) = (a - k)/a identically, so
+        # the unweighted mean is necessarily unit-invariant, and the pooled mean is
+        # necessarily unit-dependent unless every benchmark improves by the same
+        # fraction. A blind reviewer flagged the earlier claim that this was "a
+        # criterion that could have exonerated the paper's statistic" as false, and it
+        # was. What the legs establish is the SIZE and DIRECTION of a scope
+        # qualification -- 84.4% of the weight on one benchmark, an ordering that
+        # reverses under a unit change -- not a refutation of any measurement.
+        "scope_qualification_established": bool(
             identity_residual < 1e-9
             and identity_residual_mv < 1e-9
             and pooled_range > 1.0
