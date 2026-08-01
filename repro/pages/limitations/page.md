@@ -5,13 +5,18 @@ retrofitted to a convenient outcome. Items 10–11 were added afterwards and are
 as such: they record two findings that went **against** this reproduction's own
 hypotheses.
 
-## 1. Eight of the fourteen benchmark columns cannot be produced on CPU
+## 1. Ten of the twelve benchmark columns cannot be produced here
 
-`SprocketLab/CARE @ 72f5b29` releases judge-score matrices for **ASSET**,
-**CivilComments** and **PKU-BETTER** only. UltraFeedback, Summarize, FeedbackQA,
-Review-5K, Yelp, Chatbot-Arena, PKU-SAFER and SHP have none. Regenerating one
-requires running 11–20 LLM judges (0.6 B–14 B parameters) over 5,000 examples;
-Appendix E.2 of the paper reports up to 3 hours per dataset **on an NVIDIA A100**.
+Tables 1 and 2 have six columns each, twelve in total. `SprocketLab/CARE @ 72f5b29`
+releases judge-score matrices for **ASSET**, **CivilComments** and **PKU-BETTER** only.
+The other nine — UltraFeedback, Summarize, FeedbackQA, Review-5K, Yelp, Chatbot-Arena,
+PKU-SAFER, SHP and Table 2's Summarize — have none. Regenerating one requires running
+11–20 LLM judges (0.6 B–14 B parameters) over 5,000 examples; Appendix E.2 of the paper
+reports up to 3 hours per dataset **on an NVIDIA A100**.
+
+Of the three that *are* released, only two are usable: PKU-BETTER's released labels are
+constant, so no accuracy can be computed from it (item 12 below). **Two of twelve
+columns are therefore reproducible here, and both are reproduced in full.**
 
 This campaign is authorised for Hugging Face `cpu-upgrade` (8 vCPU) and explicitly
 not for GPU. A rough CPU estimate for one Table 1 dataset — 11 judges totalling
@@ -127,3 +132,28 @@ and reports the end-to-end figure separately, labelled as a statement about our
 implementation. A reproduction that quoted only the −0.35 figure would understate the
 theorem; one that quoted only the −0.47 figure would hide a real limitation of this
 implementation. Both are published.
+
+
+## 12. PKU-BETTER's released labels cannot support an accuracy
+
+Discovered while reproducing Table 2, and the reason that column reports no number.
+
+Every released label source for PKU-BETTER is constant: `gold_label_binary` is `0` in
+all seven judge files, `gold_label_num` is `1` in both the judge files and the
+standalone `data/preference/pku_better.csv`, and `was_swapped` is `False` throughout, so
+the A/B order was never randomised and the correct answer cannot vary by row. The
+judges answer "B" on about 88 % of rows, anti-correlated with the only gold answer the
+file admits.
+
+`gaussian_mixture_main.py` masks this by falling back to `pref_A_or_B` — a judge's own
+preference — when the label column is degenerate, so the reported "accuracy" scores a
+judge against itself and saturates at exactly 0 or 1. That is precisely what we measured
+(`class_balance: 100.0`).
+
+This is recorded as a **failed integrity precondition**, checked by the published
+`repro/src/label_audit.py` before any accuracy is computed, and it blocks the column
+rather than falsifying anything. The distinction matters: MV scoring 0.000 against a
+published 0.701 would look like a dramatic refutation of the paper, and it is nothing of
+the sort — the paper's PKU-BETTER numbers were presumably computed against labels that
+are not in the release. No verdict about CARE is drawn from this column in either
+direction.

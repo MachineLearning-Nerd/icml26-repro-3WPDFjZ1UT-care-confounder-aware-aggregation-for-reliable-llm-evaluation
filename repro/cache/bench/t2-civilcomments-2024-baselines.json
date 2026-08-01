@@ -1,0 +1,19 @@
+{
+  "shard": "t2:civilcomments:2024:baselines",
+  "dataset": "civilcomments",
+  "seed": 2024,
+  "part": "baselines",
+  "returncode": 0,
+  "runtime_s": 1280.2,
+  "values": {
+    "dawid_skene": 0.735490244504816,
+    "glad": 0.696715238330452,
+    "mace": 0.732279575203754,
+    "ged_pref": 0.7011607804396147
+  },
+  "threads_pinned_to": 8,
+  "budget_s": 2700,
+  "within_budget": true,
+  "hf_job_id": "6a6db00f6b79c09949c1e357",
+  "git_sha": "306a566f0c6a7ba50065952460d7ddd265138c1b"
+}
