@@ -94,7 +94,7 @@ def robust_tensor_power(T, k, rng, n_restarts=30, n_iters=60, n_deflate_iters=30
     return np.array(lams), np.array(vecs).T
 
 
-def recover_weights(M2, M3, k, rng, floor_ratio=1e-6):
+def recover_weights(M2, M3, k, rng, floor_ratio=1e-6, n_restarts=30):
     """Whiten, run the tensor power method, and return the recovered mixture weights.
 
     The population M2 is PSD of rank k, but its finite-sample estimate need not be,
@@ -110,7 +110,7 @@ def recover_weights(M2, M3, k, rng, floor_ratio=1e-6):
     s = np.maximum(s, floor_ratio * s[0])
     W = U @ np.diag(s ** -0.5)
     Tw = np.einsum("ijk,ia,jb,kc->abc", M3, W, W, W, optimize=True)
-    lams, _ = robust_tensor_power(Tw, k, rng)
+    lams, _ = robust_tensor_power(Tw, k, rng, n_restarts=n_restarts)
     with np.errstate(divide="ignore"):
         w_hat = 1.0 / np.maximum(lams, 1e-12) ** 2
     total = w_hat.sum()

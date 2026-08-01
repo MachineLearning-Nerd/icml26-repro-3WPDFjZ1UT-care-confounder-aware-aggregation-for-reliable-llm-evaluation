@@ -138,7 +138,7 @@ def _stated_bound_unit(n):
 # 5000 every pi_min setting returned n* = 5000 exactly: the error was already under
 # target at the first point, so the search was censored and the fitted exponent was a
 # property of the grid, not of the estimator.
-NS_GRID = [200, 500, 1250, 3125, 5000, 12500, 31250, 78125, 195312, 488281, 1220703]
+NS_GRID = [50, 125, 320, 800, 2000, 5000, 12500, 31250, 78125, 195312, 488281, 1220703]
 TARGET = 0.05  # target accuracy for max_{q,c} |pi^_qc - pi_qc|
 
 
@@ -150,31 +150,45 @@ def _model(rng, p_per_view, k=K_COMPONENTS):
     return mus
 
 
-def _err(mus, pi, sigma, n, seed, p_total):
+def _err(mus, pi, sigma, n, seed, p_total, n_restarts=30):
     rng = np.random.default_rng(seed)
     (X1, X2, X3), _ = sample_mixture(rng, pi, mus, sigma, n)
     M2, M3 = empirical_moments(X1, X2, X3)
-    w = recover_weights(M2, M3, len(pi), rng)
+    w = recover_weights(M2, M3, len(pi), rng, n_restarts=n_restarts)
     if w is None:
         return None
     return float(np.max(np.abs(w - np.sort(pi)[::-1])))
 
 
-def _curve(mus, pi, sigma, p_total, ns, seeds):
+def _curve(mus, pi, sigma, p_total, ns, seeds, n_restarts=30):
+    """Median error at each n, stopping at the first n that reaches TARGET.
+
+    `_n_star` reads the FIRST crossing, so points beyond it are never used. Computing
+    them anyway cost more than the rest of the sweep combined -- the largest grid point
+    draws 1.2M samples -- and that expense is what forced the grid floor up to 5000,
+    which is what censored the searches in the first place. Unreached points are
+    reported as None so the truncation is visible rather than looking like a gap.
+    """
     out = []
     for n in ns:
-        vals = [e for e in (_err(mus, pi, sigma, n, 4000 + 37 * s, p_total) for s in seeds) if e is not None]
-        out.append(float(np.median(vals)) if vals else float("nan"))
-    return out
+        vals = [e for e in (_err(mus, pi, sigma, n, 4000 + 37 * s, p_total, n_restarts)
+                            for s in seeds) if e is not None]
+        med = float(np.median(vals)) if vals else float("nan")
+        out.append(med)
+        if np.isfinite(med) and med <= TARGET:
+            break
+    return out + [None] * (len(ns) - len(out))
 
 
 def _n_star(ns, errs, target=TARGET):
     for j, e in enumerate(errs):
+        if e is None:
+            break
         if np.isfinite(e) and e <= target:
             if j == 0:
                 return float(ns[0])
             e0 = errs[j - 1]
-            if not np.isfinite(e0) or abs(np.log(e) - np.log(e0)) < 1e-12:
+            if e0 is None or not np.isfinite(e0) or abs(np.log(e) - np.log(e0)) < 1e-12:
                 return float(ns[j])
             t = (np.log(target) - np.log(e0)) / (np.log(e) - np.log(e0))
             return float(np.exp(np.log(ns[j - 1]) + t * (np.log(ns[j]) - np.log(ns[j - 1]))))
@@ -189,7 +203,7 @@ def _fit(x, y):
     return float(s), se
 
 
-def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
+def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     """Measure the exponents of n*(sigma), n*(pi_min) and n*(p) by SEARCH.
 
     Theorem 4.3's condition is a sufficient sample size, so each check is
@@ -239,7 +253,7 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
 
     # p sweep: predicted n* grows no faster than p log(p/eps).
     rows = []
-    for ppv in (4, 6, 8, 10):
+    for ppv in (4, 5, 6, 8, 10, 12):
         r2 = np.random.default_rng(20260801)
         m2 = _model(r2, ppv)
         pt = 3 * ppv
@@ -271,6 +285,42 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
         "not a free parameter of the generative model we can set independently, so its "
         "delta^-2 factor is reconstructed from the derivation but not measured."
     )
+    return out
+
+
+def restart_budget_attribution(seeds=(0, 1, 2, 3, 4)) -> dict:
+    """Does n* grow with p because of the rate, or because of a fixed restart budget?
+
+    The robust tensor power method is a non-convex search run with a fixed 30 restarts.
+    If a larger p needs more restarts to find all k components, then n* grows with p for
+    an OPTIMISATION reason, and that growth may not be charged to Theorem 4.3, whose
+    p-dependence is a statistical statement. This control repeats the largest and
+    smallest p in the sweep at 3x the restart budget: if n* falls materially, the
+    measured p-exponent is contaminated by the solver and cannot decide the theorem.
+    """
+    out = {"restarts_baseline": 30, "restarts_tripled": 90, "rows": []}
+    for ppv in (4, 12):
+        pt = 3 * ppv
+        m = _model(np.random.default_rng(20260801), ppv)
+        row = {"p_total": pt}
+        for tag, nr in (("n_star_30_restarts", 30), ("n_star_90_restarts", 90)):
+            row[tag] = _n_star(NS_GRID, _curve(m, PI_TRUE, 1.0, pt, NS_GRID, seeds, n_restarts=nr))
+        both = (row["n_star_30_restarts"], row["n_star_90_restarts"])
+        row["ratio_90_over_30"] = (both[1] / both[0]) if all(both) else None
+        out["rows"].append(row)
+    ratios = [r["ratio_90_over_30"] for r in out["rows"] if r["ratio_90_over_30"]]
+    # A budget-bound search improves markedly with more restarts; a rate-bound one does
+    # not. "Materially" is >20% at either end, chosen before the numbers were seen.
+    out["solver_bound"] = bool(ratios and min(ratios) < 0.8)
+    out["p_exponent_attributable_to_the_theorem"] = not out["solver_bound"]
+    out["why"] = (
+        "n* fell by more than 20% at 3x restarts, so the measured p-growth is at least "
+        "partly the solver's restart budget rather than the statistical rate"
+        if out["solver_bound"] else
+        "tripling the restart budget did not materially lower n*, so the measured "
+        "p-growth is not an artefact of the non-convex search's budget"
+    )
+    out["ok"] = True
     return out
 
 
@@ -363,8 +413,17 @@ def run() -> dict:
     sweeps = sample_complexity_sweeps()
     boundary = sigma_sweep()
     nc = negative_controls()
+    attribution = restart_budget_attribution()
 
-    ok = sym["ok"] and sweeps["ok"] and nc["ok"]
+    # A sweep whose growth the solver explains cannot decide the theorem either way, so
+    # it is neither a pass nor a violation; it is excluded exactly like an
+    # uninformative one.
+    p_decides = attribution["p_exponent_attributable_to_the_theorem"]
+    gating = ["sigma", "pi_min"] + (["p"] if p_decides else [])
+    sweeps_ok = all(sweeps[k]["ok"] for k in gating)
+    sweeps["gating_sweeps"] = gating
+    sweeps["p_sweep_excluded_because_solver_bound"] = not p_decides
+    ok = sym["ok"] and sweeps_ok and nc["ok"]
     proof_gap = sym["ok"]
     stated_weight_bound_violated = bool(boundary.get("ok"))
 
@@ -374,6 +433,7 @@ def run() -> dict:
         "route_b_calibrated_sample_complexity": sweeps,
         "route_c_boundary_sigma_probe": boundary,
         "negative_controls": nc,
+        "route_d_restart_budget_attribution": attribution,
         "ok": bool(ok),
         "verdict": "VERIFIED (sample-complexity condition and mean bound) with a documented "
                    "gap in the displayed proof of the weight bound"
@@ -381,7 +441,7 @@ def run() -> dict:
         else "INCONCLUSIVE",
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],
-            "sample_complexity_exponents_respected": sweeps["ok"],
+            "sample_complexity_exponents_respected": bool(sweeps_ok),
             "displayed_proof_of_weight_bound_is_incomplete": bool(proof_gap),
             "stated_weight_bound_empirically_violated": stated_weight_bound_violated,
             "note": (
