@@ -18,7 +18,10 @@ from __future__ import annotations
 import itertools
 from fractions import Fraction
 
+import math
+
 import mpmath as mp
+
 import numpy as np
 
 
@@ -48,10 +51,24 @@ def table_percentages_exact() -> dict:
         "pooled_matches_17_37": abs(float(pooled_avg) - 17.37) < 0.005,
         "pooled_matches_12_75": abs(float(pooled_mv) - 12.75) < 0.005,
         "ultrafeedback_matches_26_8": abs(float(uf) - 26.8) < 0.05,
-        "summarize_13_4_from_0p814_over_0p705": abs(
-            float((Fraction("0.814") - Fraction("0.705")) / Fraction("0.705") * 100) - 13.4
+        # The paper's 13.4% is measured against the STRONGEST Table 2 baseline on
+        # Summarize, which is GLAD at 0.718 -- not the 0.705 (WS / Dawid-Skene) that
+        # the circulated claim string quotes. Both readings are reported; only the
+        # first is asserted, because only the first is what the paper states.
+        "summarize_pct_vs_strongest_baseline_0p718": float(
+            (Fraction("0.814") - Fraction("0.718")) / Fraction("0.718") * 100
+        ),
+        "summarize_pct_vs_claimstring_0p705": float(
+            (Fraction("0.814") - Fraction("0.705")) / Fraction("0.705") * 100
+        ),
+        "summarize_13_4_from_0p814_over_0p718": abs(
+            float((Fraction("0.814") - Fraction("0.718")) / Fraction("0.718") * 100) - 13.4
         )
         < 0.1,
+        "claimstring_0p705_does_not_reproduce_13_4": abs(
+            float((Fraction("0.814") - Fraction("0.705")) / Fraction("0.705") * 100) - 13.4
+        )
+        >= 0.1,
     }
 
 
@@ -151,7 +168,7 @@ def recheck_c6_slope(verdict: dict) -> dict:
     rows = (
         verdict.get("claims", {})
         .get("C6_thm43", {})
-        .get("route_b_sigma_sweep_on_sample_complexity_boundary", {})
+        .get("route_c_boundary_sigma_probe", {})
         .get("rows", [])
     )
     if len(rows) < 3:
@@ -162,10 +179,81 @@ def recheck_c6_slope(verdict: dict) -> dict:
     return {
         "available": True,
         "theil_sen_slope": slope,
-        "least_squares_slope": verdict["claims"]["C6_thm43"][
-            "route_b_sigma_sweep_on_sample_complexity_boundary"
-        ]["loglog_slope_error_over_stated_bound_vs_sigma"],
-        "agrees_that_slope_is_positive": bool(slope > 0.5),
+        "least_squares_slope": verdict["claims"]["C6_thm43"]["route_c_boundary_sigma_probe"][
+            "loglog_slope_error_over_stated_bound_vs_sigma"
+        ],
+        # The sigma^3 hypothesis predicted a slope near 3 and would need at least 0.5
+        # to be visible at all. Both estimators must agree that no such growth is there,
+        # otherwise the claim module's null result rests on the choice of estimator.
+        "theil_sen_agrees_no_sigma_growth": bool(slope < 0.5),
+    }
+
+
+def davis_kahan_by_principal_angle(seed: int = 131, n_trials: int = 500) -> dict:
+    """Re-validate the 2^{3/2} constant along a different route than the claim module.
+
+    claim_c5_thm42 measures ||u_hat - u|| directly. Here we compute the principal
+    angle between the two one-dimensional subspaces and use the identity
+    ||u_hat - u|| = 2 sin(theta/2) after sign alignment, so an error in either
+    route's eigenvector bookkeeping cannot cancel out between them.
+    """
+    rng = np.random.default_rng(seed)
+    worst, agree = 0.0, True
+    for _ in range(n_trials):
+        p_dim = int(rng.integers(4, 12))
+        A = rng.standard_normal((p_dim, p_dim))
+        M = (A + A.T) / 2.0
+        E = rng.standard_normal((p_dim, p_dim))
+        E = (E + E.T) / 2.0
+        E *= 10.0 ** rng.uniform(-4, -1) / max(np.linalg.norm(E, 2), 1e-300)
+
+        w, V = np.linalg.eigh(M)
+        wt, Vt = np.linalg.eigh(M + E)
+        i = int(np.argmax(w))
+        u, ut = V[:, i], Vt[:, int(np.argmax(wt))]
+        if float(ut @ u) < 0:
+            ut = -ut
+
+        gaps = [abs(w[i] - w[j]) for j in range(p_dim) if j != i]
+        delta = min(gaps)
+        if delta < 1e-8:
+            continue
+
+        direct = float(np.linalg.norm(ut - u))
+        cos = float(np.clip(abs(ut @ u), -1.0, 1.0))
+        by_angle = 2.0 * math.sin(math.acos(cos) / 2.0)
+        if abs(direct - by_angle) > 1e-6 * max(1.0, direct):
+            agree = False
+
+        bound = 2.0 ** 1.5 * float(np.linalg.norm(E, 2)) / delta
+        worst = max(worst, direct / bound)
+
+    return {
+        "trials": n_trials,
+        "two_routes_agree_on_eigvec_distance": bool(agree),
+        "worst_err_over_bound": worst,
+        "constant_2_to_the_3_over_2_holds": bool(worst <= 1.0),
+    }
+
+
+def recheck_c5_stage_slopes(verdict: dict) -> dict:
+    """Refit the two theorem-governed C5 curves with Theil-Sen instead of least squares."""
+    cal = verdict.get("claims", {}).get("C5_thm42", {}).get("route_c_calibrated_rate", {})
+    ns = cal.get("grid_n", [])
+    s1 = cal.get("stage_1_precision_error_vs_n", [])
+    s2 = cal.get("stage_2_oracle_spectral_error_vs_n", [])
+    if len(ns) < 4 or len(s1) != len(ns) or len(s2) != len(ns):
+        return {"available": False}
+    ts1, ts2 = theil_sen(ns, s1), theil_sen(ns, s2)
+    return {
+        "available": True,
+        "stage_1_theil_sen_slope": ts1,
+        "stage_1_least_squares_slope": cal.get("stage_1_loglog_slope"),
+        "stage_2_theil_sen_slope": ts2,
+        "stage_2_least_squares_slope": cal.get("stage_2_loglog_slope"),
+        # One-sided, matching the claim module: the theorem is an O(.) upper bound.
+        "stage_1_agrees_at_least_root_n": bool(ts1 <= -0.42),
+        "stage_2_agrees_at_least_root_n": bool(ts2 <= -0.42),
     }
 
 
@@ -174,8 +262,10 @@ def run(verdict: dict | None = None) -> dict:
         "table_percentages_exact_rational": table_percentages_exact(),
         "prop41_counterexample_mpmath": prop41_counterexample_mpmath(),
         "first_order_formula_vs_finite_difference": first_order_by_finite_difference(),
+        "davis_kahan_by_principal_angle": davis_kahan_by_principal_angle(),
     }
     if verdict is not None:
+        out["c5_stage_slope_recheck"] = recheck_c5_stage_slopes(verdict)
         out["c6_slope_recheck"] = recheck_c6_slope(verdict)
 
         # Cross-check that the claim module and this checker agree on the tables.
@@ -191,9 +281,12 @@ def run(verdict: dict | None = None) -> dict:
         t["pooled_matches_17_37"]
         and t["pooled_matches_12_75"]
         and t["ultrafeedback_matches_26_8"]
-        and t["summarize_13_4_from_0p814_over_0p705"]
+        and t["summarize_13_4_from_0p814_over_0p718"]
+        and t["claimstring_0p705_does_not_reproduce_13_4"]
         and out["prop41_counterexample_mpmath"]["counterexample_holds"]
         and out["first_order_formula_vs_finite_difference"]["analytic_formula_confirmed"]
+        and out["davis_kahan_by_principal_angle"]["two_routes_agree_on_eigvec_distance"]
+        and out["davis_kahan_by_principal_angle"]["constant_2_to_the_3_over_2_holds"]
     )
     return out
 
