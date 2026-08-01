@@ -348,8 +348,13 @@ def reproduce_table2(root: Path, outdir: Path, shards: dict | None = None,
     blocked = blocked or set()
     per_seed = {}
     for seed in SEEDS:
+        # A blocked dataset has no shards and never will, so require coverage of the
+        # datasets we can actually measure. Requiring all of them unconditionally would
+        # send every seed down the uncached path and blow the one-hour job cap.
+        name_of = {"civilcomments": "CivilComments", "pku_better": "PKU-BETTER"}
+        wanted = [k for k, v in name_of.items() if v not in blocked]
         merged = {}
-        for ds in ("civilcomments", "pku_better"):
+        for ds in wanted:
             vals = {}
             for part in ("main", "baselines"):
                 rec = shards.get(f"t2:{ds}:{seed}:{part}")
@@ -357,10 +362,9 @@ def reproduce_table2(root: Path, outdir: Path, shards: dict | None = None,
                     vals.update(rec["values"])
             if vals:
                 merged[ds] = vals
-        # Only accept the cached seed when BOTH datasets are present, so a partially
-        # collected seed falls through to a full run instead of silently reporting
-        # half a row.
-        if len(merged) == 2:
+        # Accept the cached seed only when every measurable dataset is present, so a
+        # partially collected seed falls through instead of reporting half a row.
+        if wanted and len(merged) == len(wanted):
             per_seed[seed] = merged
             continue
         d = outdir / f"t2_seed{seed}"
