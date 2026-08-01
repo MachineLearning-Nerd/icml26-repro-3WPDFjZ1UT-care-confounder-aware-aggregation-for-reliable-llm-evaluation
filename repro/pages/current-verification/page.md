@@ -52,7 +52,7 @@ assumption-satisfying counterexample. Finite experiments appear only as calibrat
 searches (binary search for `n*`, independent sweeps of each parameter), never by
 substituting into the formula under test.
 
-## Two results that go against this reproduction
+## Three results that cut against a flattering story
 
 Both are stated here rather than buried, because a reproduction that only ever confirms
 its own hypotheses is not measuring anything.
@@ -67,7 +67,16 @@ its own hypotheses is not measuring anything.
   by a three-stage decomposition in which the theorem-governed stage is measured
   separately.
 
-Both are also in [Limitations and deviations](#/limitations).
+* A Table 2 column we expected to reproduce turned out to be **unscoreable**. Reproducing
+  PKU-BETTER returned accuracies of exactly 0.0 for four methods and exactly 1.0 for
+  CARE-Tensor. Read carelessly, MV scoring 0.000 against a published 0.701 is a
+  spectacular refutation of the paper. It is nothing of the sort: every released label
+  source for that dataset is constant, so there is no accuracy to compute. The column is
+  BLOCKED by a failed precondition and no verdict about CARE is drawn from it in either
+  direction. Reporting it as a falsification would have been the most eye-catching result
+  in this logbook and the wrong one.
+
+All three are also in [Limitations and deviations](#/limitations).
 
 ## How to check any of this
 
