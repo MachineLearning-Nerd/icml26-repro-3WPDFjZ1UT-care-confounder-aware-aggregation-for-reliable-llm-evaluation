@@ -60,24 +60,63 @@ rather than resolved silently in either direction.
 *(pending release run)*
 <!-- /FILL -->
 
-## 3d — reproduction at full scale
+## 3d — reproduction at full scale, and a defect in the released data
 
-Table 2's judge-score matrices were released by the authors for **CivilComments** and
-**PKU-BETTER**. Both columns are reproduced end-to-end with the authors' own code at
-`72f5b29` over five seeds `2024…2028`, covering **all nine methods** — the four simple
-aggregators, the three weak-supervision baselines (Dawid–Skene, GLAD, MACE) run through
-the authors' own baseline harness, and both CARE variants.
+Table 2's judge-score matrices were released for **CivilComments** and **PKU-BETTER**.
+Only one of them can actually support an accuracy.
+
+### CivilComments — reproduced
+
+Reproduced end-to-end with the authors' code at `72f5b29` over five seeds
+`2024…2028`, covering all nine methods: the four simple aggregators, the three
+weak-supervision baselines (Dawid–Skene, GLAD, MACE) through the authors' own baseline
+harness, and both CARE variants. Its released labels are valid and exactly balanced
+(2 500 / 2 500).
 
 <!-- FILL:c3.table2 -->
 *(pending release run)*
 <!-- /FILL -->
 
-Chatbot-Arena, PKU-SAFER, SHP and Summarize have no released judge outputs. Note that
-this specifically blocks the *reproduction* of the Summarize pair `0.814 / 0.718`, even
-though the arithmetic in 3c is decided exactly. Those four columns are recorded
-**BLOCKED** with the named missing capability: *GPU inference to regenerate the judge
-outputs (≈3 A100-hours per dataset), because the authors released none for these
-datasets.*
+### PKU-BETTER — BLOCKED, because its released labels are constant
+
+Reproducing this column returns accuracies of **exactly 0.0** for MV, AVG, WS and UWS
+and **exactly 1.0** for CARE-Tensor. Those are not plausible accuracies, and the cause
+is in the released data rather than in the aggregation. The authors' own run record
+reports `class_balance: 100.0` — every test label is the same class.
+
+Four independent checks of the released artifact, each reproducible from the public
+repository at `72f5b29`:
+
+| Check | Result |
+|---|---|
+| `gold_label_binary` in the seven released judge files | constant `0` in **all seven** |
+| `gold_label_num` in the judge files **and** in the standalone `data/preference/pku_better.csv` | constant `1` (9 000 rows) |
+| `was_swapped` | constant `False` — the A/B order was never randomised, so the correct answer cannot vary by row |
+| judges' own `pref_A_or_B` | "B" on ~88 % of rows, i.e. anti-correlated with the only gold answer the file admits |
+
+`gaussian_mixture_main.py` masks this. When the label column has one distinct value it
+falls back to `pref_A_or_B` — which is *a judge's own preference*, not ground truth — so
+the resulting "accuracy" scores a judge against itself. That is why it saturates at
+exactly 0 or 1.
+
+**We therefore report no accuracy for PKU-BETTER at all.** A number computed against a
+constant label is meaningless rather than merely inaccurate, so this is recorded as
+BLOCKED by a **failed integrity precondition**, and no verdict about the paper is
+inferred from it in either direction. In particular this is *not* evidence against
+CARE: the paper's published PKU-BETTER numbers were presumably computed against labels
+that are not in the release.
+
+This is a distinct blocking reason from the other four Table 2 columns
+(Chatbot-Arena, PKU-SAFER, SHP, Summarize), which have **no released judge outputs at
+all** and would need GPU inference to regenerate (≈3 A100-hours each, Appendix E.2).
+
+The precondition is executable and published:
+[`repro/src/label_audit.py`](repro/src/label_audit.py). It runs **before** any accuracy
+is computed and is reported in `verdict.json` under `label_integrity_audit`.
+
+<!-- FILL:c3.label_audit -->
+*(pending release run)*
+<!-- /FILL -->
 
 ## Negative control
 

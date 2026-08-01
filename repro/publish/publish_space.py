@@ -44,6 +44,8 @@ ALLOWLIST = [
     "pages/historical-2026-07-30/page.md",
     "repro/src/run_all.py",
     "repro/src/threads.py",
+    "repro/src/label_audit.py",
+    "repro/src/bench_shard.py",
     "repro/src/paper_source.py",
     "repro/src/tensor_mom.py",
     "repro/src/independent_check.py",

@@ -570,6 +570,30 @@ def _header(cid):
     return fn
 
 
+def c3_label_audit(v):
+    a = g(v, "claims", "C1_C2_C3_tables", "label_integrity_audit", default={})
+    ds = a.get("datasets", {})
+    rows = []
+    for name, d in ds.items():
+        if "candidate_label_sources" in d:
+            detail = "; ".join(
+                f"`{k}`: {c.get('distinct_values')} distinct"
+                for k, c in d["candidate_label_sources"].items()
+            )
+        else:
+            detail = (f"`{d.get('column')}`: {d.get('distinct_values')} distinct, "
+                      f"minority fraction {num(d.get('minority_fraction'), 3)}")
+        rows.append([name, yesno(d.get("supports_a_metric")), detail])
+    out = table(["Dataset", "Can support the metric", "Released label sources"], rows)
+    blocked = a.get("blocked_datasets") or []
+    return out + (
+        f"\n\nBlocked by this precondition: **{', '.join(blocked) or 'none'}**. "
+        f"Usable: {', '.join(a.get('usable_datasets') or []) or 'none'}. "
+        "The audit reports; it does not fail the reproduction, because a degenerate "
+        "release is a finding about the artifact rather than an error in this run."
+    )
+
+
 GENERATORS = {
     "c1.arithmetic": c1_arithmetic,
     "c1.asset": c1_asset,
@@ -582,6 +606,7 @@ GENERATORS = {
     "c3.summarize": c3_summarize,
     "c3.table2": c3_table2,
     "c3.control": c3_control,
+    "c3.label_audit": c3_label_audit,
     "c4.d3": c4_d3,
     "c4.d4": c4_d4,
     "c4.bound_scaling": c4_bound_scaling,
