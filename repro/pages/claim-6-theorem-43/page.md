@@ -122,13 +122,14 @@ An earlier revision of this page asserted such a check existed when it did not.
 *(pending release run)*
 <!-- /FILL -->
 
-**The limitation that keeps this at MEDIUM confidence.** The six per-setting decay
-curves fit a power law imperfectly (`r²` from 0.38 to 0.83) and `n*` is not monotone in
-`p` — the `p = 36` setting sits below `p = 30`. So the exponent's *value* (3.63 ± 0.80)
-carries real uncertainty. What is robust is that it *exceeds 1*, under every
-estimator tried: the curve-fitting 95 % interval is [2.06, 5.21], the curve-crossing
-interval is [1.54, 5.46], and the two independent Theil–Sen refits give 2.98 and 2.24.
-None of the four is anywhere near 1.
+**Why none of these refits rescues the finding.** Every estimate of the exponent
+exceeds 1, and that was the basis of the withdrawn falsification. It is not sufficient.
+The refits all consume the same per-setting `n*` values, and those values are what the
+per-setting screen rejects: the two estimators disagree, the decay curves fit a power law
+imperfectly (`r²` from 0.38 to 0.83), and `n*` is not monotone in `p`. An exponent that
+is stable across four *fitting methods* applied to the same unreliable inputs is not
+thereby a measurement of the system. Independently of all of that, the confound audit
+above shows the exponent is not attributable to the theorem's factor in the first place.
 
 ## Calibrated sample-complexity measurement
 

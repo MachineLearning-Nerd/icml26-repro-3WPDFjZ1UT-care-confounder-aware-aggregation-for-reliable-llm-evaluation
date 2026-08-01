@@ -55,12 +55,22 @@ the model is held fixed across each sweep and only the `n`, `α` and `δ`
 dependences are measured. The `1/ξ(T)` factor is reconstructed from the
 derivation, not empirically confirmed.
 
-## 5. Theorem 4.2's η-dependence is a tail statement
+## 5. Theorem 4.2's η-dependence — resolved in this revision
 
-The theorem is a high-probability bound in `η`. The calibrated sweep reports
-medians over seeds rather than an empirical `1 − 2e^{−η}` envelope, which would
-need far more replicates than the CPU budget allows. The `√η` factor is therefore
-reconstructed from the derivation only.
+Earlier revisions recorded this as unmeasurable: the theorem is a high-probability bound
+in `η`, the calibrated sweep reports medians over seeds rather than an empirical
+`1 − 2e^{−η}` envelope, and building that envelope was said to need more replicates than
+the CPU budget allows.
+
+That was a failure of imagination rather than a real obstacle, and it is now measured.
+The level-`q` quantile of the error *is* the tightest bound holding with probability `q`,
+so setting `1 − 2e^{−η} = q` reads `η` straight off the error distribution at fixed `n`.
+Route D of the [Claim 5 page](#/claim-5-theorem-42) reports the fitted tail exponent over
+240 replicates. What remains genuinely unmeasured for this claim is `ξ(T)`, which has no
+closed form we can evaluate.
+
+The residual scope limit: the tail is measured at a single `n` on a single model, so it
+is scoped corroboration, not a statement about all instances.
 
 ## 6. Theorem D.4's constant is checked at first order
 
@@ -219,10 +229,11 @@ boundaries of that finding:
 * The `σ⁶` and `π_min^{-2}` exponents are **NOT MEASURED**: both sweeps failed the
   admissibility test in `informativeness.py`, and neither is reported as evidence in
   either direction.
-* The exponent's value is uncertain (3.63 ± 0.80, with per-setting curve fits scoring
-  `r²` as low as 0.38 and `n*` non-monotone in `p`). Only the conclusion "greater than
-  1" is resolved, and it is resolved by two independent `n*` estimators whose 95 %
-  intervals — [2.06, 5.21] and [1.54, 5.46] — both exclude 1.
+* The `p`-exponent is **not usable at all**, and the falsification that rested on it has
+  been withdrawn — see item 23b. Per-setting curve fits score `r²` as low as 0.38, `n*`
+  is non-monotone in `p`, the two `n*` estimators disagree per setting by up to 8.6× in
+  opposite directions, and the rebuilt confound audit shows the exponent is not
+  attributable to the theorem's own factor.
 * The `δ^{-2}` factor cannot be tested at all here: `δ` is the CP eigenvalue gap
   `min_i≠j |π_i^{-1/2} − π_j^{-1/2}|`, so it is not variable independently of `π`.
 

@@ -38,13 +38,21 @@ composition and its cited Davis–Kahan constant are established directly, but i
 `η`-dependence is a tail statement we do not measure and `ξ(T)` has no closed form we
 can evaluate. Recorded as MEDIUM confidence with the reason attached.
 
-**Theorem 4.3 is partly verified and partly falsified.** Its mean bound is reproduced
-exactly and its weight bound is not violated along its own `σ` boundary, but the
-displayed proof of that weight bound loses a `σ³` factor. Separately, the stated
-`p·log(p/ε)` sample-complexity factor is **FALSIFIED**: with every other quantity in the
-bound held fixed, `n*` grows as `(p·log(p/ε))^{3.63 ± 0.80}` against a stated exponent
-of 1. The `σ⁶` and `π_min^{-2}` exponents are reported as NOT MEASURED — both sweeps
-failed the admissibility test rather than passing a one-sided contract by default.
+**Theorem 4.3 is verified in the parts this campaign can reach, with a documented gap in
+its written proof.** Its mean bound is reproduced exactly and its weight bound is not
+violated along its own `σ` boundary, but the displayed proof of that weight bound loses a
+`σ³` factor.
+
+A previous revision of this logbook additionally reported the stated `p·log(p/ε)`
+sample-complexity factor as **FALSIFIED**. **That finding has been withdrawn.** Its
+supporting agreement test compared only aggregate slope intervals while the two `n*`
+estimators disagreed per setting by up to 8.6× in opposite directions, and the audit
+meant to make the exponent attributable was assembled from `p`-independent constants.
+Rebuilt to measure the model actually constructed at each `p`, that audit finds a real
+confound — at fixed `n` the empirical second moment degrades as dimension grows — so no
+falsification may rest on the exponent. The `σ⁶` and `π_min^{-2}` exponents remain NOT
+MEASURED: both sweeps failed the admissibility test rather than passing a one-sided
+contract by default.
 
 ## What this reproduction got wrong
 
