@@ -177,11 +177,17 @@ def table_arithmetic() -> dict:
         "ok": bool(identified)
         and abs(uf_reduction - PROSE["ultrafeedback_mv_reduction_pct"]) < 0.05
         and claim3_ok,
+        # NOT round(x, 3). Storing a pre-rounded intermediate and then rendering it to
+        # two decimals rounds twice: ASSET's 17.9247 was stored as 17.925 and published
+        # as 17.93 on two pages, while the comparator grid stored the full value and
+        # published the correct 17.92 on a third. A blind reviewer found the two pages
+        # disagreeing about one number. The record keeps full precision; rounding is the
+        # renderer's job and happens exactly once.
         "per_dataset_relative_improvement_vs_AVG_pct": dict(
-            zip(TABLE1_DATASETS, [round(float(x), 3) for x in per_dataset_vs_avg])
+            zip(TABLE1_DATASETS, [float(x) for x in per_dataset_vs_avg])
         ),
         "per_dataset_relative_improvement_vs_MV_pct": dict(
-            zip(TABLE1_DATASETS, [round(float(x), 3) for x in per_dataset_vs_mv])
+            zip(TABLE1_DATASETS, [float(x) for x in per_dataset_vs_mv])
         ),
         "candidate_definitions": defs,
         "definition_matching_paper": identified,

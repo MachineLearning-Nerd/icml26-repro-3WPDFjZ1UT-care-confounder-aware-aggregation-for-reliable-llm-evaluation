@@ -113,27 +113,36 @@ verdict JSON under `environment`.
 
 *The two items below were added after measurement.*
 
-## 10. Our own falsification hypothesis for Theorem 4.3 was refuted by the data
+## 10. Our own falsification hypothesis for Theorem 4.3 is undecided — and this item twice said otherwise
 
 Item 7 above was written expecting the missing `σ_max³` factor to be *observable*: the
 prediction was that, along the sample-complexity boundary `n = 20000·σ⁶` where the
 theorem predicts a constant error, the measured weight error would grow with `σ`.
 
-It did not. The fitted exponent was **0.0605 ± 1.1149** — consistent with zero — across
-`σ ∈ {1.00, 1.25, 1.50, 1.75, 2.00}`. The hypothesis is refuted by our own experiment.
+No growth in `σ` was detected across `σ ∈ {1.00, 1.25, 1.50, 1.75, 2.00}`, and this item
+originally concluded from that: "the hypothesis is **refuted by our own experiment**".
 
-Consequently *this* hypothesis — that the weight bound fails in `σ` — was withdrawn. The
-symbolic audit still finds the `σ³` factor missing from the written derivation, but a
-bound whose own quantity is never observed to be violated in `σ` has not been falsified
-in `σ`. Reporting it as a falsification would have been the more impressive result and
-the wrong one.
+**That sentence is retracted, and it is retracted here rather than only in item 16,
+because a blind reviewer found this item still asserting it 130 lines before the
+retraction.** The probe is a five-point fit of two parameters, so it has three residual
+degrees of freedom; at the correct `t(0.975, 3) = 3.182` its 95 % interval contains both
+the slope of 0 the theorem predicts and the slope of 3 a missing `σ³` predicts. It refutes
+nothing and corroborates nothing. The correct statement is that this hypothesis is
+**undecided**, not refuted.
 
-To be unambiguous, because two earlier drafts of this item each said something different:
-the live Claim 6 verdict is **not** a falsification of any factor. A later revision did
+So *this* hypothesis — that the weight bound fails in `σ` — is withdrawn as a
+falsification, and the reasoning that withdrew it is itself withdrawn as evidence. What
+remains is narrower and firmer: the symbolic audit finds the `σ³` factor missing from the
+written derivation, exactly and by two independent routes, so the displayed **proof** of
+the weight bound does not establish it. Whether the **bound** holds is not decided here.
+
+To be unambiguous, because three earlier drafts of this item each said something
+different: the live Claim 6 verdict is **not** an empirical falsification of any factor,
+and it is **not** an empirical corroboration of any factor either. A later revision did
 report the stated `p·log(p/ε)` term as falsified, by the route described in items 15 and
 17 rather than by this `σ` probe; that finding has since been withdrawn as well
-(item 23b). What survives is a verified sample-complexity condition and mean bound,
-plus a documented gap in the displayed proof of the weight bound.
+(item 23b), and the sweep behind it is now NOT MEASURED (item 27). What survives is the
+symbolic result on the mean bound and on the displayed derivation of the weight bound.
 
 ## 11. The end-to-end pipeline does not attain `n^{-1/2}` at our solver's budget
 

@@ -663,9 +663,15 @@ def _verdict_string(sym, dk, cal, eta) -> str:
             + (f" (95% CI [{lo:.4f}, {hi:.4f}])" if lo is not None else "")
             + (", statistically consistent with the stated -1/2"
                if tight else
-               ", which decays at least as fast as the stated n^-1/2 but whose interval "
-               "EXCLUDES -1/2 exactly -- consistent with an O(.) upper bound, not "
-               "confirmation of the exponent")
+               ", which decays at least as fast as the stated n^-1/2. Its residual-based "
+               "interval lies just outside -1/2, by about half a standard error, but that "
+               "interval is NOT a basis for claiming -1/2 is excluded: each fitted point "
+               "is a median over seeds, and an OLS residual standard error carries only "
+               "the scatter of those medians about the line, not their own sampling "
+               "error. With a whole variance component missing, a margin that small "
+               "decides nothing. The honest reading is the one-sided one the theorem "
+               "actually makes: decay is at least as fast as stated, which is what an "
+               "O(.) upper bound asserts")
         )
     if dk.get("ok"):
         parts.append(

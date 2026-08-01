@@ -128,7 +128,7 @@ eq. (10)+(12) mean error `≤ √3 C_dec ‖E‖_op/δ`; eq. (11) weight error `
 > "We used a server equipped with an NVIDIA A100 (40GB). Generating LLM judge outputs took up to
 > 3 hours per dataset."
 
-This is the concrete blocking capability for the eight Table 1 / Table 2 columns whose judge-score
+This is the concrete blocking capability for the nine Table 1 / Table 2 columns whose judge-score
 matrices were not released.
 
 ---

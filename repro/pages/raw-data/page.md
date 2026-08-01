@@ -56,8 +56,42 @@ promise this artifact cannot keep on its own:
 | Authors' code SHA | **No** — checked at run time against a checkout that is not in this Space; the result is recorded as `official_repo_sha_matches_pin`. |
 | `environment.git_sha` | **No** — there is no `.git` here. What *is* checked, at publication time, is that every `repro/src/*.py` file uploaded is byte-identical to the same path at that SHA; the gate is [`repro/publish/publish_space.py`](repro/publish/publish_space.py) and it refuses the upload on any drift. That makes the SHA a claim about *this* file set rather than an unattached string, but it is still not verifiable offline. |
 | Shard `hf_job_id`s and their SHA | **No** — job records live on Hugging Face. |
-| `repro/cache/bench/*.json` | **Yes** — the benchmark shard outputs are shipped, so every Table 1/2 number on these pages can be traced to the JSON it came from. Below that layer, the authors' judge CSVs are the boundary. |
+| `repro/cache/bench/*.json` | **Yes** for ASSET and CivilComments — the benchmark shard outputs are shipped and **linked below**, so those Table 1/2 numbers can be traced to the JSON they came from. **Not** for PKU-BETTER, which has no shard because the label precondition blocks it before any accuracy is computed. Below that layer, the authors' judge CSVs are the boundary. |
 
 Anything marked **No** should be read as asserted. That is a real limit on what a
 network-isolated reviewer can conclude, and no amount of internal consistency substitutes
 for it.
+
+
+## The shard files themselves
+
+A blind reviewer pointed out that the row above offered these files as the artifact's
+one independently checkable layer while **no page linked to any of them** — so a reviewer
+following the "links only" rule this logbook sets for itself could not reach the evidence
+it was being pointed at. Every shard is listed here.
+
+Each file records the seed, the per-method values, its own wall-clock runtime, the Git SHA
+it ran at and its Hugging Face job id. `verdict.json`'s `per_seed` blocks are read back
+from exactly these files, so any Table 1 or Table 2 per-seed number can be checked against
+its shard directly.
+
+| Shard file | Contents |
+|---|---|
+| [`t1-2024.json`](repro/cache/bench/t1-2024.json) | shard `t1-2024` |
+| [`t1-2025.json`](repro/cache/bench/t1-2025.json) | shard `t1-2025` |
+| [`t1-2026.json`](repro/cache/bench/t1-2026.json) | shard `t1-2026` |
+| [`t1-2027.json`](repro/cache/bench/t1-2027.json) | shard `t1-2027` |
+| [`t1-2028.json`](repro/cache/bench/t1-2028.json) | shard `t1-2028` |
+| [`t2-civilcomments-2024-baselines.json`](repro/cache/bench/t2-civilcomments-2024-baselines.json) | shard `t2-civilcomments-2024-baselines` |
+| [`t2-civilcomments-2024-main.json`](repro/cache/bench/t2-civilcomments-2024-main.json) | shard `t2-civilcomments-2024-main` |
+| [`t2-civilcomments-2025-baselines.json`](repro/cache/bench/t2-civilcomments-2025-baselines.json) | shard `t2-civilcomments-2025-baselines` |
+| [`t2-civilcomments-2025-main.json`](repro/cache/bench/t2-civilcomments-2025-main.json) | shard `t2-civilcomments-2025-main` |
+| [`t2-civilcomments-2026-baselines.json`](repro/cache/bench/t2-civilcomments-2026-baselines.json) | shard `t2-civilcomments-2026-baselines` |
+| [`t2-civilcomments-2026-main.json`](repro/cache/bench/t2-civilcomments-2026-main.json) | shard `t2-civilcomments-2026-main` |
+| [`t2-civilcomments-2027-baselines.json`](repro/cache/bench/t2-civilcomments-2027-baselines.json) | shard `t2-civilcomments-2027-baselines` |
+| [`t2-civilcomments-2027-main.json`](repro/cache/bench/t2-civilcomments-2027-main.json) | shard `t2-civilcomments-2027-main` |
+| [`t2-civilcomments-2028-baselines.json`](repro/cache/bench/t2-civilcomments-2028-baselines.json) | shard `t2-civilcomments-2028-baselines` |
+| [`t2-civilcomments-2028-main.json`](repro/cache/bench/t2-civilcomments-2028-main.json) | shard `t2-civilcomments-2028-main` |
+
+There is no PKU-BETTER shard. That is not an omission: `label_audit.py` runs before any
+accuracy is computed and blocks the column, so no shard was ever produced to ship.

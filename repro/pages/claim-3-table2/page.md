@@ -110,13 +110,21 @@ harness, and both CARE variants. Its released labels are valid and exactly balan
 
 ### PKU-BETTER — BLOCKED, because its released labels are constant
 
-Reproducing this column returns accuracies of **exactly 0.0** for MV, AVG, WS and UWS
-and **exactly 1.0** for CARE-Tensor. Those are not plausible accuracies, and the cause
-is in the released data rather than in the aggregation. The authors' own run record
-reports `class_balance: 100.0` — every test label is the same class.
+This column is blocked before any accuracy is computed, by a precondition that runs on
+the released labels themselves and is published in full.
+
+*An earlier revision of this paragraph opened with "reproducing this column returns
+accuracies of exactly 0.0 for MV, AVG, WS and UWS and exactly 1.0 for CARE-Tensor", and
+cited the authors' run record as reporting `class_balance: 100.0`. Those observations came
+from exploratory runs that are **not** in this artifact: `class_balance` appears nowhere in
+`raw/verdict.json`, no PKU-BETTER shard is shipped, and the verdict's PKU-BETTER entry
+carries no accuracies at all. A blind reviewer checked and found them unsupported. They are
+removed rather than re-run, because the argument does not need them — everything below is
+in the record.*
 
 Four independent checks of the released artifact, each reproducible from the public
-repository at `72f5b29`:
+repository at `72f5b29` and each recorded under `label_integrity_audit` in
+[`raw/verdict.json`](raw/verdict.json):
 
 | Check | Result |
 |---|---|
@@ -127,8 +135,10 @@ repository at `72f5b29`:
 
 `gaussian_mixture_main.py` masks this. When the label column has one distinct value it
 falls back to `pref_A_or_B` — which is *a judge's own preference*, not ground truth — so
-the resulting "accuracy" scores a judge against itself. That is why it saturates at
-exactly 0 or 1.
+any resulting "accuracy" scores a judge against itself and saturates. That is a statement
+about the authors' code path, which is public at `72f5b29` and can be read there; this
+logbook reports no accuracy for the column, so it is not a statement about a number of
+ours.
 
 **We therefore report no accuracy for PKU-BETTER at all.** A number computed against a
 constant label is meaningless rather than merely inaccurate, so this is recorded as
@@ -171,11 +181,17 @@ not come from this file"* — the authors' Table 2 figure must have been compute
 randomised version of the dataset that the repository does not ship. The column stays
 **BLOCKED**, and no conclusion about CARE is drawn from it in either direction.
 
-That distinction matters for what an earlier revision nearly published. Our pipeline's
-own run returned MV = 0.000 against a stated 0.701, which read as a spectacular
-refutation of the paper. It is nothing of the sort: it is the signature of a
-non-randomised release slice being scored against the wrong one of two disagreeing gold
-columns (`gold_label_binary` = 0 while `gold_label_num` = 1).
+That distinction matters for what an earlier revision nearly published. An exploratory run
+of our pipeline returned a majority-vote accuracy of zero against a stated 0.701, which
+read as a spectacular refutation of the paper. It is nothing of the sort: it is the
+signature of a non-randomised release slice being scored against the wrong one of two
+disagreeing gold columns (`gold_label_binary` = 0 while `gold_label_num` = 1).
+
+*That exploratory number is described here and deliberately not quoted as a measurement:
+it is not in [`raw/verdict.json`](raw/verdict.json), because the label precondition now
+runs first and blocks the column before any accuracy is computed. The two reachable
+accuracies above — the ones this section's argument actually rests on — **are** in the
+record, under `label_integrity_audit`.*
 
 ## Negative control
 
