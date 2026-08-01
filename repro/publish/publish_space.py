@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -215,17 +216,28 @@ def check(work: Path) -> int:
     (work.parent / "upload_manifest.json").write_text(json.dumps(manifest, indent=2))
     print(f"manifest written for {len(manifest)} paths -> {work.parent/'upload_manifest.json'}")
 
-    # No secrets.
+    # No secrets. Each pattern matches the SHAPE of a credential, not merely its prefix:
+    # a bare "hf_" flagged the field names hf_job_id and hf_flavor on every run, and a
+    # scanner that always fires is a scanner nobody reads.
+    SECRET_PATTERNS = [
+        ("huggingface token", re.compile(r"\bhf_[A-Za-z0-9]{30,}")),
+        ("github PAT", re.compile(r"\b(?:github_pat_|ghp_|gho_|ghs_)[A-Za-z0-9_]{20,}")),
+        ("openai key", re.compile(r"\bsk-[A-Za-z0-9]{20,}")),
+        ("assigned token variable", re.compile(r"(?i)\b(?:hf_token|api_key|secret|password)\s*[=:]\s*[\"']?[A-Za-z0-9_\-]{16,}")),
+        ("PEM private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ]
     bad = []
     for rel in manifest:
+        if not rel.endswith((".md", ".json", ".sh", ".py", ".toml", ".lock", ".csv")):
+            continue
         txt = (work / rel).read_text(errors="ignore")
-        for needle in ("hf_", "HF_TOKEN=", "github_pat", "ghp_", "sk-"):
-            if needle in txt and rel.endswith((".md", ".json", ".sh")):
-                bad.append((rel, needle))
+        for label, pat in SECRET_PATTERNS:
+            if pat.search(txt):
+                bad.append((rel, label))
     if bad:
         print("POSSIBLE SECRET MATERIAL:", bad)
         return 1
-    print("no secret-shaped strings in the allowlisted text")
+    print(f"no credential-shaped strings in {len(manifest)} allowlisted files")
     return 0
 
 
