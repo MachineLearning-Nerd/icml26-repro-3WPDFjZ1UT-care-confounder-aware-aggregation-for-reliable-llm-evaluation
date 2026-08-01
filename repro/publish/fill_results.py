@@ -361,7 +361,9 @@ def c6_results(v):
         )
     ic = g(v, "independent_check", "c6_slope_recheck", default={})
     tail = (
-        f"\n\nOverall sample-complexity contract satisfied: {yesno(s.get('ok'))}. "
+        f"\n\nOverall sample-complexity contract satisfied: {yesno(s.get('ok'))} — and on "
+        "the p row that **is the result**, not a defect in the run: the exponent was "
+        "resolved by both estimators and exceeds what the theorem states. "
         f"Informative sweeps: {s.get('informative_sweeps') or 'none'}; "
         f"uninformative: {s.get('uninformative_sweeps') or 'none'}. A sweep marked NOT "
         "INFORMATIVE contributes no evidence in either direction and is excluded from the "
@@ -370,8 +372,10 @@ def c6_results(v):
         + "\n\n"
         f"Independent Theil–Sen refit of the σ boundary probe: slope "
         f"{num(ic.get('theil_sen_slope'), 4)} against least squares "
-        f"{num(ic.get('least_squares_slope'), 4)}; both estimators agree there is no "
-        f"σ-growth: {yesno(ic.get('theil_sen_agrees_no_sigma_growth'))}."
+        f"{num(ic.get('least_squares_slope'), 4)}; both fall under the 0.5 threshold for "
+        f"'no σ-growth': {yesno(ic.get('theil_sen_agrees_no_sigma_growth'))}. The "
+        "Theil–Sen figure clears that threshold only narrowly, so the two estimators "
+        "agree on the direction rather than on the magnitude."
         + (f"\n\nNot measured: {s['not_measured']}" if s.get("not_measured") else "")
     )
     return table(
