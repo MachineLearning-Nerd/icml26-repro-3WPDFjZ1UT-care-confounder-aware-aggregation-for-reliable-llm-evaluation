@@ -12,12 +12,16 @@ disqualify the sweep rather than pass it:
   * two independent n* estimators (curve-crossing and curve-fitting) whose 95%
     intervals for the exponent do not overlap, so the number is a property of the
     estimator rather than of the system;
-  * a fitted trend whose 95% interval covers zero, so no exponent was resolved. The
-    threshold is 2 standard errors rather than 1: a slope of 0.60 +/- 0.56 has a 95%
-    interval of [-0.50, +1.71], and a sweep that cannot distinguish its exponent from
-    zero has not measured one, however comfortably it clears a one-sided contract.
+  * a fitted trend whose 95% interval covers zero, so no exponent was resolved. A sweep
+    that cannot distinguish its exponent from zero has not measured one, however
+    comfortably it clears a one-sided contract.
 
 A sweep that fails any of these is reported NOT INFORMATIVE and excluded from `ok`.
+
+Every interval here is `estimate +/- t(0.975, n_points - 2) * stderr`. The point count is
+a REQUIRED argument of `informativeness` and `estimators_agree`, not an optional one that
+falls back to the normal 1.96, because that fallback is exactly how this module came to
+publish intervals 38% narrower than they were -- see `t_crit`.
 """
 
 from __future__ import annotations
@@ -116,7 +120,7 @@ def ci95(slope: float, stderr: float, n_points: int, n_params: int = 2) -> list:
     return [float(slope - k * stderr), float(slope + k * stderr)]
 
 
-def estimators_agree(a_slope, a_se, b_slope, b_se, a_n=None, b_n=None) -> dict:
+def estimators_agree(a_slope, a_se, b_slope, b_se, a_n, b_n) -> dict:
     """Do two independent estimators of the same exponent overlap at 95%?
 
     n* can be read as the crossing of the decay curve with the target, or by fitting
@@ -127,8 +131,10 @@ def estimators_agree(a_slope, a_se, b_slope, b_se, a_n=None, b_n=None) -> dict:
     vals = (a_slope, a_se, b_slope, b_se)
     if not all(isinstance(v, float) and math.isfinite(v) for v in vals):
         return {"agree": False, "why": "an estimator produced no finite exponent"}
-    ka = t_crit(a_n) if a_n else 1.96
-    kb = t_crit(b_n) if b_n else 1.96
+    # Point counts are required, not optional. An optional argument defaulting to the
+    # normal 1.96 is how every interval in this campaign came to be 38% too narrow; a
+    # caller that cannot say how many points it fitted cannot be given an interval.
+    ka, kb = t_crit(a_n), t_crit(b_n)
     lo_a, hi_a = a_slope - ka * a_se, a_slope + ka * a_se
     lo_b, hi_b = b_slope - kb * b_se, b_slope + kb * b_se
     overlap = max(lo_a, lo_b) <= min(hi_a, hi_b)
@@ -157,7 +163,7 @@ def estimators_agree(a_slope, a_se, b_slope, b_se, a_n=None, b_n=None) -> dict:
     }
 
 
-def informativeness(ys, slope, stderr, grid, agreement=None, n_points=None) -> dict:
+def informativeness(ys, slope, stderr, grid, agreement=None, *, n_points) -> dict:
     ys = [y for y in ys if y is not None and math.isfinite(y)]
     why = []
     if len(ys) < 3:
@@ -173,13 +179,13 @@ def informativeness(ys, slope, stderr, grid, agreement=None, n_points=None) -> d
     if not (isinstance(slope, float) and math.isfinite(slope)):
         why.append("no finite slope")
     elif isinstance(stderr, float) and math.isfinite(stderr):
-        k = t_crit(n_points) if n_points else 1.96
+        k = t_crit(n_points)
         lo, hi = slope - k * stderr, slope + k * stderr
         if lo * hi <= 0:
             why.append(
                 f"the fitted trend {slope:.4f} +/- {stderr:.4f} has a 95% interval "
                 f"[{lo:.4f}, {hi:.4f}] covering zero; no exponent was resolved "
-                f"(interval width uses t(0.975, {max((n_points or 4) - 2, 1)}) = {k:.3f}, "
+                f"(interval width uses t(0.975, {max(n_points - 2, 1)}) = {k:.3f}, "
                 "not the normal 1.96)"
             )
     if agreement is not None and not agreement.get("agree"):
