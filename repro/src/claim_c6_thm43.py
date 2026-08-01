@@ -660,9 +660,15 @@ def run() -> dict:
     # An earlier revision took `measured` from the union of all informative sweeps and
     # consequently published "VERIFIED (sample-complexity condition ...)" off the back of
     # the one sweep it had already ruled inadmissible.
+    # The sweeps publish `status`, which is "MEASURED" or "NOT INFORMATIVE"; reading a
+    # key that does not exist would default every sweep to uninformative and reach the
+    # right verdict for the wrong reason, which is its own kind of vacuous gate.
     gating_informative = {
-        k: bool(sweeps[k].get("informative")) for k in ("sigma", "pi_min", "p") if k in gating
+        k: sweeps[k].get("status") == "MEASURED"
+        for k in ("sigma", "pi_min", "p") if k in gating
     }
+    assert all(sweeps[k].get("status") in ("MEASURED", "NOT INFORMATIVE")
+               for k in gating), "a gating sweep published no informativeness status"
     sweeps["gating_sweeps_informative"] = gating_informative
     sweeps["sample_complexity_condition_measured"] = bool(
         gating_informative and all(gating_informative.values())
@@ -710,10 +716,25 @@ def run() -> dict:
             "displayed proof of the weight bound has a documented gap" if p_falsified else
             "VERIFIED (sample-complexity condition and mean bound) with a documented "
             "gap in the displayed proof of the weight bound" if measured else
-            "VERIFIED (mean bound, and the stated weight bound is not violated along "
-            "its own sample-complexity boundary) with a documented gap in the displayed "
-            "proof of the weight bound; the sample-complexity EXPONENTS are NOT MEASURED "
-            "at this budget -- see route_b informativeness"
+            # Lead with the result that is exact and decisive -- a symbolic
+            # reconstruction of the paper's own derivation -- rather than with an
+            # empirical sweep that this budget could not resolve. Both are stated.
+            "The paper's derivation is RECONSTRUCTED SYMBOLICALLY and the two displayed "
+            "bounds come out differently. Bound (I), the mean error, is VERIFIED: "
+            "composing the paper's own cited results (8) and (10) reproduces "
+            "C_1 (sigma^3/delta) sqrt(p log(p/eps)/n) exactly, with no residual factor. "
+            "The displayed proof of bound (II), the weight error, is FALSIFIED AS A "
+            "DERIVATION: composing (8) with (11) yields a bound larger than the stated "
+            "C_2 sqrt(p log(p/eps)/n) by exactly sigma_max^3, a factor that grows without "
+            "bound and that no universal constant can absorb; this is established in "
+            "sympy and re-derived by a second route. Bound (II) as STATED is not thereby "
+            "false, and is NOT falsified here: probed along the theorem's own boundary "
+            "n = n_0 sigma^6, where the missing factor predicts growth in sigma, the "
+            "measured weight error does not grow -- so the defect is in the written proof, "
+            "not demonstrably in the result. The sample-complexity EXPONENTS in sigma, "
+            "pi_min and p are NOT MEASURED at this budget: two sweeps are NOT INFORMATIVE "
+            "and the third is not attributable to the theorem's own factor (see "
+            "route_e_p_sweep_confound_audit)"
         ),
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],

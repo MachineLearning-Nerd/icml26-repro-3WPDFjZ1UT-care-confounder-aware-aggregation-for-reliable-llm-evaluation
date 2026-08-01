@@ -595,6 +595,60 @@ def eta_tail_measurement(n=12800, n_seeds=240, p=40, h=3, seed0=90210) -> dict:
     }
 
 
+def _verdict_string(sym, dk, cal, eta) -> str:
+    """State the verdict factor by factor, from the routes' own measured outcomes.
+
+    Theorem 4.2 is a product of four dependences -- n, eta, delta and xi(T) -- and this
+    campaign reaches them with different strength. Collapsing that to "VERIFIED" claims
+    the weakest of them at the strength of the strongest.
+    """
+    parts = []
+    n_slope = cal.get("stage_2_loglog_slope")
+    lo, hi = (cal.get("stage_2_loglog_slope_ci95") or [None, None])[:2]
+    if cal.get("stage_2_check"):
+        tight = cal.get("stage_2_exponent_statistically_consistent_with_minus_half")
+        parts.append(
+            f"the n-dependence is VERIFIED on the spectral step the theorem is about: "
+            f"exponent {n_slope:.4f}"
+            + (f" (95% CI [{lo:.4f}, {hi:.4f}])" if lo is not None else "")
+            + (", statistically consistent with the stated -1/2"
+               if tight else
+               ", which decays at least as fast as the stated n^-1/2 but whose interval "
+               "EXCLUDES -1/2 exactly -- consistent with an O(.) upper bound, not "
+               "confirmation of the exponent")
+        )
+    if dk.get("ok"):
+        parts.append(
+            f"the cited Davis-Kahan constant {dk.get('constant_checked'):.4f} = 2^(3/2) is "
+            f"VERIFIED over the search (worst error/bound "
+            f"{dk.get('worst_err_over_bound'):.4f}, no violation found)"
+        )
+    if eta.get("available") and eta.get("ok"):
+        parts.append(
+            f"the eta-dependence is MEASURED and HOLDS, conservatively: tail exponent "
+            f"{eta.get('loglog_slope_error_vs_eta'):.4f} against the stated 1/2 over "
+            f"{eta.get('n_replicates')} replicates"
+        )
+    if cal.get("alpha_sweep_status") == "MEASURED":
+        parts.append(
+            f"the accuracy-dependence is MEASURED: n*(alpha) exponent "
+            f"{cal.get('loglog_slope_n_star_vs_alpha'):.4f} +/- "
+            f"{cal.get('loglog_slope_n_star_vs_alpha_stderr'):.4f} against the stated -2"
+        )
+    unmeasured = ["xi(T), which has no closed form we can evaluate"]
+    if cal.get("delta_sweep_status") != "MEASURED":
+        unmeasured.append("the delta-dependence, whose sweep is NOT INFORMATIVE at this budget")
+    if not cal.get("stage_3_full_pipeline_check"):
+        unmeasured.append(
+            "the end-to-end pipeline exponent, which falls short of n^-1/2 at our "
+            "solver's iteration budget -- attributed to the solver by the stage "
+            "decomposition, not to the theorem"
+        )
+    return ("VERIFIED in the factors that were measurable, NOT MEASURED in the rest. "
+            + "Specifically: " + "; ".join(parts)
+            + ". Not measured: " + "; ".join(unmeasured) + ".")
+
+
 def run() -> dict:
     sym = symbolic_chain_audit()
     dk = davis_kahan_constant_check()
@@ -611,7 +665,10 @@ def run() -> dict:
         "route_d_eta_tail_measurement": eta,
         "negative_controls": nc,
         "ok": bool(ok),
-        "verdict": "VERIFIED" if ok else "INCONCLUSIVE",
+        # A bare "VERIFIED" is stronger than what four routes of differing strength
+        # establish, and a blind reviewer said so. The string is assembled from the
+        # routes' own outcomes instead, factor by factor, so it cannot overstate them.
+        "verdict": _verdict_string(sym, dk, cal, eta) if ok else "INCONCLUSIVE",
         "limitations": [
             "The full Algorithm-1 pipeline (stage 3) uses a proximal-gradient solve of the "
             "sparse-plus-low-rank program at 3,000 iterations; its measured exponent is "
