@@ -586,15 +586,24 @@ def c6_controls(v):
 # Confidence is a judgement, so it is recorded here in code with its reason
 # rather than typed into prose where it could drift from the evidence.
 CONFIDENCE = {
-    "C1": ("HIGH", "The arithmetic half is exact and seed-free; the blocked half is blocked "
-                   "by a capability the paper itself names (A100 judge generation), not by a "
-                   "gap in this reproduction."),
+    "C1": ("HIGH", "The arithmetic half is exact and seed-free. The UltraFeedback MAE pair "
+                   "itself is NOT re-measured -- the authors released no UltraFeedback "
+                   "judge-score matrix -- so the 26.8 % figure is verified as arithmetic on "
+                   "the paper's own published values, while a different Table 1 column "
+                   "(ASSET) is what this campaign reproduces at full scale. The block is "
+                   "caused by a capability the paper itself names (A100 judge generation), "
+                   "not by a gap in this reproduction."),
     "C2": ("HIGH", "The definition is identified uniquely by requiring both published targets "
                    "simultaneously, in exact rational arithmetic, and confirmed against a "
                    "second independent transcription."),
     "C3": ("HIGH", "Every arithmetic assertion is decided exactly over all nine Table 2 "
-                   "methods; the two columns with released judge outputs are reproduced at "
-                   "full scale over five seeds."),
+                   "methods, from a second independent transcription. Of Table 2's six "
+                   "columns exactly ONE -- CivilComments -- is reproduced at full scale "
+                   "over five seeds; PKU-BETTER ships judge outputs but its released "
+                   "labels are degenerate and it is BLOCKED, and the other four ship no "
+                   "judge outputs at all. The arithmetic assertions are therefore decided "
+                   "against the paper's own published grid, not against re-measured "
+                   "accuracies for those four columns."),
     "C4": ("HIGH", "Symbolic over a parameterised family, plus exact counterexamples that "
                    "satisfy the paper's own hypotheses. Deterministic; no seeds to vary."),
     "C5": ("MEDIUM", "The composition and the cited constant are established directly, and "
@@ -625,8 +634,11 @@ PAGE_VERDICT = {
     "C2": "**VERIFIED** (17.37 % and 12.75 %, with the paper's definition identified "
           "uniquely) / **BLOCKED** (five of six Table 1 columns have no released judge "
           "outputs)",
-    "C3": "**VERIFIED** (best on 5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize "
-          "figure) / **BLOCKED** (four of six Table 2 columns have no released judge outputs)",
+    "C3": "**VERIFIED** as arithmetic over the paper's published nine-method grid (best on "
+          "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure) / "
+          "**REPRODUCED at full scale on 1 of 6 columns** (CivilComments) / **BLOCKED** on "
+          "the other five: four ship no judge outputs, and PKU-BETTER's released labels are "
+          "degenerate",
 }
 
 
