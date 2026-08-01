@@ -41,10 +41,26 @@ TABLE2_DATASETS = [
     "Chatbot-Arena", "CivilComments", "PKU-BETTER", "PKU-SAFER", "SHP", "Summarize",
 ]
 TABLE2_ACC = {
-    "MV":  [0.517, 0.691, 0.701, 0.698, 0.626, 0.600],
-    "AVG": [0.551, 0.690, 0.726, 0.717, 0.634, 0.683],
-    "WS":  [0.543, 0.739, 0.575, 0.570, 0.619, 0.705],
-    "UWS": [0.507, 0.713, 0.703, None, None, None],
+    "MV":           [0.517, 0.691, 0.701, 0.698, 0.626, 0.600],
+    "AVG":          [0.551, 0.690, 0.726, 0.717, 0.634, 0.683],
+    "WS":           [0.543, 0.739, 0.575, 0.570, 0.619, 0.705],
+    "UWS":          [0.507, 0.713, 0.703, 0.701, 0.629, 0.713],
+    "Dawid-Skene":  [0.546, 0.735, 0.551, 0.548, 0.612, 0.705],
+    "GLAD":         [0.510, 0.695, 0.697, 0.671, 0.644, 0.718],
+    "MACE":         [0.550, 0.732, 0.734, 0.735, 0.580, 0.706],
+    "CARE-SVD":     [0.580, 0.778, 0.691, 0.690, 0.543, 0.695],
+    "CARE-Tensor":  [0.564, 0.749, 0.779, 0.731, 0.695, 0.814],
+}
+TABLE2_BASELINES = ["MV", "AVG", "WS", "UWS", "Dawid-Skene", "GLAD", "MACE"]
+TABLE2_CARE = ["CARE-SVD", "CARE-Tensor"]
+# Bold (best) cell per column as typeset in the paper.
+TABLE2_BOLD = {
+    "Chatbot-Arena": "CARE-SVD",
+    "CivilComments": "CARE-SVD",
+    "PKU-BETTER": "CARE-Tensor",
+    "PKU-SAFER": "MACE",
+    "SHP": "CARE-Tensor",
+    "Summarize": "CARE-Tensor",
 }
 
 # Prose quantifiers under test (Section 5.1).
@@ -53,7 +69,14 @@ PROSE = {
     "avg_relative_improvement_over_AVG_pct": 17.37,
     "avg_relative_improvement_over_MV_pct": 12.75,
     "table2_best_of_n_datasets": (5, 6),
+    "table2_care_tensor_leads_on": ["PKU-BETTER", "SHP", "Summarize"],
     "summarize_relative_improvement_pct": 13.4,
+    # The claim string circulated with this reproduction quotes
+    # "0.814 +- 0.001 vs 0.705 +- 0.000" for the Summarize comparison. 0.705 is the
+    # WS / Dawid-Skene entry, not the strongest baseline on that column; the paper's
+    # own words are "over the strongest baseline", which is GLAD at 0.718. Both
+    # readings are decided explicitly by the verifier.
+    "summarize_claimstring_pair": (0.814, 0.705),
 }
 
 # Datasets for which the authors released judge-score matrices in the official repo.

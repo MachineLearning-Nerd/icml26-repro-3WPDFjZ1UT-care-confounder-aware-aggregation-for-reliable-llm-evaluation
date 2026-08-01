@@ -41,7 +41,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from paper_source import PROSE, SOURCE, TABLE1_DATASETS, TABLE1_MAE, TABLE2_ACC, TABLE2_DATASETS
+from paper_source import (
+    PROSE, SOURCE, TABLE1_DATASETS, TABLE1_MAE, TABLE2_ACC, TABLE2_BASELINES,
+    TABLE2_BOLD, TABLE2_CARE, TABLE2_DATASETS,
+)
 
 SEEDS = (2024, 2025, 2026, 2027, 2028)
 
@@ -88,20 +91,44 @@ def table_arithmetic() -> dict:
     i_uf = TABLE1_DATASETS.index("UltraFeedback")
     uf_reduction = float((mv[i_uf] - care[i_uf]) / mv[i_uf] * 100.0)
 
-    # Claim 3's Summarize figure. CARE-Tensor's Table 2 row is not transcribable
-    # from the released HTML render for every column, so we decide only the part
-    # the prose states explicitly: 0.814 vs the strongest baseline 0.705 (WS).
+    # Claim 3, part 1: "CARE attains the best accuracy on 5 of 6 datasets, with
+    # CARE-Tensor leading on three (PKU-BETTER, SHP, Summarize)".
+    best_per_dataset, care_wins, tensor_leads = {}, 0, []
+    for j, ds in enumerate(TABLE2_DATASETS):
+        col = {m: v[j] for m, v in TABLE2_ACC.items() if v[j] is not None}
+        winner = max(col, key=col.get)
+        best_per_dataset[ds] = {"winner": winner, "accuracy": col[winner]}
+        if winner in TABLE2_CARE:
+            care_wins += 1
+        if winner == "CARE-Tensor":
+            tensor_leads.append(ds)
+    bold_agrees = all(
+        best_per_dataset[ds]["winner"] == TABLE2_BOLD[ds] for ds in TABLE2_DATASETS
+    )
+    five_of_six = (care_wins, len(TABLE2_DATASETS)) == tuple(PROSE["table2_best_of_n_datasets"])
+    tensor_ok = sorted(tensor_leads) == sorted(PROSE["table2_care_tensor_leads_on"])
+
+    # Claim 3, part 2: the Summarize percentage, decided under both readings.
     i_sum = TABLE2_DATASETS.index("Summarize")
-    baselines_summarize = {
-        m: TABLE2_ACC[m][i_sum] for m in ("MV", "AVG", "WS", "UWS") if TABLE2_ACC[m][i_sum] is not None
-    }
-    strongest = max(baselines_summarize.values())
-    summarize_rel = float((0.814 - strongest) / strongest * 100.0)
+    baseline_col = {m: TABLE2_ACC[m][i_sum] for m in TABLE2_BASELINES}
+    strongest_name = max(baseline_col, key=baseline_col.get)
+    strongest = baseline_col[strongest_name]
+    care_tensor_sum = TABLE2_ACC["CARE-Tensor"][i_sum]
+    summarize_rel = float((care_tensor_sum - strongest) / strongest * 100.0)
+    a, b = PROSE["summarize_claimstring_pair"]
+    summarize_claimstring_rel = float((a - b) / b * 100.0)
+
+    claim3_ok = (
+        five_of_six
+        and tensor_ok
+        and bold_agrees
+        and abs(summarize_rel - PROSE["summarize_relative_improvement_pct"]) < 0.1
+    )
 
     return {
         "ok": bool(identified)
         and abs(uf_reduction - PROSE["ultrafeedback_mv_reduction_pct"]) < 0.05
-        and abs(summarize_rel - PROSE["summarize_relative_improvement_pct"]) < 0.1,
+        and claim3_ok,
         "per_dataset_relative_improvement_vs_AVG_pct": dict(
             zip(TABLE1_DATASETS, [round(float(x), 3) for x in per_dataset_vs_avg])
         ),
@@ -120,9 +147,29 @@ def table_arithmetic() -> dict:
         ),
         "claim1_ultrafeedback_reduction_vs_MV_pct": uf_reduction,
         "claim1_paper_value_pct": PROSE["ultrafeedback_mv_reduction_pct"],
-        "claim3_summarize_strongest_baseline": strongest,
+        "claim3_best_method_per_dataset": best_per_dataset,
+        "claim3_bold_cells_agree_with_recomputed_winners": bool(bold_agrees),
+        "claim3_care_best_on_n_of_6": care_wins,
+        "claim3_five_of_six_holds": bool(five_of_six),
+        "claim3_care_tensor_leads_on": tensor_leads,
+        "claim3_care_tensor_leads_matches_paper": bool(tensor_ok),
+        "claim3_dataset_where_care_loses": [
+            ds for ds, v in best_per_dataset.items() if v["winner"] not in TABLE2_CARE
+        ],
+        "claim3_summarize_strongest_baseline": {"method": strongest_name, "accuracy": strongest},
+        "claim3_summarize_care_tensor": care_tensor_sum,
         "claim3_summarize_relative_improvement_pct": summarize_rel,
         "claim3_paper_value_pct": PROSE["summarize_relative_improvement_pct"],
+        "claim3_claimstring_pair_relative_pct": summarize_claimstring_rel,
+        "claim3_note": (
+            "The paper's own wording is 'a 13.4% relative improvement in accuracy on "
+            "Summarize over the strongest baseline'. The strongest Summarize baseline in "
+            f"Table 2 is {strongest_name} at {strongest}, and "
+            f"({care_tensor_sum} - {strongest})/{strongest} = {summarize_rel:.2f}%, which "
+            "reproduces 13.4% exactly. The value 0.705 quoted in the circulated claim "
+            "string is the WS / Dawid-Skene entry, not the strongest baseline; that pair "
+            f"would give {summarize_claimstring_rel:.2f}%."
+        ),
     }
 
 
@@ -250,7 +297,8 @@ def reproduce_table2(root: Path, outdir: Path) -> dict:
                 "--output", str(out),
                 "--state-dir", str(d / "state"),
                 "--cache-path", str(d / "cache.json"),
-                "--skip-baselines",
+                "--baseline-output", str(d / "baselines.csv"),
+                "--baseline-methods", "dawid_skene", "glad", "mace",
             ],
             d,
         )
@@ -258,22 +306,36 @@ def reproduce_table2(root: Path, outdir: Path) -> dict:
             per_seed[seed] = {"error": f"returncode {rc}"}
             continue
         df = pd.read_csv(out)
-        per_seed[seed] = {
+        entry = {
             str(r["dataset"]): {
                 m: (None if pd.isna(r.get(m)) else float(r.get(m)))
                 for m in ("mv", "avg", "ws", "uws", "care_svd", "care_tensor")
             }
             for _, r in df.iterrows()
         }
+        bl = d / "baselines.csv"
+        if bl.exists():
+            bdf = pd.read_csv(bl)
+            for _, r in bdf.iterrows():
+                ds, m = str(r["dataset"]), str(r["method"])
+                if ds in entry and not pd.isna(r.get("accuracy")):
+                    entry[ds][m] = float(r["accuracy"])
+        per_seed[seed] = entry
 
     name_map = {"civilcomments": "CivilComments", "pku_better": "PKU-BETTER"}
-    label = {"mv": "MV", "avg": "AVG", "ws": "WS", "uws": "UWS"}
+    label = {
+        "mv": "MV", "avg": "AVG", "ws": "WS", "uws": "UWS",
+        "dawid_skene": "Dawid-Skene", "glad": "GLAD", "mace": "MACE",
+        "care_svd": "CARE-SVD", "care_tensor": "CARE-Tensor",
+    }
     out_rows = []
     for ds_key, ds_name in name_map.items():
         i = TABLE2_DATASETS.index(ds_name)
         entry = {"dataset": ds_name, "methods": []}
         best_method, best_acc = None, -1.0
-        for m in ("mv", "avg", "ws", "uws", "care_svd", "care_tensor"):
+        for m in (
+            "mv", "avg", "ws", "uws", "dawid_skene", "glad", "mace", "care_svd", "care_tensor"
+        ):
             vals = [
                 v[ds_key][m]
                 for v in per_seed.values()

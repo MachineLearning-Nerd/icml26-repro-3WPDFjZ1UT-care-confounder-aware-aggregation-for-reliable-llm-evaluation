@@ -83,8 +83,22 @@ def main() -> int:
         out["claims"][name] = res
         print(f"[run_all] {name} ok={res.get('ok')} in {res['runtime_s']}s", flush=True)
 
+    import independent_check
+
+    t = time.time()
+    print("[run_all] starting independent_check", flush=True)
+    try:
+        chk = independent_check.run(out)
+    except Exception as exc:
+        import traceback
+
+        chk = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
+    chk["runtime_s"] = round(time.time() - t, 2)
+    out["independent_check"] = chk
+    print(f"[run_all] independent_check ok={chk.get('ok')} in {chk['runtime_s']}s", flush=True)
+
     out["total_runtime_s"] = round(time.time() - t0, 2)
-    out["all_contracts_ok"] = all(v.get("ok") for v in out["claims"].values())
+    out["all_contracts_ok"] = all(v.get("ok") for v in out["claims"].values()) and bool(chk.get("ok"))
 
     print(BEGIN, flush=True)
     print(json.dumps(out, indent=2, default=str), flush=True)
