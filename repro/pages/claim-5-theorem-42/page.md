@@ -127,8 +127,10 @@ estimator instead of least squares, so a single outlying point cannot carry the 
 uv run python repro/src/run_all.py      # runs this claim as stage C5_thm42
 ```
 
-Runtime 111.8 s on Hugging Face `cpu-upgrade` (8 vCPU / 32 GB), threads pinned to the
-cgroup quota. Record: [`raw/verdict.json`](raw/verdict.json) under `claims.C5_thm42`;
+<!-- FILL:c5.runtime -->
+*(pending release run)*
+<!-- /FILL -->
+ Record: [`raw/verdict.json`](raw/verdict.json) under `claims.C5_thm42`;
 extract [`raw/c5_rate.csv`](raw/c5_rate.csv). Code:
 [`repro/src/claim_c5_thm42.py`](repro/src/claim_c5_thm42.py).
 

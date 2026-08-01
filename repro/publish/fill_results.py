@@ -323,6 +323,15 @@ def c6_attribution(v):
     )
 
 
+def c6_grid(v):
+    grid = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", "grid_n",
+             default=[])
+    return ("`n ∈ {" + ", ".join(f"{n:,}".replace(",", " ") for n in grid) + "}`"
+            + f"\n\nTarget accuracy: `max_(q,c) |π̂ − π| ≤ "
+            + num(g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity",
+                    "target_accuracy", default=None), 3) + "`.")
+
+
 def c6_confound(v):
     c = g(v, "claims", "C6_thm43", "route_e_p_sweep_confound_audit", default={})
     rows = [[num(r.get("p_total"), 0), num(r.get("delta_cp_eigenvalue_gap"), 6),
@@ -642,6 +651,20 @@ PAGE_VERDICT = {
 }
 
 
+def _runtime(cid):
+    """Runtimes drift on every run; a hand-typed one is stale the moment it is written."""
+    def fn(v):
+        secs = g(v, "claims", CLAIM_KEY[cid], "runtime_s", default=None)
+        flavor = g(v, "environment", "hf_flavor", default="cpu-upgrade")
+        total = g(v, "total_runtime_s", default=None)
+        return (
+            f"Runtime **{num(secs, 1)} s** for this stage on Hugging Face `{flavor}` "
+            f"(8 vCPU / 32 GB), threads pinned to the cgroup quota; "
+            f"{num(total, 1)} s for the whole run."
+        )
+    return fn
+
+
 def _header(cid):
     def fn(v):
         conf, why = CONFIDENCE[cid]
@@ -706,6 +729,11 @@ GENERATORS = {
     "c6.results": c6_results,
     "c6.attribution": c6_attribution,
     "c6.confound": c6_confound,
+    "c6.grid": c6_grid,
+    "c4.runtime": _runtime("C4"),
+    "c5.runtime": _runtime("C5"),
+    "c4.runtime": _runtime("C4"),
+    "c6.runtime": _runtime("C6"),
     "c6.controls": c6_controls,
     "verdicts": verdicts,
     "c1.header": _header("C1"),

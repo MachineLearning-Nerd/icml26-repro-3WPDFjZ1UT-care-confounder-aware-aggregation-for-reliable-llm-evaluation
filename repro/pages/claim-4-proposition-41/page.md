@@ -149,8 +149,11 @@ is deterministic; there are no seeds to vary.
 uv run python repro/src/run_all.py      # runs this claim as stage C4_prop41
 ```
 
-Runtime 53.0 s on Hugging Face `cpu-upgrade` (8 vCPU / 32 GB), threads pinned to the
-cgroup quota (8). Full record in [`raw/verdict.json`](raw/verdict.json) under
+<!-- FILL:c4.runtime -->
+*(pending release run)*
+<!-- /FILL -->
+
+Full record in [`raw/verdict.json`](raw/verdict.json) under
 `claims.C4_prop41`; the constant search is extracted to
 [`raw/c4_constant_search.csv`](raw/c4_constant_search.csv). Code:
 [`repro/src/claim_c4_prop41.py`](repro/src/claim_c4_prop41.py).

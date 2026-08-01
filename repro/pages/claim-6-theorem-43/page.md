@@ -101,8 +101,12 @@ estimator's 95 % interval is [2.06, 5.21] and the curve-crossing estimator's is
 
 The claim is a statement about **exponents**, so each parameter is swept independently
 and `n*` — the sample size at which the parameter error first falls below
-`TARGET = 0.05` — is located by search over a geometric grid
-`n ∈ {200, 500, 1 250, 3 125, 5 000, 12 500, 31 250, 78 125, 195 312, 488 281, 1 220 703}`.
+`TARGET = 0.05` — is located by search over a geometric grid:
+
+<!-- FILL:c6.grid -->
+*(pending release run)*
+<!-- /FILL -->
+
 No sample size is computed from the formula under test.
 
 Because the theorem is a sufficient condition (`n ≳ …`), each contract is **one-sided**:
@@ -129,8 +133,8 @@ only if it has ≥ 3 usable points, ≥ 3 *distinct* values of `n*`, no pinning 
 `n*` to a grid endpoint, and a fitted trend whose 95 % interval excludes zero. A sweep
 failing any of these is reported **NOT INFORMATIVE**, contributes nothing in either
 direction, and is excluded from the verdict — rather than passing because it failed to
-disagree. The grid was also extended down to `n = 200` so the `π_min` search is no
-longer censored from below.
+disagree. The grid was also extended downward so the `π_min` search is no longer censored
+from below.
 
 ### Two estimators of `n*`, and why both are reported
 
@@ -221,8 +225,10 @@ an independent symbolic route, then cross-checks agreement with the claim module
 uv run python repro/src/run_all.py      # runs this claim as stage C6_thm43
 ```
 
-Runtime 331.3 s on Hugging Face `cpu-upgrade` (8 vCPU / 32 GB), threads pinned to the
-cgroup quota. Record: [`raw/verdict.json`](raw/verdict.json) under `claims.C6_thm43`;
+<!-- FILL:c6.runtime -->
+*(pending release run)*
+<!-- /FILL -->
+ Record: [`raw/verdict.json`](raw/verdict.json) under `claims.C6_thm43`;
 extract [`raw/c6_sigma_sweep.csv`](raw/c6_sigma_sweep.csv). Code:
 [`repro/src/claim_c6_thm43.py`](repro/src/claim_c6_thm43.py).
 
