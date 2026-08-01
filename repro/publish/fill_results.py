@@ -693,16 +693,54 @@ def _runtime(cid):
     return fn
 
 
+# Versions the run itself reports; the rest are read from the committed uv.lock, which is
+# published alongside this page so the two can be compared.
+LOCKED = [("scipy", "1.14.1"), ("pandas", "2.2.3"), ("scikit-learn", "1.5.2"),
+          ("cvxpy", "1.5.4"), ("snorkel", "0.10.0"), ("sympy", "1.13.3"),
+          ("mpmath", "1.3.0"), ("torch", "2.4.1+cpu")]
+
+
+def env_packages(v):
+    e = g(v, "environment", default={})
+    rows = [["Python", f"**{e.get('python', '—')}**", "reported by the run"],
+            ["numpy", f"**{e.get('numpy', '—')}**", "reported by the run"]]
+    rows += [[k, val, "from `uv.lock`"] for k, val in LOCKED]
+    return table(["Package", "Version", "Source"], rows) + (
+        "\n\nThe first two are read from the release run itself rather than typed here; "
+        "an earlier version of this page hard-coded a Python version that disagreed with "
+        "the run."
+    )
+
+
 def _header(cid):
     def fn(v):
         conf, why = CONFIDENCE[cid]
         run_verdict = g(v, "claims", CLAIM_KEY[cid], "verdict", default=None)
         verdict = PAGE_VERDICT.get(cid) or (run_verdict or "—")
         contract = g(v, "claims", CLAIM_KEY[cid], "ok", default=None)
+        # "Contract satisfied: yes" must never stand alone when part of the contract was
+        # never measured -- that is how a vacuous sweep reads as a pass.
+        unmeasured = []
+        c5 = g(v, "claims", "C5_thm42", "route_c_calibrated_rate", default={})
+        if cid == "C5":
+            unmeasured = c5.get("elements_not_measured") or []
+        if cid == "C6":
+            sw = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", default={})
+            unmeasured = [f"n*({k})" for k in (sw.get("uninformative_sweeps") or [])]
+        note = ""
+        if unmeasured:
+            note = (
+                f"\n\n**But {len(unmeasured)} contract element(s) were NOT MEASURED**: "
+                + ", ".join(f"`{u}`" for u in unmeasured)
+                + ". A sweep that resolved no exponent cannot satisfy a one-sided contract "
+                "and cannot violate one; it is excluded, and the 'satisfied' above refers "
+                "only to the elements that were measured."
+            )
         return (
             f"**Verdict:** {verdict}\n\n"
             f"**Confidence: {conf}.** {why}\n\n"
             f"Machine-checkable contract satisfied by the release run: {yesno(contract)}."
+            + note
         )
     return fn
 
@@ -758,6 +796,7 @@ GENERATORS = {
     "c6.attribution": c6_attribution,
     "c6.confound": c6_confound,
     "c6.grid": c6_grid,
+    "env.packages": env_packages,
     "c4.runtime": _runtime("C4"),
     "c5.runtime": _runtime("C5"),
     "c4.runtime": _runtime("C4"),

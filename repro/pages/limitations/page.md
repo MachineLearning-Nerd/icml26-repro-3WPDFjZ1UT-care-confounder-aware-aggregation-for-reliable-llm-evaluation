@@ -291,3 +291,29 @@ how far to trust the rest.
 * **No output of a deliberately-failing run is published**, except the secret scanner's.
   The claim that each gate fails when it should is therefore asserted for the other
   gates, not demonstrated.
+
+## 19. The one fixed command does not by itself reproduce Claims 1-3
+
+`uv run python repro/src/run_all.py` is the single command for the theory claims, and it
+is what produced every number on Claims 4-6. For Claims 1-3 it is **not** self-contained:
+it consumes cached benchmark shards under `repro/cache/bench/`, and if they are absent it
+falls back to running the authors' scripts directly, which costs about 112 minutes per
+seed for both Table 2 datasets and therefore breaches this campaign's one-hour job cap.
+
+The shards are produced by a separate, documented command —
+`python repro/src/bench_shard.py t1 <seed>` and
+`python repro/src/bench_shard.py t2 <dataset> <seed> <main|baselines>` — run as 15
+one-hour jobs. Both the shard cache and `CARE_OFFICIAL_DIR` (a checkout of the authors'
+repository, pinned at `72f5b29`) are required inputs that the single command does not
+create for itself.
+
+Two consequences an evaluator should know:
+
+* The shards ran at a **different repository revision** than the one recorded in
+  `environment.git_sha` for the release run. The per-shard revision is recorded in
+  `claims.C1_C2_C3_tables.shard_provenance` in
+  [`raw/verdict.json`](raw/verdict.json). The shard code was not modified between those
+  revisions, but the revisions differ and no page previously said so.
+* An earlier version of the environment page claimed nothing is switched by an
+  environment variable. That was wrong: `CARE_OFFICIAL_DIR` selects the authors'
+  checkout, and `CARE_ENTRY` selects the shard entrypoint inside the job bootstrap.

@@ -10,8 +10,19 @@ under `repro/`.
 uv run python repro/src/run_all.py
 ```
 
-This is the single fixed command for every node of the experiment tree. Variants
-live in committed code; nothing is switched by an environment variable or an
+This is the single fixed command for every node of the experiment tree, and it produced
+every number on Claims 4-6. Two qualifications, both of which an earlier version of this
+page omitted:
+
+* It is **not self-contained for Claims 1-3**. Those consume cached benchmark shards
+  produced by a separate documented command; see
+  [Limitations item 19](#/limitations).
+* Two environment variables **are** load-bearing: `CARE_OFFICIAL_DIR` selects the
+  authors' pinned checkout, and `CARE_ENTRY` selects the shard entrypoint inside the job
+  bootstrap. Neither selects a scientific variant — those live in committed code — but
+  the flat claim below was wrong and is corrected here.
+
+Experimental variants
 alternate command line. The script exits **1** if any claim contract or the
 independent checker fails, and prints the complete verdict JSON to stdout between
 `===CARE_VERDICT_BEGIN===` and `===CARE_VERDICT_END===`.
@@ -45,18 +56,9 @@ repository-root files that `uv sync --frozen` actually reads:
 [`repro/env/pyproject.toml`](repro/env/pyproject.toml) and
 [`repro/env/uv.lock`](repro/env/uv.lock).
 
-| Package | Version |
-|---|---|
-| Python | 3.11.13 |
-| numpy | 2.1.3 |
-| scipy | 1.14.1 |
-| pandas | 2.2.3 |
-| scikit-learn | 1.5.2 |
-| cvxpy | 1.5.4 |
-| snorkel | 0.10.0 |
-| sympy | 1.13.3 |
-| mpmath | 1.3.0 |
-| torch | 2.4.1+cpu |
+<!-- FILL:env.packages -->
+*(pending release run)*
+<!-- /FILL -->
 
 `torch` is pinned to the CPU wheel index explicitly rather than through
 `[tool.uv] torch-backend`, which not every `uv` version honours;
