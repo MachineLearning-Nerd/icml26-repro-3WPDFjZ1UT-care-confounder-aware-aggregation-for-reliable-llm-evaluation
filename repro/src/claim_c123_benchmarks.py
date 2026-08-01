@@ -373,7 +373,7 @@ def aggregation_convention_audit() -> dict:
         "pooled_is_unit_dependent": bool(pooled_range > 1.0),
         "unweighted_is_unit_invariant": bool(unweighted_range < 1e-9),
         "ordering_of_the_two_headline_gaps_flips_under_unit_change": bool(len(orderings) > 1),
-        "unweighted_across_benchmark_average_vs_AVG_pct": round(float(unweighted_1), 4),
+        "unweighted_across_benchmark_average_vs_AVG_pct": float(unweighted_1),
         "paper_headline_pct": target_avg,
         "discrepancy_pp": round(float(gap), 4),
         # The claim under test asserts an average improvement ACROSS BENCHMARKS of

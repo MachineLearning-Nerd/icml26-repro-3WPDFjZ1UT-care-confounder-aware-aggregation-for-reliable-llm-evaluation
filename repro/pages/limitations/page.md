@@ -364,3 +364,22 @@ about CARE's benchmark performance. CARE-SVD improves on AVG on all six Table 1
 datasets. Only one of those six columns (ASSET) is independently reproduced here; the
 other five rest on the paper's own reported values, so the 15.19% figure inherits the
 paper's numbers for five datasets and is only as reliable as they are.
+
+## 22. The cross-implementation agreement check did not gate the verifier
+
+Claim 2's verdict is computed twice -- once in floating point by the claim module, once
+in exact rationals by the independent checker -- and the two results are compared. On the
+first release run of this revision the comparison **reported a disagreement and the run
+still exited 0**, because `agreement_with_claim_module` was recorded in the verdict but
+was not part of the checker's `ok`. An agreement check that cannot fail is decoration.
+
+The disagreement itself was benign and was mine: the claim module rounded the
+across-benchmark average to four decimals before publishing it, and the checker compared
+that rounded value against the exact rational at a 1e-6 tolerance. Both fixes are in
+this revision -- the field is published at full precision, and any recorded disagreement
+now fails the checker.
+
+It is recorded here because the failure mode is the interesting part. Had the two
+implementations genuinely disagreed about whether Claim 2 is falsified, nothing in the
+release gates would have caught it, and the page would have published a verdict that its
+own second implementation contradicted.

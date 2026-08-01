@@ -402,6 +402,13 @@ def run(verdict: dict | None = None) -> dict:
         and out["c2_unit_invariance_exact"]["weighted_mean_identity_exact"]
         and out["c2_unit_invariance_exact"]["unweighted_exactly_invariant_under_unit_change"]
     )
+    # A cross-implementation agreement check that does not gate `ok` is decoration: the
+    # two implementations could disagree about a published verdict and the run would
+    # still exit 0. Any recorded disagreement fails the checker.
+    agree = out.get("agreement_with_claim_module")
+    if agree:
+        out["ok"] = bool(out["ok"] and all(agree.values()))
+
     # If the p exponent was refit at all, the falsification it supports must survive the
     # refit; otherwise the finding is a property of least squares and this checker fails.
     pr = out.get("c6_p_exponent_recheck") or {}
