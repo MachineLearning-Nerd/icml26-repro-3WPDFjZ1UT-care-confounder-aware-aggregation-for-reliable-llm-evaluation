@@ -65,10 +65,16 @@ not measuring anything either.
   It did not: the measured slope is 0.0605 ± 1.1149, whose 95 % interval excludes the 3
   a missing `σ³` predicts and includes the 0 the theorem predicts. The finding was
   downgraded from FALSIFIED to a documented gap in the displayed proof.
-* A **different** part of Theorem 4.3 *was* falsified, and not the part we set out to
-  attack. With `σ`, `δ` and `π_min` held fixed, the sample size needed for a fixed
-  accuracy grows as `(p·log(p/ε))^{3.63 ± 0.80}` against a stated exponent of 1, with
-  both `n*` estimators resolving the excess and the solver's restart budget ruled out.
+* A **claimed falsification of Theorem 4.3 was withdrawn by our own verifier.** The
+  2026-08-01 revision reported that `n*` grows as `(p·log(p/ε))^{3.63 ± 0.80}` against a
+  stated exponent of 1, "with both `n*` estimators agreeing". Only the two *aggregate*
+  slope intervals had been compared; per setting the estimators differed by up to 8.6×
+  in opposite directions, over decay curves with r² as low as 0.38. A stricter
+  per-setting screen and a rebuilt confound audit now govern that finding, and the
+  confound audit detects a real one: at fixed `n` the empirical second moment degrades
+  with `p` — subspace leakage grows 259× across the sweep — so part of the measured
+  growth is the moment estimate deteriorating rather than the `p·log(p/ε)` factor. The
+  exponent is no longer attributable, and Theorem 4.3 is **not** recorded as falsified.
 * The full Algorithm-1 pipeline's empirical error exponent falls short of `n^{-1/2}` at
   our solver's iteration budget. That shortfall is attributed to our proximal-gradient
   solver, not to the theorem, and the attribution is demonstrated rather than asserted

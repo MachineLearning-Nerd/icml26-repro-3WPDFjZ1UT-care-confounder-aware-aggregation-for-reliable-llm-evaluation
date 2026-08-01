@@ -513,19 +513,42 @@ def c6_p_refit(v):
 
 
 def c6_confound(v):
+    """Only the quantities that were actually MEASURED belong in this table.
+
+    The previous version listed five columns, four of which were written from
+    p-independent constants, under a caption saying they had been found constant.
+    Design invariants are now stated as such, separately, and not dressed as findings.
+    """
     c = g(v, "claims", "C6_thm43", "route_e_p_sweep_confound_audit", default={})
-    rows = [[num(r.get("p_total"), 0), num(r.get("delta_cp_eigenvalue_gap"), 6),
-             num(r.get("min_pairwise_mean_separation"), 6),
-             num(r.get("m2_condition_number"), 6), num(r.get("sigma_max"), 2),
-             num(r.get("pi_min"), 3)] for r in c.get("rows", [])]
+    rows = [
+        [
+            num(r.get("p_total"), 0),
+            num(r.get("min_pairwise_mean_separation"), 6),
+            num(r.get("empirical_m2_topk_condition_number"), 4),
+            num(r.get("empirical_m2_leakage_outside_topk"), 4)
+            if r.get("empirical_m2_leakage_outside_topk") is not None else "n/a",
+        ]
+        for r in c.get("rows", [])
+    ]
+    fixed = c.get("fixed_by_construction", {})
     held = c.get("held_fixed", {})
-    return table(
-        ["p", "δ (CP gap)", "min ‖μᵢ−μⱼ‖", "cond(M₂)", "σ_max", "π_min"], rows
-    ) + (
-        "\n\nHeld fixed across the sweep: "
+    ratio = c.get("leakage_ratio_first_to_last_p")
+    body = table(
+        ["p", "min ‖μᵢ−μⱼ‖", "empirical cond(M̂₂) on top-k", "leakage outside top-k"], rows
+    )
+    inv = ", ".join(
+        f"`{k}` = {num(x, 4)}" for k, x in fixed.items() if isinstance(x, (int, float))
+    )
+    return body + (
+        f"\n\n**Fixed by construction, not measured:** {inv}. "
+        f"{fixed.get('why_these_cannot_drift', '')}\n\n"
+        f"**Measured, and held fixed across the sweep:** "
         + ", ".join(f"{k} {yesno(vv)}" for k, vv in held.items())
-        + f"\n\nAll other quantities in the bound held fixed: "
-        f"{yesno(c.get('all_other_quantities_held_fixed'))}. {c.get('why', '')}"
+        + (f"\n\nLeakage outside the signal subspace grows **{num(ratio, 0)}×** from the "
+           f"smallest to the largest `p` at fixed `n`. " if ratio else "\n\n")
+        + f"A measured p-exponent is attributable to the theorem's own factor: "
+          f"{yesno(c.get('all_other_quantities_held_fixed'))}."
+        + (f" {c.get('why_not_attributable')}." if c.get("why_not_attributable") else "")
     )
 
 

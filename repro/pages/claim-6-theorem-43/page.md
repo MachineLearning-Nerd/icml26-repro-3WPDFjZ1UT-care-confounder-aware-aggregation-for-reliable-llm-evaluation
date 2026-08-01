@@ -45,59 +45,71 @@ falsified in `σ`, however flawed its written proof.
 This is recorded rather than quietly dropped because a reproduction that only reports
 confirmations of its own hypotheses is not measuring anything.
 
-## What *is* falsified: the stated `p·log(p/ε)` factor
+## The `p·log(p/ε)` factor: a falsification we published, then withdrew
 
-A different part of the same condition does not survive. With `σ`, `δ` and `π_min` held
-fixed and `p` swept over six settings, the sample size needed to reach a fixed accuracy
-grows far faster than the stated bound allows — the measured exponent on `p·log(p/ε)` is
-about **3.6 against a stated 1**, and the excess is resolved by *both* `n*` estimators
-independently.
+**The 2026-08-01 revision recorded this claim as FALSIFIED. That verdict has been
+withdrawn, by this logbook's own verifier, and the reasoning is kept here in full
+because the retraction is the result.**
 
-This is a statement about the exponent, never about the value, which is what makes it
-immune to the theorem's unknown universal constant `C₁`: a constant can move `n*` up or
-down, but it cannot turn `p¹` into `p³·⁶`. The comparison is also normalised correctly.
-Substituting the boundary sample size `n = C₁σ⁶/(δ²π_min²)·p·log(p/ε)` into the
-theorem's own weight bound gives an achieved accuracy of `C₂·δ·π_min/√C₁`, which is
-**independent of `p`** — so holding the target accuracy fixed at 0.05 while sweeping `p`
-is exactly the right comparison, and `n*` should then scale as `p·log(p/ε)` itself.
+What was published: with `σ`, `δ` and `π_min` held fixed and `p` swept over six
+settings, the sample size `n*` needed to reach a fixed accuracy appeared to grow as
+`(p·log(p/ε))^{3.63 ± 0.80}` against a stated exponent of 1, "with both `n*` estimators
+agreeing and the solver's restart budget ruled out".
 
-The three audits that make this attributable — both estimators resolving the exponent,
-the restart-budget control, and the constancy of every other quantity in the bound — are
-published in full below, and each was written before its own outcome was known.
+Two things were wrong with it.
+
+**1. The estimators were not agreeing.** The agreement test compared only the two
+*aggregate* exponents' 95% intervals. Per setting the two `n*` estimators differed by up
+to **8.6×, in opposite directions** (at `p = 18`: 2662 by curve-fitting against 308 by
+crossing), across decay curves fitted at slopes of −0.076 to −0.260 — against the
+theorem's own −0.5 — with r² as low as 0.38. At `p = 18` the error column was
+`[0.0648, 0.0892, 0.0564, 0.0497, 0.0611, 0.0511]` against a target of 0.05: noise about
+the target, not a decay, and `n*` was extrapolated from it. Two fits through noise
+agreeing on a slope is not corroboration. The gate in
+[`repro/src/informativeness.py`](repro/src/informativeness.py) now screens **each setting
+individually** — the two estimators must agree within 3×, the decay fit must explain the
+curve (r² ≥ 0.5), and the decay must be steep enough that extrapolating to the target
+does not amplify noise (|slope| ≥ 0.15) — before that setting may enter an exponent fit.
+
+**2. The confound audit could not have found a confound.** It reported `δ`, mean
+separation, `cond(M₂)`, `σ` and `π_min` "identical to eight decimal places across every
+`p`", but every one of those numbers was written into the table from a `p`-independent
+constant, and its `ok` was hard-coded `True`. The previous version of this page even
+named the risk — "a `p^{3.6}` growth is consistent with the estimator's conditioning
+degrading in `p`… this campaign cannot separate those two" — and then reported a
+falsification anyway.
+
+That separation has now been made, and it comes out against the falsification.
+
+<!-- FILL:c6.confound -->
+*(pending release run)*
+<!-- /FILL -->
+
+Measured from the model actually built at each `p`, at fixed `n`: the empirical `M₂`
+top-`k` condition number is **not** constant, and leakage outside the signal subspace
+grows by two orders of magnitude across the sweep. At fixed `n` the empirical second
+moment simply degrades as dimension grows, so part of any `n*(p)` growth is the moment
+estimate deteriorating rather than the `p·log(p/ε)` factor being wrong. The exponent is
+therefore **not attributable to the theorem**, and no falsification may rest on it.
+
+With the sweep repeated at 21 seeds and each decay curve continued three points past its
+crossing, the surviving settings give an exponent near 2.9 — still above 1, and still
+not usable, for exactly the reason above. It is reported as a measurement, not as a
+verdict.
+
+**What this claim does establish** is on the rest of this page: the mean bound is
+reproduced exactly from the paper's own derivation chain, the stated weight bound is not
+violated along its own sample-complexity boundary, and the displayed proof of the weight
+bound has a `σ³` gap that is symbolic and exact. The `σ` and `π_min` exponents are
+**NOT MEASURED**.
 
 **This test was not pre-registered, and that is recorded rather than hidden.** The
 contract written at the start of this campaign
 ([`raw/claim_contract.json`](raw/claim_contract.json), entry `C6`) names only the `σ`
-boundary criterion. The `p` criterion was added mid-campaign, and the honest sequence is
-this: while repairing a censored search grid — every `π_min` setting had been returning
-`n* = 5 000`, the grid floor — the `p` sweep became measurable for the first time and
-immediately exceeded its bound. The criterion was written down before that sweep was
-re-run on the corrected grid, but *after* a censored run had already shown a large
-exponent. So the **decision to test the `p` factor was prompted by seeing a large
-number**, even though every gate the finding had to clear was fixed in advance. Both the
-original and the added criterion are in the contract file, with this provenance attached.
-
-A reader who discounts post-hoc findings should discount this one accordingly. What
-does not depend on the ordering: the exponent is resolved by two independent estimators,
-`δ`, `σ`, `π_min`, the mean separation and `cond(M₂)` are identical to eight decimal
-places across every `p`, and tripling the solver's restart budget does not *lower* `n*`
-at either end of the sweep — see the attribution table below for the measured ratios.
-
-**Scope, stated precisely.** This falsifies the stated `p·log(p/ε)` factor *as tested
-with the algorithm the theorem names* (Anandkumar et al.'s robust tensor power method
-with whitening), on a model family that satisfies the theorem's own hypotheses:
-`K = 4` components, three conditionally independent views, full-column-rank means, and
-`π_min = 0.10 > 0`. It says nothing about the `σ⁶` or `π_min^{-2}` factors, whose
-exponents this campaign reports as **NOT MEASURED**.
-
-**One solver knob was varied, not all of them.** The attribution control varies the
-restart count and nothing else: the 60 power iterations, 30 deflation iterations and the
-rank-`k` whitening are held fixed across the whole `p` sweep. Larger `p` should make the
-statistical problem no harder at fixed component separation, so a `p^{3.6}` growth is
-consistent with the estimator's *conditioning* degrading in `p` as well as with the
-stated rate being wrong. This campaign cannot separate those two, and the falsification
-should be read as "the stated factor does not hold for this algorithm as specified"
-rather than as a statement about the statistical problem itself.
+boundary criterion. The `p` criterion was added mid-campaign, after a censored run had
+already shown a large exponent — so the decision to test the `p` factor was prompted by
+seeing a large number. A reader who discounts post-hoc findings should discount it
+accordingly; as it turns out, the finding did not survive its own gates either.
 
 ### Independent refit of the exponent
 
@@ -193,15 +205,13 @@ numbers were seen) would disqualify the sweep.
 *(pending release run)*
 <!-- /FILL -->
 
-**Are `σ`, `δ` and `π_min` really held fixed?** If `δ` shrank as `p` grew, an apparent
-`p`-growth would be the bound's own `δ^{-2}` factor in disguise. These are population
-quantities of the generative model, so they carry no sampling noise: the CP eigenvalues
-are `λ_i = π_i^{-1/2}`, `δ` is their minimum gap, and the component means are columns of
-an orthonormal frame scaled by 3.0.
-
-<!-- FILL:c6.confound -->
-*(pending release run)*
-<!-- /FILL -->
+**Are `σ`, `δ` and `π_min` really held fixed?** `σ` and `π_min` are sweep arguments and
+the CP eigenvalues are `λ_i = π_i^{-1/2}`, a function of the mixture weights alone, so
+those three are fixed *by construction* and reporting them as measurements that came out
+constant would be a vacuous control. The quantities that genuinely could drift with `p`
+are measured instead, and one of them does — see
+[the withdrawn falsification above](#/claim-6-theorem-43), where that measurement is the
+reason the `p`-exponent is not attributable to the theorem.
 
 ## The algorithm actually implemented
 
