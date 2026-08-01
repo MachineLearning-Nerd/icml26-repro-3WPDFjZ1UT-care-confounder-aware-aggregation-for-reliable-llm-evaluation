@@ -120,6 +120,17 @@ extrapolation is dressed up as measurement.
 *(pending release run)*
 <!-- /FILL -->
 
+**The interval above is a bootstrap, and an earlier revision's was not honest.** The seven
+fitted points are quantiles of one sample of 240 replicates, so they are order statistics
+and move together. An earlier revision computed the interval from the fit's OLS residuals
+as though the seven were independent observations, which made it far too narrow; a blind
+reviewer flagged it. It is now resampled: the 240 replicates — the things that really are
+independent — are drawn with replacement 400 times and the whole quantile-to-slope
+pipeline is re-run inside each resample. The old interval is printed beside the new one so
+the difference is visible rather than asserted — both are rendered from the run, not typed
+here. The point estimate is unchanged; only the uncertainty attached to it is, and every
+conclusion below is read off the bootstrap interval.
+
 The contract is one-sided, because Theorem 4.2 is an upper bound: the tail must grow no
 *faster* than `√η`. That one-sided form is not vacuous here, because the same fit must
 also resolve a **non-zero** exponent — a run in which the error had no `η`-dependence at
