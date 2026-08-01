@@ -138,7 +138,7 @@ def _stated_bound_unit(n):
 # 5000 every pi_min setting returned n* = 5000 exactly: the error was already under
 # target at the first point, so the search was censored and the fitted exponent was a
 # property of the grid, not of the estimator.
-NS_GRID = [50, 125, 320, 800, 2000, 5000, 12500, 31250, 78125, 195312, 488281, 1220703]
+NS_GRID = [20, 50, 125, 320, 800, 2000, 5000, 12500, 31250, 78125, 195312, 488281, 1220703]
 TARGET = 0.05  # target accuracy for max_{q,c} |pi^_qc - pi_qc|
 
 
@@ -175,7 +175,11 @@ def _curve(mus, pi, sigma, p_total, ns, seeds, n_restarts=30):
                             for s in seeds) if e is not None]
         med = float(np.median(vals)) if vals else float("nan")
         out.append(med)
-        if np.isfinite(med) and med <= TARGET:
+        # Two points past the crossing, and never fewer than four: `_n_star_fit` pools
+        # every computed point, so stopping dead at the crossing would leave it nothing
+        # to pool.
+        below = [i for i, e in enumerate(out) if np.isfinite(e) and e <= TARGET]
+        if below and len(out) >= max(4, below[0] + 3):
             break
     return out + [None] * (len(ns) - len(out))
 
@@ -195,6 +199,39 @@ def _n_star(ns, errs, target=TARGET):
     return None
 
 
+def _n_star_fit(ns, errs, target=TARGET):
+    """Estimate n* by fitting the whole decay curve, not by reading one crossing.
+
+    A crossing point is decided by a single grid point, so where the curve is shallow
+    near the target a little vertical noise moves n* by an order of magnitude -- raising
+    the seed count from 5 to 7 moved one sigma setting's crossing from 424 to 3266.
+    Fitting log(err) = a + b*log(n) over every computed point and solving for
+    err = target pools all of them, which is what makes the exponent regressions above
+    stable enough to mean anything.
+
+    Returns None when the curve does not decay (b >= 0), when fewer than three points
+    were computed, or when the solved n* falls outside the searched grid -- the last
+    case is an extrapolation, and it is reported as censored rather than used.
+    """
+    pts = [(n, e) for n, e in zip(ns, errs) if e is not None and np.isfinite(e) and e > 0]
+    if len(pts) < 3:
+        return {"n_star": None, "why": f"only {len(pts)} computed points"}
+    x = np.log([n for n, _ in pts])
+    y = np.log([e for _, e in pts])
+    b, a = np.polyfit(x, y, 1)
+    if b >= 0:
+        return {"n_star": None, "why": f"error does not decay with n (fitted slope {b:.3f})"}
+    resid = y - (a + b * x)
+    ss_tot = float(np.sum((y - y.mean()) ** 2))
+    r2 = float(1 - (resid @ resid) / ss_tot) if ss_tot > 0 else float("nan")
+    n_star = float(np.exp((np.log(target) - a) / b))
+    if n_star < min(ns) or n_star > max(ns):
+        return {"n_star": None, "n_star_extrapolated": n_star, "decay_slope": float(b),
+                "r2": r2, "why": f"solved n* = {n_star:.0f} lies outside the searched "
+                                 f"grid [{min(ns)}, {max(ns)}]; censored, not measured"}
+    return {"n_star": n_star, "decay_slope": float(b), "r2": r2, "why": "fitted"}
+
+
 def _fit(x, y):
     x, y = np.log(np.asarray(x, float)), np.log(np.asarray(y, float))
     s, b = np.polyfit(x, y, 1)
@@ -203,7 +240,7 @@ def _fit(x, y):
     return float(s), se
 
 
-def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
+def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
     """Measure the exponents of n*(sigma), n*(pi_min) and n*(p) by SEARCH.
 
     Theorem 4.3's condition is a sufficient sample size, so each check is
@@ -219,13 +256,18 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     rows = []
     for sigma in (1.0, 1.3, 1.7, 2.2):
         c = _curve(mus, PI_TRUE, sigma, P_TOTAL, NS_GRID, seeds)
-        rows.append({"sigma_max": sigma, "errors": c, "n_star": _n_star(NS_GRID, c)})
+        f = _n_star_fit(NS_GRID, c)
+        rows.append({"sigma_max": sigma, "errors": c, "n_star": f["n_star"],
+                     "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
     ok_rows = [r for r in rows if r["n_star"]]
     s_sigma, se_sigma = _fit([r["sigma_max"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
     info_sigma = informativeness([r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID)
     out["sigma"] = {
         "rows": rows, "exponent": s_sigma, "stderr": se_sigma,
         "stated_exponent": 6.0, "requirement": "exponent <= 6 + 2*stderr",
+        "n_settings_used": len(ok_rows),
+        "n_settings_censored": len(rows) - len(ok_rows),
+        "censored_why": [r["n_star_fit"].get("why") for r in rows if r["n_star"] is None],
         "informativeness": info_sigma,
         "status": info_sigma["status"],
         "ok": bool((not info_sigma["informative"])
@@ -238,13 +280,18 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         rest = (1.0 - pmin) / 3.0
         pi = np.array([rest, rest, rest, pmin])
         c = _curve(mus, pi, 1.0, P_TOTAL, NS_GRID, seeds)
-        rows.append({"pi_min": pmin, "errors": c, "n_star": _n_star(NS_GRID, c)})
+        f = _n_star_fit(NS_GRID, c)
+        rows.append({"pi_min": pmin, "errors": c, "n_star": f["n_star"],
+                     "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
     ok_rows = [r for r in rows if r["n_star"]]
     s_pi, se_pi = _fit([r["pi_min"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
     info_pi_min = informativeness([r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID)
     out["pi_min"] = {
         "rows": rows, "exponent": s_pi, "stderr": se_pi,
         "stated_exponent": -2.0, "requirement": "exponent >= -2 - 2*stderr",
+        "n_settings_used": len(ok_rows),
+        "n_settings_censored": len(rows) - len(ok_rows),
+        "censored_why": [r["n_star_fit"].get("why") for r in rows if r["n_star"] is None],
         "informativeness": info_pi_min,
         "status": info_pi_min["status"],
         "ok": bool((not info_pi_min["informative"])
@@ -258,7 +305,9 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         m2 = _model(r2, ppv)
         pt = 3 * ppv
         c = _curve(m2, PI_TRUE, 1.0, pt, NS_GRID, seeds)
-        rows.append({"p_total": pt, "errors": c, "n_star": _n_star(NS_GRID, c)})
+        f = _n_star_fit(NS_GRID, c)
+        rows.append({"p_total": pt, "errors": c, "n_star": f["n_star"],
+                     "n_star_crossing": _n_star(NS_GRID, c), "n_star_fit": f})
     ok_rows = [r for r in rows if r["n_star"]]
     if len(ok_rows) >= 3:
         x = [r["p_total"] * np.log(r["p_total"] / EPS) for r in ok_rows]
@@ -269,6 +318,9 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     out["p"] = {
         "rows": rows, "exponent_vs_p_log_p": s_p, "stderr": se_p,
         "stated_exponent": 1.0, "requirement": "exponent <= 1 + 2*stderr",
+        "n_settings_used": len(ok_rows),
+        "n_settings_censored": len(rows) - len(ok_rows),
+        "censored_why": [r["n_star_fit"].get("why") for r in rows if r["n_star"] is None],
         "informativeness": info_p,
         "status": info_p["status"],
         "ok": bool((not info_p["informative"])
@@ -304,7 +356,9 @@ def restart_budget_attribution(seeds=(0, 1, 2, 3, 4)) -> dict:
         m = _model(np.random.default_rng(20260801), ppv)
         row = {"p_total": pt}
         for tag, nr in (("n_star_30_restarts", 30), ("n_star_90_restarts", 90)):
-            row[tag] = _n_star(NS_GRID, _curve(m, PI_TRUE, 1.0, pt, NS_GRID, seeds, n_restarts=nr))
+            row[tag] = _n_star_fit(
+                NS_GRID, _curve(m, PI_TRUE, 1.0, pt, NS_GRID, seeds, n_restarts=nr)
+            )["n_star"]
         both = (row["n_star_30_restarts"], row["n_star_90_restarts"])
         row["ratio_90_over_30"] = (both[1] / both[0]) if all(both) else None
         out["rows"].append(row)
