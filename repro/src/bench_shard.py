@@ -83,9 +83,12 @@ def shard_t1(seed: int) -> dict:
     if rc != 0 or not csv.exists():
         out["error"] = err or "no output csv"
         return out
+    # Long format: one row per method, with columns `pred` and `mae`.
     df = pd.read_csv(csv)
-    row = df.iloc[0]
-    out["values"] = {m: (None if pd.isna(row.get(m)) else float(row.get(m))) for m in T1_METHODS}
+    out["values"] = {
+        str(r["pred"]): (None if pd.isna(r["mae"]) else float(r["mae"]))
+        for _, r in df.iterrows()
+    }
     return out
 
 
@@ -138,13 +141,17 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
 
+    usable = {k: v for k, v in (res.get("values") or {}).items() if v is not None}
+    if not usable:
+        res.setdefault("error", "shard produced no non-null values")
+    res["n_values"] = len(usable)
     res["threads_pinned_to"] = threads.NUM_THREADS
     res["budget_s"] = BUDGET_S
     res["within_budget"] = res["runtime_s"] <= BUDGET_S
     print(BEGIN, flush=True)
     print(json.dumps(res, indent=2, default=str), flush=True)
     print(END, flush=True)
-    return 0 if res.get("values") and not res.get("error") else 1
+    return 0 if usable and not res.get("error") else 1
 
 
 if __name__ == "__main__":

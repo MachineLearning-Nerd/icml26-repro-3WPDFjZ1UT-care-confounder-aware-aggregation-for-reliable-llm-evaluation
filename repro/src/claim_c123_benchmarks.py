@@ -72,7 +72,10 @@ def _load_shards() -> dict:
             rec = json.loads(f.read_text())
         except json.JSONDecodeError:
             continue
-        if rec.get("shard"):
+        # An all-null shard is a failed shard; caching it would quietly turn a
+        # missing measurement into a "not produced" table row.
+        vals = rec.get("values") or {}
+        if rec.get("shard") and any(v is not None for v in vals.values()) and not rec.get("error"):
             out[rec["shard"]] = rec
     return out
 
