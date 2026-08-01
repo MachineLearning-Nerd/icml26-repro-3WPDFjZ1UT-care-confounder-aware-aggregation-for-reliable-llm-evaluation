@@ -36,11 +36,14 @@ are recomposed in `sympy` and their cited lemmas independently re-validated. Whe
 a finite experiment is used it is calibrated by search, never by substituting into
 the formula under test.
 
-All research compute ran on Hugging Face `cpu-upgrade` (8 vCPU). No GPU was used.
+All research compute ran on Hugging Face `cpu-upgrade` (8 vCPU). No GPU was used, and
+no single job exceeded one hour: the benchmark stage is split into 25 shards, the
+longest of which took 31 minutes.
 
 ## Honesty notes
 
-This reproduction reports two negative results against itself. A conjectured
+This reproduction reports two negative results against itself, and one defect it found
+in the released data rather than in the paper. A conjectured
 falsification of Theorem 4.3's weight bound did not survive measurement, and is
 reported as a gap in the written proof rather than as a refutation. The full
 Algorithm-1 pipeline's empirical rate falls short of `n^{-1/2}` at our solver's

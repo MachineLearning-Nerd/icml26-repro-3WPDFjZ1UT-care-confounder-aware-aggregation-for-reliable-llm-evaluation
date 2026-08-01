@@ -30,14 +30,18 @@ The judge's overall assessment of the 2026-07-30 revision was:
 That assessment was correct. Two things changed.
 
 **1. The benchmark claims now run on the paper's real benchmarks.** CARE's aggregation
-step is deterministic linear algebra on a fixed judge-score matrix; producing that
-matrix is the GPU-bound step. The authors released the matrices for ASSET (Table 1) and
-for CivilComments and PKU-BETTER (Table 2). Those columns are now reproduced
-end-to-end with the authors' own code at `72f5b29`, over five seeds, with no synthetic
-substitute anywhere. The remaining eight columns have no released judge outputs and
-regenerating them requires GPU inference over 11–20 LLM judges — the paper's own
-Appendix E.2 reports up to 3 hours per dataset on an A100. Those are recorded BLOCKED
-against that exact missing capability rather than replaced by a proxy.
+step is deterministic linear algebra on a fixed judge-score matrix; producing that matrix
+is the GPU-bound step. Of Tables 1–2's twelve columns the authors released matrices for
+three, and **two of those are reproduced here end-to-end** with the authors' own code at
+`72f5b29`, over five seeds, with no synthetic substitute anywhere.
+
+The third released column, PKU-BETTER, cannot be scored at all: every released label
+source for it is constant, so an accuracy computed from it would be meaningless. An
+executable precondition catches this before any number is produced, and the column is
+BLOCKED rather than scored. The remaining nine columns have no released judge outputs
+and would need GPU inference over 11–20 LLM judges — the paper's own Appendix E.2
+reports up to 3 hours per dataset on an A100. Those are BLOCKED against that named
+capability rather than replaced by a proxy.
 
 **2. The theorem claims are decided by reconstructing the derivations, not by fitting a
 slope.** A log-log slope on synthetic data cannot decide a universally quantified
