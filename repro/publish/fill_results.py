@@ -517,16 +517,32 @@ def c4_d4(v):
     ) + f"\n\nMethod: {sup.get('method', '')}"
 
 
-def c4_bound_scaling(v):
+def c4_bound_scaling(v):  # noqa: C901
     ce = g(v, "claims", "C4_prop41", "maintext_bound_scaling_counterexample", default={})
     rows = [
-        [num(r.get("c_scale_of_K_JH"), 0), f"**{num(r.get('worst_err_over_maintext_bound'), 3)}**"]
+        [
+            num(r.get("c_scale_of_K_JH"), 0),
+            "yes" if r.get("K_JH_columns_are_orthonormal") else "no",
+            f"**{num(r.get('worst_err_over_maintext_bound'), 3)}**",
+            num(r.get("worst_err_over_appendix_bound"), 3),
+        ]
         for r in ce.get("rows", [])
     ]
-    return table(["Scale `c` applied to `K_JH`", "worst ‖ũᵢ − uᵢ‖ ÷ main-text bound"], rows) + (
-        f"\n\nRatio grows monotonically without bound: {yesno(ce.get('ratio_grows_without_bound'))} · "
-        f"bound violated: {yesno(ce.get('bound_violated'))} · "
-        f"maximum violation factor **{num(ce.get('max_violation_factor'), 1)}×**."
+    return table(
+        ["Scale `c` on `K_JH`", "columns orthonormal?",
+         "worst ‖ũᵢ − uᵢ‖ ÷ **main-text** bound", "÷ appendix bound"],
+        rows,
+    ) + (
+        f"\n\nMain-text bound — ratio grows monotonically without bound: "
+        f"{yesno(ce.get('ratio_grows_without_bound'))} · violated: "
+        f"{yesno(ce.get('bound_violated'))} · maximum violation factor "
+        f"**{num(ce.get('max_violation_factor'), 1)}×**.\n\n"
+        f"Appendix bound — applicable only where its orthonormality hypothesis holds, i.e. "
+        f"at `c = 1`, where the ratio is "
+        f"{num(ce.get('appendix_ratio_at_c_equals_1'), 3)} and the bound is satisfied: "
+        f"{yesno(ce.get('appendix_bound_holds_where_applicable'))}. The column is shown at "
+        f"every `c` for transparency, but rows with `c ≠ 1` fall outside Theorem D.4's own "
+        f"hypotheses and are not evidence for or against it."
     )
 
 

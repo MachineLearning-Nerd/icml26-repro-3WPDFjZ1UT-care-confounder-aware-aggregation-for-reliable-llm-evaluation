@@ -19,7 +19,7 @@ differences are:
 | | Main text, Section 4 | Appendix D (Theorems D.3 and D.4) |
 |---|---|---|
 | Condition on `K_JH` | columns **orthogonal** | columns **orthonormal** (`K_JHᵀ K_JH = I_h`) |
-| Stability bound | `‖ũ_i − u_i‖ ≤ 4‖E‖₂ / δ_i` | `‖ũ_i − u_i‖ ≤ 4‖E‖₂ ‖K_JH‖₂² / δ_i` |
+| Stability bound | `‖ũ_i − u_i‖ ≤ 4‖E‖₂ / δ_i` | `‖ũ_i − s_i u_i‖₂ ≤ 4‖K_HH⁻¹‖₂‖E‖₂ / δ_i + O(‖E‖₂²)` |
 
 We tested both. **The appendix statement holds. The main-text statement is false
 as written, on both counts, and we give exact counterexamples.**
@@ -101,8 +101,18 @@ right-hand side not at all while the true error grows linearly:
 *(pending release run)*
 <!-- /FILL -->
 
-The ratio crosses 1 early in that sweep and then grows without bound. Note the appendix bound is satisfied at
-every `c` — the same data confirms it.
+The ratio crosses 1 early in that sweep and then grows without bound.
+
+**What the appendix bound does and does not say here.** Theorem D.4 *assumes* orthonormal
+columns, so it applies only at `c = 1`; asking whether it "holds at every `c`" would be
+asking a theorem to govern cases outside its own hypotheses. The table above therefore
+reports the appendix ratio at every `c` for transparency but adjudicates it only where it
+applies, and at `c = 1` it is satisfied. An earlier version of this page asserted the
+appendix bound was "satisfied at every `c` — the same data confirms it", which was both
+outside the theorem's hypotheses and unsupported: no appendix bound was computed at all,
+and the quantity the code did evaluate used `‖K_HH‖₂` rather than the stated constant.
+Both bounds are now evaluated exactly as transcribed on
+[Source audit](#/source-audit).
 
 **This defeats the `≲` as well as a `≤`.** The main text writes the bound with `≲`,
 which hides an unspecified constant, so a single violated instance would prove nothing.

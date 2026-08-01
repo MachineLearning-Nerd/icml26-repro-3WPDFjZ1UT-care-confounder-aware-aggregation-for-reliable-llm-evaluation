@@ -449,6 +449,7 @@ def maintext_bound_scaling_counterexample(scales=(1, 10, 100, 1000, 10000)) -> d
         o, ot = np.argsort(w)[::-1], np.argsort(wt)[::-1]
         eigs = np.sort(w)[::-1][:h]
         worst = 0.0
+        worst_app = 0.0
         for i in range(h):
             u, ut = V[:, o[i]], Vt[:, ot[i]]
             if float(u @ ut) < 0:
@@ -456,16 +457,41 @@ def maintext_bound_scaling_counterexample(scales=(1, 10, 100, 1000, 10000)) -> d
             err = float(np.linalg.norm(ut - u))
             gaps = [abs(eigs[i] - eigs[j]) for j in range(h) if j != i]
             delta_i = min([eigs[i]] + gaps)
-            maintext_bound = lam.max() * np.linalg.norm(E0, 2) / delta_i
+            # Both bounds exactly as transcribed on the Source audit page, so a reader
+            # can match symbol for symbol. K_HH = diag(lam) here, so ||K_HH^-1||_2 is
+            # 1/min(lam). An earlier version computed neither: it used ||K_HH||_2 in
+            # place of the stated constant and never evaluated the appendix bound at all.
+            maintext_bound = 4.0 * np.linalg.norm(E0, 2) / delta_i
+            appendix_bound = (
+                4.0 * (1.0 / lam.min()) * np.linalg.norm(E0, 2) / delta_i
+            )
             worst = max(worst, err / maintext_bound)
-        rows.append({"c_scale_of_K_JH": c, "worst_err_over_maintext_bound": worst})
+            worst_app = max(worst_app, err / appendix_bound)
+        rows.append({
+            "c_scale_of_K_JH": c,
+            "K_JH_columns_are_orthonormal": bool(abs(c - 1.0) < 1e-12),
+            "worst_err_over_maintext_bound": worst,
+            "worst_err_over_appendix_bound": worst_app,
+        })
 
     ratios = [r["worst_err_over_maintext_bound"] for r in rows]
     growing = all(b > a for a, b in zip(ratios, ratios[1:]))
     violated = max(ratios) > 1.0
+    # The appendix theorem ASSUMES orthonormal columns, so it is only applicable at c = 1.
+    # Reporting it as "satisfied at every c" would be claiming a result outside its own
+    # hypotheses; what can be checked is that it holds where it applies.
+    at_one = [r for r in rows if r["K_JH_columns_are_orthonormal"]]
+    appendix_holds_where_applicable = bool(
+        at_one and all(r["worst_err_over_appendix_bound"] <= 1.0 for r in at_one)
+    )
     return {
         "ok": bool(growing and violated),
         "rows": rows,
+        "appendix_bound_applicable_only_at_c_equals_1": True,
+        "appendix_bound_holds_where_applicable": appendix_holds_where_applicable,
+        "appendix_ratio_at_c_equals_1": (
+            at_one[0]["worst_err_over_appendix_bound"] if at_one else None
+        ),
         "ratio_grows_without_bound": bool(growing),
         "bound_violated": bool(violated),
         "max_violation_factor": max(ratios),

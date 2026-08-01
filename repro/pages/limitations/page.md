@@ -320,3 +320,17 @@ Two consequences an evaluator should know:
 * An earlier version of the environment page claimed nothing is switched by an
   environment variable. That was wrong: `CARE_OFFICIAL_DIR` selects the authors'
   checkout, and `CARE_ENTRY` selects the shard entrypoint inside the job bootstrap.
+
+## 20. Claim 5's `n*(alpha)` sweep is not independent of its stage-2 slope
+
+The stage-2 curve is fitted as a power law with exponent about `-0.472`. Given that fit,
+the sample size at which the error first reaches a target `alpha` follows algebraically:
+`n*(alpha)` is proportional to `alpha^(1/-0.472)`, which is approximately `alpha^-2.1`.
+The measured `n*(alpha)` exponent of `-1.9584` is therefore **largely implied by a number
+already reported on the same page**, not a second independent observation of the theorem.
+
+It is not entirely vacuous -- the two are computed from different quantities (a slope fit
+over all n, versus a search for a crossing at four separate targets) and could disagree if
+the curve were not a clean power law. But it should be read as an internal consistency
+check, not as corroboration from a new direction, and the Claim 5 page's phrase "reported
+as evidence" overstates it in that respect.

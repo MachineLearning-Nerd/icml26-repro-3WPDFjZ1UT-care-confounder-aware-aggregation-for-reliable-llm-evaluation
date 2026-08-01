@@ -88,8 +88,11 @@ Claim 6 applies one further condition that this claim does not: there, `n*` is e
 by two independent routes and an exponent counts only if both resolve it and agree. That
 condition was added because Claim 6's `n*` measurements proved unstable, and it is not
 applied here — so the `n*(α)` and `n*(δ)` exponents below rest on a single estimator.
-The `n*(α)` sweep is monotone over five settings and lands 36 standard errors from zero,
-which is why it is reported as evidence. `n*(δ)` fails the test — 1.1 standard errors
+The `n*(α)` sweep is monotone over five settings and lands 36 standard errors from zero.
+Read it as an **internal consistency check rather than independent corroboration**: given
+the stage-2 power-law exponent of −0.472 already reported above, an `n*(α)` exponent near
+−2.1 follows algebraically, so the two are not independent observations. See
+[Limitations item 20](#/limitations). `n*(δ)` fails the test — 1.1 standard errors
 from zero — and is therefore excluded entirely, supporting neither the `δ^{-2}` factor
 nor any bound on it; see [Limitations item 14](#/limitations).
 
