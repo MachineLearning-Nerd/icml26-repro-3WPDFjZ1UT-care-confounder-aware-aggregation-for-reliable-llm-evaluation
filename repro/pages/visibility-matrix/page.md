@@ -35,3 +35,18 @@ Shared items, reachable from every claim page:
 
 The verifier [`repro/src/run_all.py`](repro/src/run_all.py) exits nonzero whenever any
 claim contract fails; it does not merely report.
+
+## The gates themselves are published
+
+So that this table can be audited rather than trusted:
+
+| Gate | What it refuses to let through |
+|---|---|
+| [`repro/publish/visibility_matrix.py`](repro/publish/visibility_matrix.py) | Any `✗` cell above, any claim page whose results block never rendered, and any reviewer verdict still `pending` |
+| [`repro/publish/check_links.py`](repro/publish/check_links.py) | A broken link, or a page that exists but is **unreachable** from the entrypoint — the failure mode that turns good evidence into zero credit |
+| [`repro/publish/fill_results.py`](repro/publish/fill_results.py) | A page still holding a placeholder instead of a measured number |
+| [`repro/publish/make_raw.py`](repro/publish/make_raw.py) | — builds every `raw/*.csv` mechanically from `verdict.json`, so a CSV cannot disagree with the run |
+| [`repro/publish/publish_space.py`](repro/publish/publish_space.py) | An upload that would drop a file present in the judged revision, modify a frozen historical page, or carry secret-shaped text |
+
+Each gate was tested against a deliberately broken copy of this Space to confirm it
+fails when it should, not only that it passes when everything is fine.
