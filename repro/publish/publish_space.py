@@ -186,6 +186,44 @@ def build_logbook(work: Path) -> None:
     print(f"logbook.json rebuilt with {len(children)} nodes")
 
 
+def verify_claim_code_matches_verdict(work: Path) -> int:
+    """The verdict's git_sha must still describe the claim code being published.
+
+    Pages and renderers are edited after a run -- that is normal, and it does not change
+    a measured number. Editing anything under repro/src/ does. This proves the
+    difference rather than asserting it: every claim module published here must be
+    byte-identical to the same file at the revision recorded in the verdict, or the
+    published SHA is not the provenance of the published numbers.
+    """
+    import subprocess
+
+    verdict = json.loads((work / "raw" / "verdict.json").read_text())
+    sha = verdict.get("environment", {}).get("git_sha")
+    if not sha:
+        print("PROVENANCE: verdict records no git_sha")
+        return 1
+    repo = Path(__file__).resolve().parents[2]
+    drifted = []
+    for rel in ALLOWLIST:
+        if not rel.startswith("repro/src/"):
+            continue
+        try:
+            was = subprocess.run(["git", "-C", str(repo), "show", f"{sha}:{rel}"],
+                                 capture_output=True, check=True).stdout
+        except subprocess.CalledProcessError:
+            drifted.append(f"{rel} (absent at {sha[:8]})")
+            continue
+        if was != (work / rel).read_bytes():
+            drifted.append(rel)
+    if drifted:
+        print(f"PROVENANCE FAILED: claim code differs from verdict revision {sha[:8]}:")
+        for d in drifted:
+            print("   ", d)
+        return 1
+    print(f"provenance: all claim modules byte-identical to verdict revision {sha[:8]}")
+    return 0
+
+
 def check(work: Path) -> int:
     token = get_token()
     judged = work.parent / "judged_ref"
@@ -253,6 +291,9 @@ def check(work: Path) -> int:
         print("POSSIBLE SECRET MATERIAL:", bad)
         return 1
     print(f"no credential-shaped strings in {len(manifest)} allowlisted files")
+
+    if verify_claim_code_matches_verdict(work) != 0:
+        return 1
     return 0
 
 
