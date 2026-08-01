@@ -1,21 +1,34 @@
 # Resume state — 3WPDFjZ1UT (CARE)
 
-**Blocked on Hugging Face pre-paid credits.** All jobs on the `DineshAI` account were
-cancelled by the platform (90 CANCELED) and new job submissions return
-`402 Payment Required: Pre-paid credit balance is insufficient`. No research compute can
-run until credits are restored. Local execution is not a substitute — this campaign is
-authorised to run research compute only on Hugging Face `cpu-upgrade`.
+**Job policy: no single job may exceed one hour.** The whole Table 2 reproduction costs
+~112 min per seed, so the benchmark stage is split into 25 shards of roughly half an hour
+by `repro/orx/run_shards.sh`, each submitted with `--timeout 1h` so the platform enforces
+the cap independently of the 45-minute budget `bench_shard.py` enforces itself. Shard
+results are committed under `repro/cache/bench/` and consumed by the one fixed run
+command, which then completes in about ten minutes.
+
+Sharding changes *where* the work runs, not what is computed: each shard invokes the
+authors' script with the same seed, and every seed keeps its own `--cache-path` because
+that cache is keyed by dataset, not by seed.
 
 Nothing has been published. The live Space `DineshAI/3WPDFjZ1UT` is untouched at its
 judged revision `2a647ca068d0943b4c3a54d2f7940594fac5287f` (5/12).
 
 ## To resume, in order
 
-1. Relaunch the canonical run (12 h timeout; Table 2 costs ~112 min/seed × 5 seeds):
+1. Run the benchmark shards (25 jobs, each capped at one hour), then collect them:
+
+   ```
+   bash repro/orx/run_shards.sh launch
+   bash repro/orx/run_shards.sh collect repro/cache/bench
+   git add repro/cache/bench && git commit && git push
+   ```
+
+   Then the canonical run, which reads the cached shards and finishes well inside the cap:
 
    ```
    SHA=$(git rev-parse HEAD)
-   hf jobs run --flavor cpu-upgrade --timeout 12h -e CARE_HF_FLAVOR=cpu-upgrade --detach \
+   hf jobs run --flavor cpu-upgrade --timeout 1h -e CARE_HF_FLAVOR=cpu-upgrade --detach \
      ghcr.io/astral-sh/uv:python3.11-bookworm bash -c "set -eo pipefail
    apt-get update -qq && apt-get install -y -qq git
    curl -fsSL https://raw.githubusercontent.com/MachineLearning-Nerd/icml26-repro-3WPDFjZ1UT-care-confounder-aware-aggregation-for-reliable-llm-evaluation/$SHA/repro/orx/run_hf_job.sh -o /tmp/run_hf_job.sh
