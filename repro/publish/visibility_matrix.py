@@ -76,9 +76,25 @@ def checker_ran_for(root: Path, cid: str) -> bool:
         block = chk.get(key)
         if not isinstance(block, dict):
             return False
-        if not any(isinstance(x, bool) for x in block.values()):
+        if not _decided_something(block):
             return False
     return True
+
+
+def _decided_something(o) -> bool:
+    """Does this checker output contain a decision anywhere, at any depth?
+
+    Some blocks decide at the top level (`agree: false`), others per row inside a list
+    (`consistent: true` for each of six datasets). A shallow scan would call the second
+    kind undecided, so this walks the whole structure.
+    """
+    if isinstance(o, bool):
+        return True
+    if isinstance(o, dict):
+        return any(_decided_something(v) for v in o.values())
+    if isinstance(o, list):
+        return any(_decided_something(v) for v in o)
+    return False
 
 
 def check_page(root: Path, slug: str, src_name: str, cid: str):
