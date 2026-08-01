@@ -36,6 +36,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import numpy as np
@@ -196,6 +197,10 @@ def _official_sha(root: Path) -> str | None:
 
 
 def _run_script(root: Path, script: str, args: list[str], outdir: Path) -> int:
+    # Job filesystems are discarded, so subprocess stdout goes to a file that nobody
+    # can read; without this line a multi-hour stage looks identical to a hang.
+    started = time.time()
+    print(f"[bench] start {script} {' '.join(args)}", flush=True)
     env = dict(os.environ)
     env["PYTHONPATH"] = f"{root / 'src'}:{root / 'scripts'}:" + env.get("PYTHONPATH", "")
     proc = subprocess.run(
@@ -208,6 +213,9 @@ def _run_script(root: Path, script: str, args: list[str], outdir: Path) -> int:
     )
     (outdir / f"{script}.stdout.txt").write_text(proc.stdout[-200000:])
     (outdir / f"{script}.stderr.txt").write_text(proc.stderr[-200000:])
+    print(f"[bench] done  {script} rc={proc.returncode} {time.time() - started:.1f}s", flush=True)
+    if proc.returncode != 0:
+        print(f"[bench] stderr tail: {proc.stderr[-1500:]}", flush=True)
     return proc.returncode
 
 
