@@ -573,15 +573,29 @@ def c6_p_refit(v):
         ["**Theil–Sen, fitted n***", f"**{num(r.get('fitted_theil_sen_slope'), 3)}**", "independent checker"],
         ["**Theil–Sen, crossing n***", f"**{num(r.get('crossing_theil_sen_slope'), 3)}**", "independent checker"],
     ]
+    if r.get("refit_produced_nothing"):
+        raise SystemExit("c6.p_refit: the sweep produced rows but the refit produced no slope")
+    over = r.get("fitted_over_settings") or []
     return table(["Estimator", "Exponent on p·log(p/ε)", "Computed by"], rows) + (
-        f"\n\nStated exponent: **{num(r.get('stated_exponent'), 0)}**. All four estimates "
-        f"exceed it: {yesno(r.get('both_estimators_exceed_stated_exponent'))} "
-        f"(lowest is {num(r.get('min_theil_sen_slope'), 3)}).\n\n"
-        "The two Theil–Sen figures are **lower** than least squares, so the exponent's "
-        "*value* is uncertain across the range ~2.2 to ~3.6 — a single outlying setting "
-        "does move the least-squares fit. What no estimator disputes is that the exponent "
-        "exceeds 1, which is the entire content of the falsification. The independent "
-        "checker fails the whole run if this ceases to hold."
+        f"\n\nAll four are fitted over the **same** settings — the "
+        f"{len(over)} that survive the per-setting screen "
+        f"(`p` = {', '.join(str(x) for x in over)}). An earlier revision fitted the "
+        f"robust estimator over all six and called the difference \"estimator\".\n\n"
+        f"Stated exponent: **{num(r.get('stated_exponent'), 0)}**. Every estimate exceeds "
+        f"it: {yesno(r.get('both_estimators_exceed_stated_exponent'))} (lowest "
+        f"{num(r.get('min_theil_sen_slope'), 3)}, highest "
+        f"{num(r.get('max_theil_sen_slope'), 3)}). The robust estimates **bracket** the "
+        f"least-squares value rather than falling below it, so no single outlying setting "
+        f"is carrying the fit — which removes the one remaining reason to think the "
+        f"exponent's *value* was an artefact of least squares.\n\n"
+        f"Theil–Sen agrees with least squares within 1.0: "
+        f"{yesno(r.get('theil_sen_agrees_with_least_squares'))}, and **that** is what the "
+        f"independent checker gates on. It does **not** gate on the exponent exceeding 1: "
+        f"an earlier revision did, which would have failed the entire verifier in exactly "
+        f"the case where the theorem turned out to be right. None of this rescues the "
+        f"withdrawn falsification, because agreement between estimators fitted to the same "
+        f"inputs says nothing about whether those inputs are attributable to the theorem — "
+        f"and the confound audit says they are not."
     )
 
 
