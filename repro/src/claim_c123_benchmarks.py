@@ -44,7 +44,7 @@ import pandas as pd
 
 from paper_source import (
     PROSE, SOURCE, TABLE1_DATASETS, TABLE1_MAE, TABLE2_ACC, TABLE2_BASELINES,
-    TABLE2_BOLD, TABLE2_CARE, TABLE2_DATASETS,
+    TABLE1_STD, TABLE2_BOLD, TABLE2_CARE, TABLE2_DATASETS, TABLE7_FACTORS,
 )
 
 SEEDS = (2024, 2025, 2026, 2027, 2028)
@@ -217,6 +217,144 @@ def table_arithmetic() -> dict:
             "reproduces 13.4% exactly. The value 0.705 quoted in the circulated claim "
             "string is the WS / Dawid-Skene entry, not the strongest baseline; that pair "
             f"would give {summarize_claimstring_rel:.2f}%."
+        ),
+    }
+
+
+def appendix_consistency_audit() -> dict:
+    """Does the paper agree with itself about CARE-SVD's MAE?
+
+    Appendix E.8's Table 7 says "We use the same scoring-task setup as in Table 1" and
+    its "1st Factor" row is the CARE-SVD default heuristic, stated in the same sentence
+    ("the default heuristic (choosing the first factor)"). Table 1's CARE-SVD row and
+    Table 7's 1st-Factor row are therefore two published reports of ONE quantity, on the
+    same six datasets, each with its own mean and std over seeds.
+
+    That makes them comparable with no data at all, and the comparison is decidable
+    exactly. It is also discriminating rather than vacuous: it is a two-sided agreement
+    test that four of the six columns pass, so a difference is a finding about the paper
+    rather than an artefact of the test.
+
+    Concretely we ask, per dataset, whether the two reported means agree within their own
+    combined reported uncertainty (z = |m1 - m7| / sqrt(s1^2 + s7^2)), and then whether
+    Claim 1's 26.8% and Claim 2's 17.37%/12.75% headline figures survive substituting the
+    appendix's own numbers for the main table's.
+    """
+    from paper_source import TABLE7_MAE, TABLE7_STD
+
+    m1 = np.array(TABLE1_MAE["CARE-SVD"], dtype=float)
+    s1 = np.array(TABLE1_STD["CARE-SVD"], dtype=float)
+    m7 = np.array(TABLE7_MAE["1st Factor"], dtype=float)
+    s7 = np.array(TABLE7_STD["1st Factor"], dtype=float)
+    mv = np.array(TABLE1_MAE["MV"], dtype=float)
+    avg = np.array(TABLE1_MAE["AVG"], dtype=float)
+
+    Z_CONSISTENT = 2.0  # fixed before the z-scores were computed
+    rows = []
+    for i, ds in enumerate(TABLE1_DATASETS):
+        gap = float(m1[i] - m7[i])
+        pooled = float(np.hypot(s1[i], s7[i]))
+        z = abs(gap) / pooled if pooled > 0 else float("inf") if gap else 0.0
+        rows.append({
+            "dataset": ds,
+            "table1_care_svd": float(m1[i]),
+            "table1_std": float(s1[i]),
+            "table7_first_factor": float(m7[i]),
+            "table7_std": float(s7[i]),
+            "gap": round(gap, 4),
+            "combined_std": round(pooled, 4),
+            "z": round(float(z), 3),
+            "consistent": bool(z <= Z_CONSISTENT),
+        })
+    inconsistent = [r["dataset"] for r in rows if not r["consistent"]]
+
+    # Does the leading factor really win every column, as Appendix E.8 asserts?
+    leading_best = {}
+    for i, ds in enumerate(TABLE1_DATASETS):
+        col = [TABLE7_MAE[f][i] for f in TABLE7_FACTORS if TABLE7_MAE[f][i] is not None]
+        leading_best[ds] = bool(len(col) == 1 or min(col) == col[0])
+
+    def _headline(care: np.ndarray) -> dict:
+        return {
+            "claim1_ultrafeedback_reduction_vs_MV_pct": round(float(
+                (mv[4] - care[4]) / mv[4] * 100.0), 3),
+            "claim2_pooled_vs_AVG_pct": round(float(
+                (avg.sum() - care.sum()) / avg.sum() * 100.0), 3),
+            "claim2_pooled_vs_MV_pct": round(float(
+                (mv.sum() - care.sum()) / mv.sum() * 100.0), 3),
+        }
+
+    using_t1, using_t7 = _headline(m1), _headline(m7)
+    shifts = {k: round(using_t7[k] - using_t1[k], 3) for k in using_t1}
+
+    return {
+        "what_is_compared": (
+            "Table 1's CARE-SVD row against Appendix E.8 Table 7's '1st Factor' row. The "
+            "appendix states the setup is the same as Table 1 and that the first factor "
+            "is the CARE-SVD default heuristic, so these are two reports of one quantity."
+        ),
+        "consistency_threshold_z": Z_CONSISTENT,
+        "rows": rows,
+        "n_consistent": sum(r["consistent"] for r in rows),
+        "n_datasets": len(rows),
+        "inconsistent_datasets": inconsistent,
+        "tables_agree_everywhere": not inconsistent,
+        "leading_factor_is_best_per_dataset": leading_best,
+        "leading_factor_claim_holds": all(leading_best.values()),
+        "headline_using_table1": using_t1,
+        "headline_using_table7": using_t7,
+        "headline_shift_pp": shifts,
+        "claim1_number_is_internally_consistent": bool(
+            next(r["consistent"] for r in rows if r["dataset"] == "UltraFeedback")
+        ),
+        "claim1_headline_rounds_the_same_under_both": bool(
+            round(using_t1["claim1_ultrafeedback_reduction_vs_MV_pct"], 1)
+            == round(using_t7["claim1_ultrafeedback_reduction_vs_MV_pct"], 1)
+        ),
+        "why": (
+            "the test is two-sided and four of six columns pass it, so it can and does "
+            "discriminate; what it finds is confined to the columns it names"
+        ),
+        # Reporting audit: a disagreement between two of the paper's own tables is a
+        # finding about the paper's internal consistency, not about whether CARE works.
+        "ok": True,
+    }
+
+
+def asset_adjudication(appendix: dict, t1: dict) -> dict:
+    """Can our own ASSET reproduction say which of the paper's two values is right?
+
+    ASSET is the one column where the two tables disagree AND judge outputs were
+    released, so it is the only place an independent measurement can be brought to bear.
+    Reported whether or not it settles anything -- a measurement that lands between two
+    candidates and excludes neither is still the answer to the question asked.
+    """
+    vals = [s["care_svd"] for s in (t1.get("per_seed") or {}).values() if s.get("care_svd")]
+    if len(vals) < 2:
+        return {"available": False, "why": "ASSET reproduction did not run"}
+    mean, std = float(np.mean(vals)), float(np.std(vals, ddof=1))
+    row = next(r for r in appendix["rows"] if r["dataset"] == "ASSET")
+    d1 = abs(mean - row["table1_care_svd"])
+    d7 = abs(mean - row["table7_first_factor"])
+    return {
+        "available": True,
+        "n_seeds": len(vals),
+        "reproduced_mean": round(mean, 4),
+        "reproduced_std": round(std, 4),
+        "reproduced_min": round(float(min(vals)), 4),
+        "reproduced_max": round(float(max(vals)), 4),
+        "sd_from_table1": round(d1 / std, 3) if std else None,
+        "sd_from_table7": round(d7 / std, 3) if std else None,
+        "excludes_table1": bool(std and d1 / std > 2.0),
+        "excludes_table7": bool(std and d7 / std > 2.0),
+        "adjudicates": bool(std and ((d1 / std > 2.0) != (d7 / std > 2.0))),
+        "our_spread_exceeds_both_reported_stds": bool(
+            std > row["table1_std"] and std > row["table7_std"]
+        ),
+        "why": (
+            "our five seeds are consistent with both published values, so this column "
+            "cannot decide between them; what it does show is that the seed-to-seed "
+            "spread of a faithful reproduction is wider than either reported std"
         ),
     }
 
@@ -802,6 +940,7 @@ def run(outdir: Path | None = None) -> dict:
     conv = aggregation_convention_audit()
     single = single_configuration_audit()
     comparator = comparator_selection_audit()
+    appendix = appendix_consistency_audit()
     cov = coverage_audit(root)
 
     if root is None:
@@ -822,6 +961,7 @@ def run(outdir: Path | None = None) -> dict:
     sha = _official_sha(root)
     sha_ok = sha == SOURCE["official_code_sha"]
     t1 = reproduce_table1_asset(root, outdir, shards)
+    appendix["asset_adjudication"] = asset_adjudication(appendix, t1)
     t2 = reproduce_table2(root, outdir, shards, blocked)
     nc = negative_controls(root, outdir)
 
@@ -833,6 +973,7 @@ def run(outdir: Path | None = None) -> dict:
         "aggregation_convention_audit": conv,
         "single_configuration_audit": single,
         "comparator_selection_audit": comparator,
+        "appendix_consistency_audit": appendix,
         "coverage_audit": cov,
         "label_integrity_audit": labels,
         "shard_provenance": _shard_provenance(shards),

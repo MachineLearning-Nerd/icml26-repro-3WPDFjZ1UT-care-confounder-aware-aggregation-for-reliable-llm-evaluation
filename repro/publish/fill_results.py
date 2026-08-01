@@ -216,6 +216,70 @@ def c1_comparator(v):
     )
 
 
+def appendix_consistency(v):
+    a = g(v, "claims", "C1_C2_C3_tables", "appendix_consistency_audit", default={})
+    if not a.get("rows"):
+        raise SystemExit(
+            "appendix_consistency: appendix_consistency_audit missing from the verdict; "
+            "refusing to render a table 1 vs table 7 comparison that was not measured"
+        )
+    rows = [
+        [
+            r["dataset"],
+            f"{num(r['table1_care_svd'], 3)} ± {num(r['table1_std'], 3)}",
+            f"{num(r['table7_first_factor'], 3)} ± {num(r['table7_std'], 3)}",
+            num(r["gap"], 3),
+            num(r["z"], 2),
+            "agree" if r["consistent"] else "**disagree**",
+        ]
+        for r in a["rows"]
+    ]
+    t1 = a.get("headline_using_table1", {})
+    t7 = a.get("headline_using_table7", {})
+    return table(
+        ["Dataset", "Table 1 CARE-SVD", "Table 7 1st Factor", "gap", "z", "verdict"], rows
+    ) + (
+        f"\n\n{a.get('n_consistent')} of {a.get('n_datasets')} columns agree within the "
+        f"paper's own combined error bars (threshold z ≤ {num(a.get('consistency_threshold_z'), 1)}, "
+        f"fixed before the z-scores were computed). Disagreeing: "
+        f"**{', '.join(a.get('inconsistent_datasets') or ['none'])}**.\n\n"
+        f"The appendix's own assertion that the leading factor beats every other factor on "
+        f"every dataset: **{yesno(a.get('leading_factor_claim_holds'))}** — that part of "
+        f"Table 7 checks out.\n\n"
+        f"| Headline figure | using Table 1 | using Table 7 | shift |\n|---|---|---|---|\n"
+        f"| Claim 1's UltraFeedback reduction vs MV | {num(t1.get('claim1_ultrafeedback_reduction_vs_MV_pct'), 3)} % "
+        f"| {num(t7.get('claim1_ultrafeedback_reduction_vs_MV_pct'), 3)} % | "
+        f"{num(a.get('headline_shift_pp', {}).get('claim1_ultrafeedback_reduction_vs_MV_pct'), 3)} pp |\n"
+        f"| Claim 2's improvement over AVG | {num(t1.get('claim2_pooled_vs_AVG_pct'), 3)} % "
+        f"| {num(t7.get('claim2_pooled_vs_AVG_pct'), 3)} % | "
+        f"{num(a.get('headline_shift_pp', {}).get('claim2_pooled_vs_AVG_pct'), 3)} pp |\n"
+        f"| Claim 2's improvement over MV | {num(t1.get('claim2_pooled_vs_MV_pct'), 3)} % "
+        f"| {num(t7.get('claim2_pooled_vs_MV_pct'), 3)} % | "
+        f"{num(a.get('headline_shift_pp', {}).get('claim2_pooled_vs_MV_pct'), 3)} pp |\n\n"
+        f"- Claim 1's own quoted MAE is internally consistent between the two tables: "
+        f"**{yesno(a.get('claim1_number_is_internally_consistent'))}**\n"
+        f"- Claim 1's headline still rounds to the same one-decimal percentage under both: "
+        f"**{yesno(a.get('claim1_headline_rounds_the_same_under_both'))}**"
+    ) + _asset_adjudication(a)
+
+
+def _asset_adjudication(a):
+    j = a.get("asset_adjudication") or {}
+    if not j.get("available"):
+        return ""
+    return (
+        f"\n\n**Can our own reproduction settle the ASSET disagreement?** ASSET is the only "
+        f"disputed column whose judge outputs were released. Over {j.get('n_seeds')} seeds we "
+        f"measure **{num(j.get('reproduced_mean'), 3)} ± {num(j.get('reproduced_std'), 3)}** "
+        f"(range {num(j.get('reproduced_min'), 3)}–{num(j.get('reproduced_max'), 3)}), which sits "
+        f"{num(j.get('sd_from_table1'), 2)} sd from Table 1's value and "
+        f"{num(j.get('sd_from_table7'), 2)} sd from Table 7's. Excludes Table 1: "
+        f"{yesno(j.get('excludes_table1'))} · excludes Table 7: {yesno(j.get('excludes_table7'))} · "
+        f"**adjudicates: {yesno(j.get('adjudicates'))}**. Our seed spread is wider than both "
+        f"reported standard deviations: {yesno(j.get('our_spread_exceeds_both_reported_stds'))}."
+    )
+
+
 def c3_pku_reachable(v):
     r = g(v, "claims", "C1_C2_C3_tables", "label_integrity_audit", "datasets",
           "PKU-BETTER", "reachable_accuracy_under_each_convention", default={})
@@ -1026,6 +1090,8 @@ GENERATORS = {
     "c1.control": c1_control,
     "c2.definitions": c2_definitions,
     "c1.comparator": c1_comparator,
+    "c1.appendix": appendix_consistency,
+    "c2.appendix": appendix_consistency,
     "c3.single_config": c3_single_config,
     "c3.pku_reachable": c3_pku_reachable,
     "c2.weights": c2_weights,

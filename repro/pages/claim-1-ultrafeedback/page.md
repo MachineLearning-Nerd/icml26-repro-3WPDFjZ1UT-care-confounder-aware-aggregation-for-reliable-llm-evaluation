@@ -54,6 +54,46 @@ Contrast this with [Claim 2](#/claim-2-average-improvement), where the same styl
 audit *did* find a problem. The two checks are the same kind of check; only the answers
 differ.
 
+## Does the paper agree with itself about this number?
+
+Claim 1's empirical half needs a judge-score matrix that was never released (§1c below).
+But the paper reports CARE-SVD's MAE on these six datasets **twice**, and the second
+report can be checked against the first with no data at all.
+
+Appendix E.8's Table 7 sweeps which recovered latent factor is used as the quality
+direction. Its opening sentence is *"We use the same scoring-task setup as in Table 1"*,
+and it identifies the first factor as CARE-SVD's default: *"Beyond the default heuristic
+(choosing the first factor), we also evaluate all recovered latent factors…"*. So
+Table 7's **1st Factor** row and Table 1's **CARE-SVD** row are two published
+measurements of one quantity, each with its own mean and standard deviation over seeds.
+
+Two tables of the same quantity must agree within their own error bars. The test is
+two-sided and could have come out clean on all six columns.
+
+<!-- FILL:c1.appendix -->
+*(pending release run)*
+<!-- /FILL -->
+
+Read the result carefully, because it cuts both ways.
+
+* **For Claim 1 specifically, the paper is internally consistent.** The UltraFeedback row
+  of the table above agrees to well inside one combined standard deviation. Claim 1's own
+  quoted MAE survives its own paper's second look — a *corroboration* of the number this
+  claim rests on, obtained independently of the blocked dataset.
+* **The headline percentage is not stable to the last digit.** Substituting the
+  appendix's own UltraFeedback value moves the reduction across the 26.85% rounding
+  boundary, so the same claim reads **26.9%** from Appendix E.8 and 26.8% from Table 1.
+  The claim is right about the quantity and off by one in the last displayed place,
+  depending on which of the paper's two tables you read.
+* **Two other columns do not reconcile at all**, and neither is UltraFeedback:
+  **FeedbackQA**, whose discrepancy the paper's own reported seed noise cannot absorb,
+  and **ASSET**. Both bear on [Claim 2](#/claim-2-average-improvement), which averages all
+  six columns, not on Claim 1. The exact gaps and z-scores are in the table above.
+
+What this is not: it is not evidence that CARE fails, and it is not a measurement of
+UltraFeedback. It is an internal-consistency defect in the paper's reporting, decided
+exactly, and it is scoped to the two columns named.
+
 ## 1c — the reproduction, and the honest boundary
 
 CARE's aggregation is deterministic linear algebra on a fixed `n × p` judge-score

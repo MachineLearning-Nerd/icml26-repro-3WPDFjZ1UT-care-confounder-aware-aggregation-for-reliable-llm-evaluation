@@ -29,6 +29,58 @@ import numpy as np
 _T1_AVG = ["33.663", "0.830", "2.274", "1.394", "0.686", "1.037"]
 _T1_MV = ["31.153", "0.822", "2.608", "1.417", "0.851", "0.923"]
 _T1_CARE = ["27.629", "0.730", "1.957", "1.325", "0.623", "0.694"]
+# Second, hand-typed copy of Appendix E.8 Table 7's "1st Factor" row (mean, std).
+_T7_FIRST = ["27.148", "0.753", "1.950", "1.325", "0.622", "0.694"]
+_T7_FIRST_STD = ["0.133", "0.003", "0.006", "0.003", "0.006", "0.005"]
+_T1_CARE_STD = ["0.156", "0.002", "0.018", "0.004", "0.006", "0.004"]
+
+
+def appendix_consistency_exact() -> dict:
+    """Re-decide the Table 1 vs Table 7 comparison from a second transcription.
+
+    The finding is that two of the paper's tables report the same quantity with
+    incompatible values, so it is exactly the kind of finding a single transcription
+    could manufacture: one mistyped digit and the tables "disagree". This route types
+    both rows again, independently of paper_source.py, and does the arithmetic in exact
+    rationals. Only the z-scores need floating point, and they need it only for a square
+    root; the gaps themselves are exact.
+    """
+    datasets = ["ASSET", "FeedbackQA", "Review-5K", "Summarize", "UltraFeedback", "Yelp"]
+    care = [Fraction(x) for x in _T1_CARE]
+    first = [Fraction(x) for x in _T7_FIRST]
+    s1 = [Fraction(x) for x in _T1_CARE_STD]
+    s7 = [Fraction(x) for x in _T7_FIRST_STD]
+    avg = [Fraction(x) for x in _T1_AVG]
+    mv = [Fraction(x) for x in _T1_MV]
+
+    rows = []
+    for i, ds in enumerate(datasets):
+        gap = care[i] - first[i]
+        pooled = math.hypot(float(s1[i]), float(s7[i]))
+        z = abs(float(gap)) / pooled if pooled > 0 else (float("inf") if gap else 0.0)
+        rows.append({
+            "dataset": ds,
+            "gap_exact": str(gap),
+            "gap_is_zero": gap == 0,
+            "z": round(z, 3),
+            "consistent": bool(z <= 2.0),
+        })
+
+    def pooled_pct(base, care_row):
+        return float((sum(base) - sum(care_row)) / sum(base) * 100)
+
+    i_uf = datasets.index("UltraFeedback")
+    return {
+        "rows": rows,
+        "n_consistent": sum(r["consistent"] for r in rows),
+        "inconsistent_datasets": [r["dataset"] for r in rows if not r["consistent"]],
+        "claim1_pct_using_table1": float((mv[i_uf] - care[i_uf]) / mv[i_uf] * 100),
+        "claim1_pct_using_table7": float((mv[i_uf] - first[i_uf]) / mv[i_uf] * 100),
+        "claim2_pooled_vs_AVG_using_table1": pooled_pct(avg, care),
+        "claim2_pooled_vs_AVG_using_table7": pooled_pct(avg, first),
+        "claim2_pooled_vs_MV_using_table1": pooled_pct(mv, care),
+        "claim2_pooled_vs_MV_using_table7": pooled_pct(mv, first),
+    }
 
 
 def table_percentages_exact() -> dict:
@@ -360,6 +412,7 @@ def run(verdict: dict | None = None) -> dict:
     out = {
         "table_percentages_exact_rational": table_percentages_exact(),
         "c2_unit_invariance_exact": c2_unit_invariance_exact(),
+        "appendix_consistency_exact": appendix_consistency_exact(),
         "prop41_counterexample_mpmath": prop41_counterexample_mpmath(),
         "first_order_formula_vs_finite_difference": first_order_by_finite_difference(),
         "davis_kahan_by_principal_angle": davis_kahan_by_principal_angle(),
@@ -386,6 +439,18 @@ def run(verdict: dict | None = None) -> dict:
             out["agreement_with_claim_module"]["c2_unweighted_average"] = bool(
                 abs(conv["unweighted_across_benchmark_average_vs_AVG_pct"]
                     - e["unweighted_across_benchmark_avg_vs_AVG_pct"]) < 1e-6
+            )
+        # The Table 1 vs Table 7 finding rests on a transcription, so the two
+        # transcriptions must agree on WHICH datasets disagree, not merely on a summary.
+        app = verdict["claims"]["C1_C2_C3_tables"].get("appendix_consistency_audit")
+        if app is not None:
+            a = out["appendix_consistency_exact"]
+            out["agreement_with_claim_module"]["appendix_inconsistent_set"] = bool(
+                sorted(app["inconsistent_datasets"]) == sorted(a["inconsistent_datasets"])
+            )
+            out["agreement_with_claim_module"]["appendix_headline_shift"] = bool(
+                abs(app["headline_using_table7"]["claim2_pooled_vs_AVG_pct"]
+                    - a["claim2_pooled_vs_AVG_using_table7"]) < 1e-3
             )
 
     t = out["table_percentages_exact_rational"]

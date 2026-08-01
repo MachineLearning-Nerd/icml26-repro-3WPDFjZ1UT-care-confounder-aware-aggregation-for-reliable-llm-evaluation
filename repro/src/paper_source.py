@@ -36,6 +36,29 @@ TABLE1_STD = {
     "CARE-SVD": [0.156, 0.002, 0.018, 0.004, 0.006, 0.004],
 }
 
+# Table 7 (Appendix E.8): the same six scoring datasets, same MAE metric, under the
+# ablation over which recovered latent factor is treated as the quality direction. The
+# appendix states "We use the same scoring-task setup as in Table 1", and the "1st
+# Factor" row IS the CARE-SVD default heuristic ("the default heuristic (choosing the
+# first factor)"). So TABLE7_MAE["1st Factor"] and TABLE1_MAE["CARE-SVD"] are two
+# published reports of one quantity, and can be compared without any data.
+# "--" marks a dataset with no higher-order factor above the 1e-8 eigenvalue floor.
+TABLE7_FACTORS = ["1st Factor", "2nd Factor", "3rd Factor", "4th Factor", "5th Factor"]
+TABLE7_MAE = {
+    "1st Factor": [27.148, 0.753, 1.950, 1.325, 0.622, 0.694],
+    "2nd Factor": [31.757, None, 2.222, None, 0.781, 1.067],
+    "3rd Factor": [32.399, None, 3.115, None, 0.939, 0.955],
+    "4th Factor": [30.529, None, 2.667, None, 0.996, 1.125],
+    "5th Factor": [31.807, None, 3.369, None, 1.040, 1.099],
+}
+TABLE7_STD = {
+    "1st Factor": [0.133, 0.003, 0.006, 0.003, 0.006, 0.005],
+    "2nd Factor": [0.100, None, 0.007, None, 0.045, 0.062],
+    "3rd Factor": [0.159, None, 0.006, None, 0.010, 0.023],
+    "4th Factor": [0.144, None, 0.004, None, 0.005, 0.012],
+    "5th Factor": [0.170, None, 0.004, None, 0.062, 0.003],
+}
+
 # Table 2: Accuracy (higher is better) across classification / preference datasets.
 TABLE2_DATASETS = [
     "Chatbot-Arena", "CivilComments", "PKU-BETTER", "PKU-SAFER", "SHP", "Summarize",

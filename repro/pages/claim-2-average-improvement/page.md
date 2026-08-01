@@ -115,6 +115,40 @@ The stable statement is the one above — a quantified scope qualification on a 
 statistic, with the underlying benchmark comparison untouched. See
 [Limitations items 21 and 23](#/limitations).
 
+## A second source for the same six numbers, inside the paper
+
+The 17.37% is a function of exactly twelve numbers: Table 1's AVG row and its CARE-SVD
+row. The paper publishes that CARE-SVD row a **second** time, in Appendix E.8's Table 7,
+whose text states *"We use the same scoring-task setup as in Table 1"* and identifies its
+"1st Factor" row as CARE-SVD's default heuristic. So the input to this claim can be
+checked against the paper's own duplicate, with no data and no compute.
+
+<!-- FILL:c2.appendix -->
+*(pending release run)*
+<!-- /FILL -->
+
+**Four of six columns agree; two do not** — FeedbackQA decisively and ASSET marginally,
+with the exact gaps, combined standard deviations and z-scores in the table above.
+Because the 17.37% pools all six columns, the disagreement propagates straight into the
+headline: recomputed from the appendix's own row, the improvement over AVG is the
+"using Table 7" figure in that table, and the shift is stated there in percentage points.
+
+That shift is of the same order as the gap between the pooled statistic and the
+unit-invariant one discussed earlier on this page, and it arises from a completely
+independent cause. The two findings are additive, and neither depends on any measurement
+of ours.
+
+The scope of this is narrow and worth stating precisely:
+
+* It is a defect in the paper's **internal consistency**, not in CARE. Both tables show
+  CARE-SVD beating AVG on all six datasets; they disagree about by how much.
+* We cannot say which of the two rows is correct. ASSET is the only disputed column we
+  can measure, and our reproduction of it — reported in the block above, computed from
+  the same run, not typed here — lands between the two published values and excludes
+  neither.
+* FeedbackQA, the decisive column, has no released judge matrix, so it cannot be
+  adjudicated here at all.
+
 ## Per-dataset breakdown
 
 <!-- FILL:c2.per_dataset -->
