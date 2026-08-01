@@ -357,6 +357,57 @@ def sample_complexity_sweeps(seeds=tuple(range(9))) -> dict:
     return out
 
 
+def p_sweep_confound_audit() -> dict:
+    """Are sigma, delta and pi_min really held fixed while p varies?
+
+    A measured p-exponent only says something about Theorem 4.3's p*log(p/eps) factor
+    if the theorem's OTHER quantities are constant across the sweep. If delta shrank as
+    p grew, an apparent p-growth would just be the delta^-2 factor in disguise, and the
+    finding would be an artefact of the sweep design rather than a property of the bound.
+
+    Everything here is a population quantity computed from the generative model, so it
+    carries no sampling noise: the CP eigenvalues are lambda_i = pi_i^{-1/2}, delta is
+    their minimum gap, and the component means are columns of an orthonormal frame
+    scaled by MEAN_SCALE, so their pairwise separation should not move with p either.
+    """
+    lam = np.sort(1.0 / np.sqrt(np.asarray(PI_TRUE, float)))
+    delta_cp = float(np.min(np.diff(lam)))
+    rows = []
+    for ppv in (4, 5, 6, 8, 10, 12):
+        mus = _model(np.random.default_rng(20260801), ppv)
+        mu = mus[0]
+        seps = [float(np.linalg.norm(mu[:, i] - mu[:, j]))
+                for i in range(mu.shape[1]) for j in range(i + 1, mu.shape[1])]
+        m2_eigs = np.sort(np.asarray(PI_TRUE, float) * MEAN_SCALE ** 2)[::-1]
+        rows.append({
+            "p_total": 3 * ppv,
+            "delta_cp_eigenvalue_gap": delta_cp,
+            "min_pairwise_mean_separation": min(seps),
+            "m2_condition_number": float(m2_eigs[0] / m2_eigs[-1]),
+            "sigma_max": 1.0,
+            "pi_min": float(min(PI_TRUE)),
+        })
+
+    def constant(key):
+        vals = [r[key] for r in rows]
+        return bool(max(vals) / min(vals) < 1.01) if min(vals) > 0 else False
+
+    keys = ("delta_cp_eigenvalue_gap", "min_pairwise_mean_separation",
+            "m2_condition_number", "sigma_max", "pi_min")
+    held = {k: constant(k) for k in keys}
+    out = {"rows": rows, "held_fixed": held, "ok": True,
+           "all_other_quantities_held_fixed": all(held.values())}
+    out["why"] = (
+        "delta, the mean separation, the M2 conditioning, sigma and pi_min are identical "
+        "at every p in the sweep, so a measured p-exponent is attributable to the "
+        "p*log(p/eps) factor alone"
+        if out["all_other_quantities_held_fixed"] else
+        f"these quantities move with p: {[k for k, v in held.items() if not v]}; the "
+        "measured p-exponent is confounded and cannot decide the stated bound"
+    )
+    return out
+
+
 def restart_budget_attribution(seeds=(0, 1, 2, 3, 4)) -> dict:
     """Does n* grow with p because of the rate, or because of a fixed restart budget?
 
@@ -485,16 +536,26 @@ def run() -> dict:
     boundary = sigma_sweep()
     nc = negative_controls()
     attribution = restart_budget_attribution()
+    confound = p_sweep_confound_audit()
 
     # A sweep whose growth the solver explains cannot decide the theorem either way, so
     # it is neither a pass nor a violation; it is excluded exactly like an
     # uninformative one.
-    p_decides = attribution["p_exponent_attributable_to_the_theorem"]
+    p_decides = (attribution["p_exponent_attributable_to_the_theorem"]
+                 and confound["all_other_quantities_held_fixed"])
     gating = ["sigma", "pi_min"] + (["p"] if p_decides else [])
     sweeps_ok = all(sweeps[k]["ok"] for k in gating)
+    violations = [k for k in gating if not sweeps[k]["ok"]]
     sweeps["gating_sweeps"] = gating
-    sweeps["p_sweep_excluded_because_solver_bound"] = not p_decides
-    ok = sym["ok"] and sweeps_ok and nc["ok"]
+    sweeps["contract_violations"] = violations
+    sweeps["p_sweep_excluded_because_not_attributable"] = not p_decides
+
+    # A measured, attributable violation is a RESULT, not a broken verifier: the
+    # p-exponent was resolved by both estimators, the solver was ruled out, and every
+    # other quantity in the bound was held fixed. The verifier therefore succeeds and
+    # reports a falsification of the stated p-dependence.
+    p_falsified = violations == ["p"] and p_decides
+    ok = sym["ok"] and nc["ok"] and (sweeps_ok or p_falsified)
     # An unmeasured exponent is absent evidence, not failed evidence: it must not fail
     # the verifier, and it must not be reported as a verified sample-complexity
     # condition either. The verdict is downgraded to say exactly what was measured.
@@ -509,9 +570,16 @@ def run() -> dict:
         "route_c_boundary_sigma_probe": boundary,
         "negative_controls": nc,
         "route_d_restart_budget_attribution": attribution,
+        "route_e_p_sweep_confound_audit": confound,
         "ok": bool(ok),
         "verdict": (
             "INCONCLUSIVE" if not ok else
+            "FALSIFIED (the stated p*log(p/eps) sample-complexity factor is insufficient: "
+            f"n* grows as (p log(p/eps))^{sweeps['p'].get('exponent_vs_p_log_p', float('nan')):.2f} "
+            f"+/- {sweeps['p'].get('stderr', float('nan')):.2f} with sigma, delta and pi_min "
+            "held fixed, both n* estimators agreeing, and the solver's restart budget ruled "
+            "out), while the mean bound and the boundary behaviour are VERIFIED and the "
+            "displayed proof of the weight bound has a documented gap" if p_falsified else
             "VERIFIED (sample-complexity condition and mean bound) with a documented "
             "gap in the displayed proof of the weight bound" if measured else
             "VERIFIED (mean bound, and the stated weight bound is not violated along "
@@ -521,6 +589,7 @@ def run() -> dict:
         ),
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],
+            "stated_p_factor_falsified": bool(p_falsified),
             "sample_complexity_exponents_measured": bool(measured),
             "sample_complexity_exponents_respected": bool(sweeps_ok) if measured else None,
             "displayed_proof_of_weight_bound_is_incomplete": bool(proof_gap),

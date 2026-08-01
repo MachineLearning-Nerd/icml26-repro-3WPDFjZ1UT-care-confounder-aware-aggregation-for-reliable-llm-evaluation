@@ -39,6 +39,20 @@ def estimators_agree(a_slope, a_se, b_slope, b_se) -> dict:
     lo_a, hi_a = a_slope - 1.96 * a_se, a_slope + 1.96 * a_se
     lo_b, hi_b = b_slope - 1.96 * b_se, b_slope + 1.96 * b_se
     overlap = max(lo_a, lo_b) <= min(hi_a, hi_b)
+    # Both must individually resolve an exponent first. Otherwise a garbage estimator
+    # with a very wide interval "agrees" with everything, and agreement becomes another
+    # way of passing without measuring.
+    a_resolved, b_resolved = lo_a * hi_a > 0, lo_b * hi_b > 0
+    if not (a_resolved and b_resolved):
+        which = "curve-fitting" if not a_resolved else "curve-crossing"
+        return {
+            "agree": False,
+            "fitted_ci95": [lo_a, hi_a],
+            "crossing_ci95": [lo_b, hi_b],
+            "why": f"the {which} estimator's own 95% interval covers zero, so it "
+                   "resolved no exponent; agreement with an unresolved estimator is "
+                   "not evidence",
+        }
     return {
         "agree": bool(overlap),
         "fitted_ci95": [lo_a, hi_a],
