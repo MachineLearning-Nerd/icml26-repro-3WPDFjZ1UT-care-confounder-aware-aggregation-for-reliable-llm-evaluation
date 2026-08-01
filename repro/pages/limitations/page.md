@@ -583,3 +583,34 @@ several of them were in code that this logbook had already presented as a gate.
 * **Claim 1's headline is arithmetic on the paper's own printed table**, and the verdict
   cell now leads with BLOCKED rather than VERIFIED so that a reader scanning the summary
   is not told the stronger half first.
+
+## 26. One of the fixes for item 25 was itself a silent no-op, and the release run caught it
+
+Repairing the robust-refit defect (item 25, fourth bullet) meant restricting the
+Theil–Sen refit to the settings the per-setting screen accepts. The screen publishes
+those as a list of **records**; the fix read it as a list of **p values**. Nothing
+matched, both refits returned `None`, the block's `available` flag stayed `False`, and
+the gate that was supposed to compare the two estimators quietly did not run. The release
+run published two empty slots where two numbers should have been.
+
+That is the same failure this campaign has now hit three times in three different places
+— a check that passes because it measured nothing — and it is worth naming as a pattern
+rather than as three unrelated bugs:
+
+| Where | What measured nothing | What made it pass |
+|---|---|---|
+| Claim 6, `π_min` sweep | every `n*` pinned to the grid floor | a one-sided contract on a constant exponent |
+| Claim 6, verdict string | two NOT-INFORMATIVE sweeps | `ok` defined as `(not informative) or (consistent)` |
+| Independent checker, `p` refit | a key lookup that never matched | `available: False` skipping the gate entirely |
+
+The repair is not another special case: the block now records whether a refit was
+*expected* (the sweep produced rows) and fails the run when an expected refit produces
+nothing, so absence is an error rather than a silence. With it working, the two Theil–Sen
+exponents **bracket** the least-squares one instead of falling below it — which is what
+the reviewer predicted would happen once the double-logging was removed, and is why the
+earlier inference from those numbers was withdrawn.
+
+The general lesson, stated once: **every gate in this logbook needs a companion assertion
+that the gate had something to look at.** Where that assertion exists it is named in the
+verdict JSON (`informative`, `n_usable`, `refit_expected`, `measurement_resolves_a_nonzero_exponent`,
+`leakage_measured_between_p`); where it does not, the check should be read as unproven.

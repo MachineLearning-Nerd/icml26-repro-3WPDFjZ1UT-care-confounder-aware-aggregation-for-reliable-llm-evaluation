@@ -400,8 +400,13 @@ def recheck_c6_p_exponent(verdict: dict) -> dict:
     #    6-point Theil-Sen fit and the difference was labelled "estimator".
     #
     # Both are fixed: raw inputs, and the same screened settings.
-    usable = sw.get("per_setting_screen", {}).get("usable")
-    out = {"available": False, "fitted_over_settings": usable}
+    # `per_setting_screen.usable` is a list of RECORDS, not of p values. Reading it as a
+    # set of keys silently matched nothing, both refits returned None, `available` stayed
+    # False and the gate below never ran -- a check that quietly measures nothing, which
+    # is the same failure this file exists to catch.
+    screen = sw.get("per_setting_screen") or {}
+    usable = {u["p_total"] for u in (screen.get("usable") or []) if "p_total" in u} or None
+    out = {"available": False, "fitted_over_settings": sorted(usable) if usable else None}
     for tag, key in (("fitted", "n_star"), ("crossing", "n_star_crossing")):
         pts = [(r["p_total"], r.get(key)) for r in rows
                if r.get(key) and (usable is None or r["p_total"] in usable)]
@@ -414,6 +419,10 @@ def recheck_c6_p_exponent(verdict: dict) -> dict:
         out[f"{tag}_n_points"] = len(pts)
     slopes = [out.get("fitted_theil_sen_slope"), out.get("crossing_theil_sen_slope")]
     slopes = [v for v in slopes if v is not None]
+    # If the sweep produced rows at all, a refit that yields nothing is a broken check,
+    # not an absent one, and must fail rather than disappear.
+    out["refit_expected"] = bool(rows)
+    out["refit_produced_nothing"] = bool(rows) and not slopes
     if slopes:
         out["available"] = True
         out["least_squares_slope_from_claim_module"] = sw.get("exponent_vs_p_log_p")
@@ -577,7 +586,9 @@ def run(verdict: dict | None = None) -> dict:
     # theorem's stated 1. An earlier revision gated on the latter, which meant the whole
     # verifier exited nonzero in exactly the case where the paper turned out to be right.
     pr = out.get("c6_p_exponent_recheck") or {}
-    if pr.get("available"):
+    if pr.get("refit_produced_nothing"):
+        out["ok"] = False
+    elif pr.get("available"):
         out["ok"] = bool(out["ok"] and pr["theil_sen_agrees_with_least_squares"])
     return out
 
