@@ -192,6 +192,30 @@ def c2_definitions(v):
     )
 
 
+def c1_comparator(v):
+    c = g(v, "claims", "C1_C2_C3_tables", "comparator_selection_audit", default={})
+    grid = c.get("relative_reduction_grid_pct", {})
+    ds = list(next(iter(grid.values()), {}))
+    rows = []
+    for m, col in grid.items():
+        cells = []
+        for k in ds:
+            mark = "**" if (m == "MV" and k == "UltraFeedback") else ""
+            cells.append(f"{mark}{num(col[k], 2)}{mark}")
+        rows.append([f"vs {m}"] + cells)
+    gb = c.get("global_best_cell", {})
+    return table(["Baseline"] + ds, rows) + (
+        f"\n\nAll {c.get('n_cells')} cells are CARE-SVD's relative MAE reduction against that "
+        f"baseline on that dataset, in %. The claimed headline is shown in bold.\n\n"
+        f"- Headline is the largest reduction against the baseline the paper names (MV): "
+        f"{yesno(c.get('headline_is_max_within_the_named_baseline'))}\n"
+        f"- Headline is the largest cell in the whole grid: "
+        f"{yesno(c.get('headline_is_the_global_argmax'))} — the largest is "
+        f"**{gb.get('baseline')} on {gb.get('dataset')} at {num(gb.get('pct'), 2)} %**\n"
+        f"- Headroom the paper did not claim: **{num(c.get('headroom_left_on_the_table_pp'), 2)} pp**"
+    )
+
+
 def c3_single_config(v):
     s = g(v, "claims", "C1_C2_C3_tables", "single_configuration_audit", default={})
     cfg = s.get("per_care_configuration", {})
@@ -812,8 +836,10 @@ CLAIM_KEY = {
 
 # For C1-C3 the run reports one combined verdict, so each page states its own.
 PAGE_VERDICT = {
-    "C1": "**VERIFIED** (the 26.8 % arithmetic, exactly) / **BLOCKED** (the UltraFeedback "
-          "MAE pair — the authors released no UltraFeedback judge-score matrix)",
+    "C1": "**VERIFIED** (the 26.8 % arithmetic, exactly, and a comparator-selection audit "
+          "over the full 6 × 4 grid finding no cherry-picking — the headline leaves "
+          "6.28 pp unclaimed) / **BLOCKED** (the UltraFeedback MAE pair — the authors "
+          "released no UltraFeedback judge-score matrix)",
     "C2": "**FALSIFIED as worded** — the average across the six benchmarks of CARE-SVD's "
           "improvement over AVG is 15.19 %, not 17.37 %. The published figure is an "
           "MAE-weighted mean that puts 84.4 % of its weight on one benchmark and is not "
@@ -927,6 +953,7 @@ GENERATORS = {
     "c1.asset": c1_asset,
     "c1.control": c1_control,
     "c2.definitions": c2_definitions,
+    "c1.comparator": c1_comparator,
     "c3.single_config": c3_single_config,
     "c2.weights": c2_weights,
     "c2.invariance": c2_invariance,

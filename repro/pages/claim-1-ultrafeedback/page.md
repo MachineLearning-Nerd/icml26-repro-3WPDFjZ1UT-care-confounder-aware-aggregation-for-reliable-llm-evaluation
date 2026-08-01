@@ -32,6 +32,28 @@ to a tolerance of 0.05 percentage points.
 *(pending release run)*
 <!-- /FILL -->
 
+## Is 26.8% the most flattering number available?
+
+The arithmetic being correct does not settle whether the *comparison* was chosen after
+the fact. "Up to 26.8% compared to MV on UltraFeedback" names one baseline and one
+dataset out of a 6 × 4 grid of possible (dataset, baseline) reductions, and a headline
+that happened to be the largest cell in that grid would be a selection effect rather
+than a result. So the whole grid is computed and the headline located in it.
+
+<!-- FILL:c1.comparator -->
+*(pending release run)*
+<!-- /FILL -->
+
+**This check could have found a problem and did not.** The 26.8% figure is the largest
+reduction against MV, so the paper's "up to" is used correctly; and it is *not* the
+largest cell in the grid — CARE-SVD against AVG on Yelp would have supported 33.08%.
+The headline leaves 6.28 pp unclaimed. On this evidence there is no comparator
+cherry-picking in Claim 1, and that is reported as plainly as a defect would have been.
+
+Contrast this with [Claim 2](#/claim-2-average-improvement), where the same style of
+audit *did* find a problem. The two checks are the same kind of check; only the answers
+differ.
+
 ## 1c — the reproduction, and the honest boundary
 
 CARE's aggregation is deterministic linear algebra on a fixed `n × p` judge-score

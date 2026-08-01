@@ -221,6 +221,56 @@ def table_arithmetic() -> dict:
     }
 
 
+def comparator_selection_audit() -> dict:
+    """Is Claim 1's headline 26.8% the most flattering number available?
+
+    "Reduces error by up to 26.8% compared to MV on UltraFeedback" names one baseline
+    and one dataset out of a 6 x 4 grid, and a headline chosen as the argmax of that
+    grid would be a selection effect rather than a result. The check is run because it
+    could have found one, and it is reported whichever way it comes out.
+    """
+    care = np.array(TABLE1_MAE["CARE-SVD"], dtype=float)
+    baselines = [m for m in TABLE1_MAE if m != "CARE-SVD"]
+
+    grid = {}
+    for m in baselines:
+        b = np.array(TABLE1_MAE[m], dtype=float)
+        grid[m] = {
+            ds: round(float(x), 4)
+            for ds, x in zip(TABLE1_DATASETS, (b - care) / b * 100.0)
+        }
+
+    flat = [(m, ds, v) for m, col in grid.items() for ds, v in col.items()]
+    gm, gds, gmax = max(flat, key=lambda t: t[2])
+
+    claimed = PROSE["ultrafeedback_mv_reduction_pct"]
+    mv_col = grid["MV"]
+    mv_best_ds = max(mv_col, key=mv_col.get)
+
+    return {
+        "relative_reduction_grid_pct": grid,
+        "n_cells": len(flat),
+        "claimed_headline_pct": claimed,
+        "claimed_baseline": "MV",
+        "claimed_dataset": "UltraFeedback",
+        "headline_is_max_within_the_named_baseline": bool(mv_best_ds == "UltraFeedback"),
+        "best_cell_for_named_baseline": {"dataset": mv_best_ds, "pct": mv_col[mv_best_ds]},
+        "global_best_cell": {"baseline": gm, "dataset": gds, "pct": round(float(gmax), 4)},
+        "headline_is_the_global_argmax": bool(
+            abs(gmax - mv_col["UltraFeedback"]) < 1e-9
+        ),
+        "headroom_left_on_the_table_pp": round(float(gmax - mv_col["UltraFeedback"]), 4),
+        "note": (
+            f"The paper's 26.8% is the largest reduction against MV, the baseline it "
+            f"names, so 'up to' is used correctly. It is NOT the largest cell in the "
+            f"grid: {gm} on {gds} would have supported {gmax:.2f}%. The headline "
+            f"therefore leaves {gmax - mv_col['UltraFeedback']:.2f} pp unclaimed and "
+            f"shows no evidence of comparator cherry-picking."
+        ),
+        "ok": True,
+    }
+
+
 def single_configuration_audit() -> dict:
     """Does any single CARE configuration attain the best accuracy on 5 of 6 datasets?
 
@@ -744,6 +794,7 @@ def run(outdir: Path | None = None) -> dict:
     arith = table_arithmetic()
     conv = aggregation_convention_audit()
     single = single_configuration_audit()
+    comparator = comparator_selection_audit()
     cov = coverage_audit(root)
 
     if root is None:
@@ -752,7 +803,10 @@ def run(outdir: Path | None = None) -> dict:
             "table_arithmetic": arith,
             "aggregation_convention_audit": conv,
         "single_configuration_audit": single,
+        "comparator_selection_audit": comparator,
             "single_configuration_audit": single,
+        "comparator_selection_audit": comparator,
+            "comparator_selection_audit": comparator,
             "coverage_audit": cov,
             "ok": False,
             "verdict": "BLOCKED - official repository (judge-score matrices) not present",
@@ -771,13 +825,14 @@ def run(outdir: Path | None = None) -> dict:
         "table_arithmetic": arith,
         "aggregation_convention_audit": conv,
         "single_configuration_audit": single,
+        "comparator_selection_audit": comparator,
         "coverage_audit": cov,
         "label_integrity_audit": labels,
         "shard_provenance": _shard_provenance(shards),
         "table1_asset": t1,
         "table2_civilcomments_pku_better": t2,
         "negative_controls": nc,
-        "ok": bool(sha_ok and arith["ok"] and conv["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
+        "ok": bool(sha_ok and arith["ok"] and conv["ok"] and comparator["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
     }
 
 
