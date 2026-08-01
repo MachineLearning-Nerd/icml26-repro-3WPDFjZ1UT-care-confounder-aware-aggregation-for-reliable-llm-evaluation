@@ -512,6 +512,31 @@ def c6_p_refit(v):
     )
 
 
+def c5_eta(v):
+    e = g(v, "claims", "C5_thm42", "route_d_eta_tail_measurement", default={})
+    if not e.get("available"):
+        return f"Not available: {e.get('why', 'not run')}"
+    rows = [
+        [num(q, 3), num(et, 4), num(y, 5)]
+        for q, et, y in zip(e.get("quantiles", []), e.get("eta_of_quantile", []),
+                            e.get("error_quantile", []))
+    ]
+    ci = e.get("ci95", [None, None])
+    return table(["confidence q", "η(q) = −log((1−q)/2)", "stage-2 error quantile"], rows) + (
+        f"\n\nFitted tail exponent: **{num(e.get('loglog_slope_error_vs_eta'), 4)} ± "
+        f"{num(e.get('stderr'), 4)}**, 95 % interval "
+        f"[{num(ci[0], 4)}, {num(ci[1], 4)}], over {e.get('n_replicates')} independent "
+        f"replicates at n = {e.get('n')}.\n\n"
+        f"- Bound holds (tail grows no faster than √η): "
+        f"{yesno(e.get('bound_holds_tail_no_faster_than_sqrt_eta'))}\n"
+        f"- Measurement resolves a non-zero exponent: "
+        f"{yesno(e.get('measurement_resolves_a_nonzero_exponent'))}\n"
+        f"- Stated √η is *tight* (0.5 inside the interval): "
+        f"{yesno(e.get('stated_exponent_is_tight'))}\n\n"
+        + (e.get("interpretation") or "")
+    )
+
+
 def c6_confound(v):
     """Only the quantities that were actually MEASURED belong in this table.
 
@@ -1027,6 +1052,7 @@ GENERATORS = {
     "c6.boundary": c6_boundary,
     "c6.results": c6_results,
     "c6.attribution": c6_attribution,
+    "c5.eta": c5_eta,
     "c6.confound": c6_confound,
     "c6.p_refit": c6_p_refit,
     "c6.grid": c6_grid,
