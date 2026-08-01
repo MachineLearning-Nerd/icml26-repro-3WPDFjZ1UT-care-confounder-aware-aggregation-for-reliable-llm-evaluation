@@ -90,12 +90,24 @@ with whitening), on a model family that satisfies the theorem's own hypotheses:
 `π_min = 0.10 > 0`. It says nothing about the `σ⁶` or `π_min^{-2}` factors, whose
 exponents this campaign reports as **NOT MEASURED**.
 
+### Independent refit of the exponent
+
+The `p` sweep carries this falsification, so it is refit by an estimator the claim module
+never uses — Theil–Sen, in
+[`independent_check.py`](repro/src/independent_check.py) — for **both** `n*` estimators.
+An earlier revision of this page asserted such a check existed when it did not.
+
+<!-- FILL:c6.p_refit -->
+*(pending release run)*
+<!-- /FILL -->
+
 **The limitation that keeps this at MEDIUM confidence.** The six per-setting decay
 curves fit a power law imperfectly (`r²` from 0.38 to 0.83) and `n*` is not monotone in
 `p` — the `p = 36` setting sits below `p = 30`. So the exponent's *value* (3.63 ± 0.80)
-carries real uncertainty. What is robust is that it *exceeds 1*: the curve-fitting
-estimator's 95 % interval is [2.06, 5.21] and the curve-crossing estimator's is
-[1.54, 5.46], and neither contains 1.
+carries real uncertainty. What is robust is that it *exceeds 1*, under every
+estimator tried: the curve-fitting 95 % interval is [2.06, 5.21], the curve-crossing
+interval is [1.54, 5.46], and the two independent Theil–Sen refits give 2.98 and 2.24.
+None of the four is anywhere near 1.
 
 ## Calibrated sample-complexity measurement
 

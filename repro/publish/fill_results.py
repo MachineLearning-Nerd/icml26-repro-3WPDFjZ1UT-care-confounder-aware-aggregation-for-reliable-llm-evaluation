@@ -359,6 +359,27 @@ def c6_grid(v):
                     "target_accuracy", default=None), 3) + "`.")
 
 
+def c6_p_refit(v):
+    r = g(v, "independent_check", "c6_p_exponent_recheck", default={})
+    sw = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", "p", default={})
+    rows = [
+        ["least squares, fitted n*", num(sw.get("exponent_vs_p_log_p"), 3), "claim module"],
+        ["least squares, crossing n*", num(sw.get("exponent_from_crossing_estimator"), 3), "claim module"],
+        ["**Theil–Sen, fitted n***", f"**{num(r.get('fitted_theil_sen_slope'), 3)}**", "independent checker"],
+        ["**Theil–Sen, crossing n***", f"**{num(r.get('crossing_theil_sen_slope'), 3)}**", "independent checker"],
+    ]
+    return table(["Estimator", "Exponent on p·log(p/ε)", "Computed by"], rows) + (
+        f"\n\nStated exponent: **{num(r.get('stated_exponent'), 0)}**. All four estimates "
+        f"exceed it: {yesno(r.get('both_estimators_exceed_stated_exponent'))} "
+        f"(lowest is {num(r.get('min_theil_sen_slope'), 3)}).\n\n"
+        "The two Theil–Sen figures are **lower** than least squares, so the exponent's "
+        "*value* is uncertain across the range ~2.2 to ~3.6 — a single outlying setting "
+        "does move the least-squares fit. What no estimator disputes is that the exponent "
+        "exceeds 1, which is the entire content of the falsification. The independent "
+        "checker fails the whole run if this ceases to hold."
+    )
+
+
 def c6_confound(v):
     c = g(v, "claims", "C6_thm43", "route_e_p_sweep_confound_audit", default={})
     rows = [[num(r.get("p_total"), 0), num(r.get("delta_cp_eigenvalue_gap"), 6),
@@ -648,13 +669,14 @@ CONFIDENCE = {
                      "eta-dependence is a tail statement we do not measure, and xi(T) has no "
                      "closed form we can evaluate, so both are reconstructed from the "
                      "derivation rather than confirmed empirically."),
-    "C6": ("MEDIUM", "The p-factor falsification is the strongest part: both n* estimators "
-                     "resolve an exponent near 3.6 against a stated 1, every other quantity "
-                     "in the bound is held fixed to eight decimal places, and the solver's "
-                     "restart budget is ruled out. It is MEDIUM rather than HIGH because the "
-                     "six per-setting curve fits scatter (r^2 as low as 0.38) and n* is not "
-                     "monotone in p, so the exponent's value is uncertain even though its "
-                     "excess over 1 is resolved by both estimators. The sigma and pi_min "
+    "C6": ("MEDIUM", "The p-factor falsification is the strongest part: four independent "
+                     "estimates of the exponent (2.24, 2.98, 3.50, 3.63) all exceed the "
+                     "stated 1, every other quantity in the bound is held fixed to eight "
+                     "decimal places, and the solver's restart budget is ruled out. It is "
+                     "MEDIUM rather than HIGH because those four span 2.2-3.6, the six "
+                     "per-setting curve fits scatter (r^2 as low as 0.38) and n* is not "
+                     "monotone in p, so the exponent's VALUE is uncertain even though its "
+                     "excess over 1 is not. The sigma and pi_min "
                      "exponents are NOT MEASURED, and the delta^-2 factor is not "
                      "independently variable in this generative model."),
 }
@@ -730,7 +752,9 @@ def _header(cid):
         note = ""
         if unmeasured:
             note = (
-                f"\n\n**But {len(unmeasured)} contract element(s) were NOT MEASURED**: "
+                f"\n\n**But {len(unmeasured)} contract element"
+                + ("s were" if len(unmeasured) != 1 else " was")
+                + " NOT MEASURED**: "
                 + ", ".join(f"`{u}`" for u in unmeasured)
                 + ". A sweep that resolved no exponent cannot satisfy a one-sided contract "
                 "and cannot violate one; it is excluded, and the 'satisfied' above refers "
@@ -795,6 +819,7 @@ GENERATORS = {
     "c6.results": c6_results,
     "c6.attribution": c6_attribution,
     "c6.confound": c6_confound,
+    "c6.p_refit": c6_p_refit,
     "c6.grid": c6_grid,
     "env.packages": env_packages,
     "c4.runtime": _runtime("C4"),
