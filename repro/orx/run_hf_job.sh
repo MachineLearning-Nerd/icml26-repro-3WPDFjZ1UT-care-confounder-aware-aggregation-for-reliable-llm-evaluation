@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Bootstrap for a Hugging Face `cpu-upgrade` job.
 #
-#   BRANCH=<git branch>  bash run_hf_job.sh
+#   BRANCH=<git branch> [CARE_ENTRY="repro/src/bench_shard.py t1 2024"] bash run_hf_job.sh
 #
 # Clones this repository and the authors' released code (pinned by SHA, so the
 # judge-score matrices are byte-identical across runs), syncs the locked
@@ -28,4 +28,7 @@ export PYTHONHASHSEED=0
 export CARE_HF_FLAVOR="${CARE_HF_FLAVOR:-cpu-upgrade}"
 
 uv sync --frozen
-uv run python repro/src/run_all.py
+
+# CARE_ENTRY lets a one-hour shard job reuse this identical bootstrap. Unset, the
+# bootstrap runs the one fixed command that produces the canonical verdict.
+uv run python ${CARE_ENTRY:-repro/src/run_all.py}
