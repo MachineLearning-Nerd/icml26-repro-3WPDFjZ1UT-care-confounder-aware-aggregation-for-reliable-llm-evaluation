@@ -1,0 +1,19 @@
+{
+  "shard": "t1:asset:2024",
+  "seed": 2024,
+  "returncode": 0,
+  "runtime_s": 42.2,
+  "values": {
+    "mv": 31.15333333333333,
+    "avg": 33.66284848484848,
+    "ws": 29.230444444444444,
+    "uws": 33.92838699882012,
+    "care_svd": 27.73499283660756
+  },
+  "n_values": 5,
+  "threads_pinned_to": 8,
+  "budget_s": 2700,
+  "within_budget": true,
+  "hf_job_id": "6a6db0b26b79c09949c1e37a",
+  "git_sha": "a91eba74802ab0d91f924ccb02369caefd56c75f"
+}

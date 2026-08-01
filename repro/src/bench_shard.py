@@ -120,6 +120,14 @@ def shard_t2(dataset: str, seed: int, part: str) -> dict:
             if str(r["dataset"]) == dataset:
                 values = {m: (None if pd.isna(r.get(m)) else float(r.get(m)))
                           for m in T2_MAIN_METHODS}
+                # Provenance, and the fields that distinguish a real accuracy from a
+                # degenerate split: an accuracy of exactly 0 or 1 usually means the
+                # test labels collapsed to one class, not that a method is perfect.
+                out["diagnostics"] = {
+                    k: (None if pd.isna(r.get(k)) else r.get(k))
+                    for k in ("n_examples", "n_judges", "class_balance",
+                              "val_size", "test_size", "care_svd_gamma", "val_acc")
+                }
     elif part == "baselines" and bl_csv.exists():
         bdf = pd.read_csv(bl_csv)
         for _, r in bdf.iterrows():

@@ -1,0 +1,21 @@
+{
+  "shard": "t2:pku_better:2027:main",
+  "dataset": "pku_better",
+  "seed": 2027,
+  "part": "main",
+  "returncode": 0,
+  "runtime_s": 450.2,
+  "values": {
+    "mv": 0.0,
+    "avg": 0.0,
+    "ws": 0.0,
+    "uws": 0.0,
+    "care_svd": 0.354387341441088,
+    "care_tensor": 1.0
+  },
+  "threads_pinned_to": 8,
+  "budget_s": 2700,
+  "within_budget": true,
+  "hf_job_id": "6a6db036a00abefd4b28b21e",
+  "git_sha": "a91eba74802ab0d91f924ccb02369caefd56c75f"
+}
