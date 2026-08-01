@@ -4,7 +4,8 @@ Never creates a second Space. Never uploads binaries. Before uploading it proves
 that the judged revision's file set is a subset of the candidate's, so no existing
 page or evidence file can be dropped.
 
-    python repro/publish/publish_space.py stage   <staging_dir>   # build candidate
+    python repro/publish/publish_space.py stage   <staging_dir>   # seed from live Space
+    python repro/publish/publish_space.py sync    <staging_dir>   # overlay pages + code
     python repro/publish/publish_space.py check    <staging_dir>   # subset + manifest
     python repro/publish/publish_space.py upload   <staging_dir>   # commit + verify
 """
@@ -105,6 +106,38 @@ def stage(work: Path) -> None:
     work.mkdir(parents=True, exist_ok=True)
     snapshot_download(REPO, repo_type="space", local_dir=str(work), token=token)
     print(f"seeded {work} from live {REPO}")
+
+
+def sync_pages_and_code(work: Path) -> None:
+    """Overlay the pages and every allowlisted source file the pages link to.
+
+    The pages link to their own verifiers, so a source file that is not copied here
+    becomes a broken link in the published Space. Doing it by hand was one rsync away
+    from silently publishing a claim whose code the evaluator cannot open.
+    """
+    repo = Path(__file__).resolve().parents[2]
+    n = 0
+    for src in (repo / "repro" / "pages").glob("*/page.md"):
+        dst = work / "pages" / src.parent.name / "page.md"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(src.read_text())
+        n += 1
+    index = repo / "repro" / "pages" / "index.md"
+    if index.exists():
+        (work / "pages" / "index.md").write_text(index.read_text())
+        n += 1
+    code = 0
+    for rel in ALLOWLIST:
+        if not rel.startswith("repro/"):
+            continue
+        src = repo / rel
+        if not src.exists():
+            raise SystemExit(f"allowlisted source missing from the repository: {rel}")
+        dst = work / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(src.read_text())
+        code += 1
+    print(f"synced {n} pages and {code} allowlisted source files into {work}")
 
 
 def build_logbook(work: Path) -> None:
@@ -219,6 +252,8 @@ if __name__ == "__main__":
     os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
     if cmd == "stage":
         stage(target)
+    elif cmd == "sync":
+        sync_pages_and_code(target)
     elif cmd == "logbook":
         build_logbook(target)
     elif cmd == "check":

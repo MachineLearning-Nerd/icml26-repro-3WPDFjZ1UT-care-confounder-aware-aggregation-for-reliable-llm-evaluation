@@ -43,7 +43,7 @@ judged revision `2a647ca068d0943b4c3a54d2f7940594fac5287f` (5/12).
 
    ```
    python repro/publish/publish_space.py stage    <staging>   # seeds from the LIVE Space
-   rsync -a repro/pages/ <staging>/pages/                     # overlay new pages
+   python repro/publish/publish_space.py sync     <staging>   # pages + linked code
    python repro/publish/make_raw.py     verdict.json <staging>
    python repro/publish/fill_results.py verdict.json <staging>
    python repro/publish/check_links.py  <staging>
