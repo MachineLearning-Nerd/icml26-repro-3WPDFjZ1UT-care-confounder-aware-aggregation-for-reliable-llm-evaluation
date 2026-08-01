@@ -730,15 +730,35 @@ def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2, 3, 4)) 
 
     nc1_power = effect_vs_noise(over[0]["errs"], over[-1]["errs"], expect_b_larger=False)
     nc2_power = effect_vs_noise(frozen[0]["errs"], frozen[-1]["errs"], expect_b_larger=True)
+    # Comparing NC1's shared point with NC2's when both are the SAME deterministic call
+    # is a tautology -- it tests that the interpreter is deterministic, and an earlier
+    # revision published it as a gate. A blind reviewer caught that. The live question is
+    # different and worth asking: is the shared configuration STABLE under a change of
+    # seed stream at all? So the same configuration is measured a second time from an
+    # independent offset and the two medians are compared. This can fail, and if it does
+    # it says the three-point control curves are being read off a quantity that moves
+    # with the seeds -- which is exactly what the 5.2x discrepancy between the old
+    # mismatched offsets was telling us.
+    alt_errs = [e for e in (_one_run(mus, 1.0, n_base, 7717 + 31 * s) for s in seeds)
+                if e is not None]
+    alt_median = float(np.median(alt_errs)) if alt_errs else None
+    base_median = over[0]["median_err"]
+    ratio = (max(alt_median, base_median) / min(alt_median, base_median)
+             if alt_median and base_median else None)
+    STABILITY_LIMIT = 3.0
     shared = {
         "configuration": {"sigma_max": 1.0, "n": n_base},
-        "nc1_median": over[0]["median_err"],
-        "nc2_median": frozen[0]["median_err"],
-        "identical": bool(over[0]["median_err"] == frozen[0]["median_err"]),
+        "median_from_the_control_seed_stream": base_median,
+        "median_from_an_independent_seed_stream": alt_median,
+        "independent_stream_seed_offset": 7717,
+        "ratio_between_the_two_streams": round(float(ratio), 3) if ratio else None,
+        "stability_limit": STABILITY_LIMIT,
+        "stable_under_a_change_of_seed_stream": bool(ratio and ratio <= STABILITY_LIMIT),
         "why": (
-            "NC1 and NC2 share one configuration and now share one seed stream, so the "
-            "two medians must be identical. If they are not, the controls are not "
-            "measuring the same system and neither number means what it says."
+            "the same configuration measured from two independent seed streams must give "
+            "the same answer to within seed noise. This is a live test: it fails if the "
+            "control curves are being read off a quantity that moves with the seed choice, "
+            "which is what the two controls' old mismatched offsets were signalling."
         ),
     }
     # The contract is only the endpoint comparison, so a non-monotone interior passes it.
@@ -750,7 +770,7 @@ def negative_controls(n_base=20000, model_seed=20260801, seeds=(0, 1, 2, 3, 4)) 
     monotone = all(b > a for a, b in zip(errs_by_sigma, errs_by_sigma[1:]))
 
     return {
-        "ok": bool(nc1 and nc2 and shared["identical"]),
+        "ok": bool(nc1 and nc2 and shared["stable_under_a_change_of_seed_stream"]),
         "nc1_oversampling_reduces_error": bool(nc1),
         "nc1_rows": over,
         "nc2_frozen_n_larger_sigma_raises_error": bool(nc2),

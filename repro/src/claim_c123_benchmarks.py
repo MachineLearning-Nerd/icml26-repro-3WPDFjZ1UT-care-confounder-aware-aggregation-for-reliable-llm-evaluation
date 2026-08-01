@@ -573,7 +573,6 @@ def single_configuration_audit() -> dict:
             "on three'), so this is a scope qualification on the headline count rather "
             "than an undisclosed one."
         ),
-        "ok": True,
     }
 
 

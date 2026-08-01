@@ -173,8 +173,11 @@ file admits.
 
 `gaussian_mixture_main.py` masks this by falling back to `pref_A_or_B` — a judge's own
 preference — when the label column is degenerate, so the reported "accuracy" scores a
-judge against itself and saturates at exactly 0 or 1. That is precisely what we measured
-(`class_balance: 100.0`).
+judge against itself and saturates at exactly 0 or 1. That is a description of the authors'
+code path, which is public at `72f5b29` and readable there. An earlier revision of this
+sentence added "that is precisely what we measured (`class_balance: 100.0`)"; that figure is
+not in `verdict.json` and has been withdrawn from the Claim 3 page, and a blind reviewer
+found it surviving here. We report no accuracy for this column at all.
 
 This is recorded as a **failed integrity precondition**, checked by the published
 `repro/src/label_audit.py` before any accuracy is computed, and it blocks the column
@@ -712,11 +715,13 @@ sample**, which are strongly dependent, so the interval was far too narrow; it i
 nonparametric bootstrap over the 240 independent replicates, with the old interval shown
 beside it for comparison. The conclusion it carried survives; its stated precision did not.
 
-**What is disclosed rather than fixed.** Claim 6's NC2 control rises from σ=1 to σ=2 and
-falls back at σ=3. Its contract compares only the endpoints, so it passes, and the
-reversal is the estimator saturating at large σ. The control therefore shows a
-σ-dependence exists near σ=1; it does not show the dependence is monotone, and the Claim 6
-page now says so where it calls NC2 "the discriminating one".
+**What was disclosed rather than fixed here, and then turned out not to be a fact.** This
+item originally recorded that Claim 6's NC2 control rises from σ=1 to σ=2 and falls back at
+σ=3, and explained the reversal as the estimator saturating at large σ. With the two
+controls' seed offsets unified and the seed count raised from three to five, NC2 is
+strictly monotone. The reversal was an artefact of three seeds and a mismatched offset, and
+the saturation story is withdrawn — it explained something that was not happening. See
+item 29.
 
 **What this round says about the process.** Three blind reviews have now found,
 respectively, nineteen, twenty and thirteen defects, and each round found at least one

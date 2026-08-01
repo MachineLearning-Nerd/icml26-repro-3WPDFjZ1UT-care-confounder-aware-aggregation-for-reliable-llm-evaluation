@@ -291,8 +291,8 @@ def _asset_adjudication(a):
         f"disputed column whose judge outputs were released. Over {j.get('n_seeds')} seeds we "
         f"measure **{num(j.get('reproduced_mean'), 3)} ± {num(j.get('reproduced_std'), 3)}** "
         f"(range {num(j.get('reproduced_min'), 3)}–{num(j.get('reproduced_max'), 3)}), which sits "
-        f"{num(j.get('sd_from_table1'), 2)} sd from Table 1's value and "
-        f"{num(j.get('sd_from_table7'), 2)} sd from Table 7's. Excludes Table 1: "
+        f"{num(j.get('sem_from_table1'), 2)} standard errors from Table 1's value and "
+        f"{num(j.get('sem_from_table7'), 2)} from Table 7's. Excludes Table 1: "
         f"{yesno(j.get('excludes_table1'))} · excludes Table 7: {yesno(j.get('excludes_table7'))} · "
         f"**adjudicates: {yesno(j.get('adjudicates'))}**. Our seed spread is wider than both "
         f"reported standard deviations: {yesno(j.get('our_spread_exceeds_both_reported_stds'))}."
@@ -1160,12 +1160,19 @@ def c6_controls(v):
         "makes any max/min measure meaningless while leaving the median trend intact. An "
         "earlier revision published bare medians with no dispersion at all, and the "
         "revision after that used exactly the max/min measure this replaces.\n\n"
-        f"**Shared-configuration cross-check.** NC1 and NC2 both measure σ = 1 at "
-        f"n = {sh.get('configuration', {}).get('n', '—')}; drawing from one seed stream they "
-        f"must return the identical median. They do: {yesno(sh.get('identical'))}. An "
-        "earlier revision used different seed offsets and the two controls reported "
-        "medians 5.2× apart at that one shared point — a fact about seed noise that read "
-        "as a fact about the estimator. This cross-check now gates the run."
+        f"**Is the shared configuration stable under a change of seed stream?** σ = 1 at "
+        f"n = {sh.get('configuration', {}).get('n', '—')}, measured twice from independent "
+        f"seed offsets: {num(sh.get('median_from_the_control_seed_stream'), 5)} against "
+        f"{num(sh.get('median_from_an_independent_seed_stream'), 5)}, a ratio of "
+        f"{num(sh.get('ratio_between_the_two_streams'), 2)}× against a limit of "
+        f"{num(sh.get('stability_limit'), 1)}× — stable: "
+        f"{yesno(sh.get('stable_under_a_change_of_seed_stream'))}. This gates the run. "
+        "Two earlier revisions got this wrong in opposite ways: the first let NC1 and NC2 "
+        "use mismatched offsets and reported medians 5.2× apart at this one shared point, "
+        "and the second unified them onto a single deterministic call and then published "
+        "the resulting identity as a gate — which tested only that the interpreter is "
+        "deterministic. A blind reviewer named the tautology; this version draws a genuinely "
+        "independent stream, so it can fail."
         f"\n\nNC1 (over-sampling reduces error): {yesno(nc.get('nc1_oversampling_reduces_error'))} · "
         f"NC2 (frozen n, larger σ raises error): {yesno(nc.get('nc2_frozen_n_larger_sigma_raises_error'))} · "
         f"NC2 monotone across the whole σ grid: "
@@ -1395,8 +1402,7 @@ GENERATORS = {
     "env.packages": env_packages,
     "c4.runtime": _runtime("C4"),
     "c5.runtime": _runtime("C5"),
-    "c4.runtime": _runtime("C4"),
-    "c6.runtime": _runtime("C6"),
+        "c6.runtime": _runtime("C6"),
     "c6.controls": c6_controls,
     "verdicts": verdicts,
     "c1.header": _header("C1"),

@@ -6,10 +6,12 @@ meaningless rather than wrong -- such a dataset is recorded BLOCKED, and no verd
 about the paper is inferred from it either way. This is deliberately separate from the
 claim checks: a failed precondition must block a claim, never falsify it.
 
-Why this exists. Reproducing Table 2's PKU-BETTER column produced accuracies of exactly
-0.0 for MV/AVG/WS/UWS and exactly 1.0 for CARE-Tensor. Those are not plausible
-accuracies, and the authors' own run record showed `class_balance: 100.0` -- every test
-label the same class. The cause is in the released data, not in the aggregation:
+Why this exists. An exploratory reproduction of Table 2's PKU-BETTER column returned
+degenerate accuracies -- saturating at the extremes rather than landing anywhere plausible.
+Those figures are deliberately not quoted here or anywhere in this artifact: they are not
+in `verdict.json`, because this precondition now runs FIRST and blocks the column before
+any accuracy is computed. What follows is what the released data itself shows, all of it
+recorded in the verdict under `label_integrity_audit`:
 
   * `gold_label_binary` is the constant 0 in all seven released judge files;
   * `gold_label_num` is the constant 1, both in the judge files and in the standalone
