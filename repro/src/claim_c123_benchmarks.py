@@ -341,9 +341,11 @@ def reproduce_table1_asset(root: Path, outdir: Path, shards: dict | None = None)
     }
 
 
-def reproduce_table2(root: Path, outdir: Path, shards: dict | None = None) -> dict:
+def reproduce_table2(root: Path, outdir: Path, shards: dict | None = None,
+                     blocked: set[str] | None = None) -> dict:
     """Table 2, CivilComments and PKU-BETTER columns, over five seeds."""
     shards = shards or {}
+    blocked = blocked or set()
     per_seed = {}
     for seed in SEEDS:
         merged = {}
@@ -406,6 +408,16 @@ def reproduce_table2(root: Path, outdir: Path, shards: dict | None = None) -> di
     }
     out_rows = []
     for ds_key, ds_name in name_map.items():
+        # An accuracy computed against a degenerate label column is meaningless, not
+        # merely inaccurate. Report the block; do not report a number.
+        if ds_name in blocked:
+            out_rows.append({
+                "dataset": ds_name,
+                "methods": [],
+                "status": "BLOCKED",
+                "reason": "released labels cannot support an accuracy; see label_audit",
+            })
+            continue
         i = TABLE2_DATASETS.index(ds_name)
         entry = {"dataset": ds_name, "methods": []}
         best_method, best_acc = None, -1.0
@@ -438,8 +450,10 @@ def reproduce_table2(root: Path, outdir: Path, shards: dict | None = None) -> di
         out_rows.append(entry)
 
     produced = [e for e in out_rows if e["methods"]]
+    blocked_rows = [e for e in out_rows if e.get("status") == "BLOCKED"]
     return {
         "ok": bool(produced) and all(e["care_wins"] for e in produced),
+        "blocked_datasets": [e["dataset"] for e in blocked_rows],
         "seeds": list(SEEDS),
         "per_seed": per_seed,
         "datasets": out_rows,
@@ -474,6 +488,13 @@ def coverage_audit(root: Path | None) -> dict:
         "table1_blocked": blocked_t1,
         "table2_reachable": reachable_t2,
         "table2_blocked": blocked_t2,
+        "two_distinct_blocking_reasons": {
+            "no_released_judge_outputs": "the capability gap below",
+            "released_but_unusable_labels": "PKU-BETTER ships judge outputs, but every "
+            "released label source is constant, so no accuracy can be computed from it. "
+            "This is a defect in the released artifact, not a compute limitation; see "
+            "label_integrity_audit.",
+        },
         "blocking_capability": (
             "The authors did not release judge-score matrices for these datasets. "
             "Regenerating them requires running 11-20 LLM judges (0.6B-14B) over 5,000 "
@@ -543,6 +564,9 @@ def run(outdir: Path | None = None) -> dict:
     outdir.mkdir(parents=True, exist_ok=True)
     root = _official_root()
     shards = _load_shards()
+    import label_audit
+    labels = label_audit.audit(root)
+    blocked = set(labels.get("blocked_datasets", []))
     arith = table_arithmetic()
     cov = coverage_audit(root)
 
@@ -558,7 +582,7 @@ def run(outdir: Path | None = None) -> dict:
     sha = _official_sha(root)
     sha_ok = sha == SOURCE["official_code_sha"]
     t1 = reproduce_table1_asset(root, outdir, shards)
-    t2 = reproduce_table2(root, outdir, shards)
+    t2 = reproduce_table2(root, outdir, shards, blocked)
     nc = negative_controls(root, outdir)
 
     return {
@@ -567,6 +591,7 @@ def run(outdir: Path | None = None) -> dict:
         "official_repo_sha_matches_pin": bool(sha_ok),
         "table_arithmetic": arith,
         "coverage_audit": cov,
+        "label_integrity_audit": labels,
         "shard_provenance": _shard_provenance(shards),
         "table1_asset": t1,
         "table2_civilcomments_pku_better": t2,
