@@ -598,10 +598,15 @@ CONFIDENCE = {
                      "eta-dependence is a tail statement we do not measure, and xi(T) has no "
                      "closed form we can evaluate, so both are reconstructed from the "
                      "derivation rather than confirmed empirically."),
-    "C6": ("MEDIUM", "The sample-complexity exponents are located by calibrated search and "
-                     "the mean bound is reproduced exactly, but the delta^-2 factor is not "
-                     "independently measurable in this generative model, and the weight-bound "
-                     "finding is a proof gap rather than a decided statement."),
+    "C6": ("MEDIUM", "The p-factor falsification is the strongest part: both n* estimators "
+                     "resolve an exponent near 3.6 against a stated 1, every other quantity "
+                     "in the bound is held fixed to eight decimal places, and the solver's "
+                     "restart budget is ruled out. It is MEDIUM rather than HIGH because the "
+                     "six per-setting curve fits scatter (r^2 as low as 0.38) and n* is not "
+                     "monotone in p, so the exponent's value is uncertain even though its "
+                     "excess over 1 is resolved by both estimators. The sigma and pi_min "
+                     "exponents are NOT MEASURED, and the delta^-2 factor is not "
+                     "independently variable in this generative model."),
 }
 
 CLAIM_KEY = {

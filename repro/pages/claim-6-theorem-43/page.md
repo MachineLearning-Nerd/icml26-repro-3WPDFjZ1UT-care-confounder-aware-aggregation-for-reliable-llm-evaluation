@@ -33,17 +33,51 @@ measured weight error did not grow:
 *(pending release run)*
 <!-- /FILL -->
 
-The honest reading is therefore **not** a falsification. The theorem's *statement* is
-not contradicted by any measurement we could make; what is defective is the *displayed
-derivation*, which loses a `σ³` factor that the stated result nonetheless survives. We
-report this as a documented gap in the written proof and record the verdict as
-**VERIFIED (sample-complexity condition and mean bound) with a documented gap in the
-displayed proof of the weight bound**.
+The honest reading of *this* probe is therefore **not** a falsification. What the fit
+supports precisely: the measured slope's 95 % interval **excludes the value 3** that a
+genuinely missing `σ³` factor predicts, and **includes 0**, the value the theorem
+predicts. It is a marginal discrimination — the interval is wide — but it is a real one,
+and it points at the derivation rather than at the result. What is defective is the
+*displayed derivation*, which loses a `σ³` factor that the stated result nonetheless
+survives. A bound whose own quantity is never observed to be violated has not been
+falsified in `σ`, however flawed its written proof.
 
-This is recorded here rather than quietly dropped because a reproduction that only
-reports confirmations of its own hypotheses is not measuring anything. It is also the
-reason the claim is *not* reported as FALSIFIED: a bound whose own quantity is never
-observed to be violated has not been falsified, however flawed its derivation.
+This is recorded rather than quietly dropped because a reproduction that only reports
+confirmations of its own hypotheses is not measuring anything.
+
+## What *is* falsified: the stated `p·log(p/ε)` factor
+
+A different part of the same condition does not survive. With `σ`, `δ` and `π_min` held
+fixed and `p` swept over six settings, the sample size needed to reach a fixed accuracy
+grows far faster than the stated bound allows — the measured exponent on `p·log(p/ε)` is
+about **3.6 against a stated 1**, and the excess is resolved by *both* `n*` estimators
+independently.
+
+This is a statement about the exponent, never about the value, which is what makes it
+immune to the theorem's unknown universal constant `C₁`: a constant can move `n*` up or
+down, but it cannot turn `p¹` into `p³·⁶`. The comparison is also normalised correctly.
+Substituting the boundary sample size `n = C₁σ⁶/(δ²π_min²)·p·log(p/ε)` into the
+theorem's own weight bound gives an achieved accuracy of `C₂·δ·π_min/√C₁`, which is
+**independent of `p`** — so holding the target accuracy fixed at 0.05 while sweeping `p`
+is exactly the right comparison, and `n*` should then scale as `p·log(p/ε)` itself.
+
+The three audits that make this attributable — both estimators resolving the exponent,
+the restart-budget control, and the constancy of every other quantity in the bound — are
+published in full below and were written before the outcome was known.
+
+**Scope, stated precisely.** This falsifies the stated `p·log(p/ε)` factor *as tested
+with the algorithm the theorem names* (Anandkumar et al.'s robust tensor power method
+with whitening), on a model family that satisfies the theorem's own hypotheses:
+`K = 4` components, three conditionally independent views, full-column-rank means, and
+`π_min = 0.10 > 0`. It says nothing about the `σ⁶` or `π_min^{-2}` factors, whose
+exponents this campaign reports as **NOT MEASURED**.
+
+**The limitation that keeps this at MEDIUM confidence.** The six per-setting decay
+curves fit a power law imperfectly (`r²` from 0.38 to 0.83) and `n*` is not monotone in
+`p` — the `p = 36` setting sits below `p = 30`. So the exponent's *value* (3.63 ± 0.80)
+carries real uncertainty. What is robust is that it *exceeds 1*: the curve-fitting
+estimator's 95 % interval is [2.06, 5.21] and the curve-crossing estimator's is
+[1.54, 5.46], and neither contains 1.
 
 ## Calibrated sample-complexity measurement
 

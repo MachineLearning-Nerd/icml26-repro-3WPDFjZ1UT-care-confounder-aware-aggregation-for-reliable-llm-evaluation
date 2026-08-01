@@ -194,3 +194,33 @@ direction Theorem 4.2's `O(·)` asserts. It **does not** confirm the `δ^{-2}` f
 itself: a bound that is loose over the swept range is consistent with many exponents,
 and the confounded sweep cannot separate them. Claim 5's verdict rests on the stage-2
 `n^{-1/2}` measurement and the reconstructed symbolic derivation, not on this sweep.
+
+## 15. What the `p`-factor falsification does and does not cover
+
+Claim 6 reports the stated `p·log(p/ε)` sample-complexity factor as FALSIFIED. The
+boundaries of that finding:
+
+* It is a statement about the **exponent**, not the value, so the theorem's unknown
+  universal constant `C₁` cannot rescue it — but equally, nothing here bounds `C₁`.
+* It covers the algorithm the theorem names (robust tensor power method with whitening)
+  on a model family satisfying the theorem's hypotheses. A different estimator for the
+  same statistical problem could have a different `p`-dependence, and this campaign has
+  not tested one.
+* The `σ⁶` and `π_min^{-2}` exponents are **NOT MEASURED**: both sweeps failed the
+  admissibility test in `informativeness.py`, and neither is reported as evidence in
+  either direction.
+* The exponent's value is uncertain (3.63 ± 0.80, with per-setting curve fits scoring
+  `r²` as low as 0.38 and `n*` non-monotone in `p`). Only the conclusion "greater than
+  1" is resolved, and it is resolved by two independent `n*` estimators whose 95 %
+  intervals — [2.06, 5.21] and [1.54, 5.46] — both exclude 1.
+* The `δ^{-2}` factor cannot be tested at all here: `δ` is the CP eigenvalue gap
+  `min_i≠j |π_i^{-1/2} − π_j^{-1/2}|`, so it is not variable independently of `π`.
+
+## 16. The σ boundary probe discriminates, but only just
+
+The probe along `n = 20000·σ⁶` returns a slope of 0.0605 ± 1.1149. Its 95 % interval
+excludes the slope of 3 that a genuinely missing `σ³` factor would produce, and includes
+the 0 the theorem predicts, so it does discriminate between the two hypotheses. But the
+interval is wide, and a narrower one would need more `σ` settings than the one-hour job
+cap allows. The claim page states the discrimination in exactly these terms rather than
+calling the hypothesis refuted outright.
