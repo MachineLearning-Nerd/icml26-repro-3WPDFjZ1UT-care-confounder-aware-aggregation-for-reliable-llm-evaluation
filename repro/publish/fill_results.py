@@ -255,6 +255,11 @@ def c2_weights(v):
         for k, x in sorted(w.items(), key=lambda kv: -kv[1])
     ]
     res = c.get("pooled_equals_MAE_weighted_mean_identity_residual_pct")
+    if res is None:
+        raise SystemExit(
+            "c2.weights: aggregation_convention_audit missing from the verdict; refusing "
+            "to render Claim 2's falsification without the identity residual behind it"
+        )
     return (
         table(["Benchmark", "CARE-SVD improvement over AVG", "Weight it receives in the 17.37 %"], rows)
         + f"\n\nIdentity residual: **{res:.3e} pp** (exact-rational check in the independent "
