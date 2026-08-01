@@ -884,21 +884,19 @@ CONFIDENCE = {
                    "accuracies for those four columns."),
     "C4": ("HIGH", "Symbolic over a parameterised family, plus exact counterexamples that "
                    "satisfy the paper's own hypotheses. Deterministic; no seeds to vary."),
-    "C5": ("MEDIUM", "The composition and the cited constant are established directly, and "
-                     "the theorem-governed stage attains the predicted exponent. But the "
-                     "eta-dependence is a tail statement we do not measure, and xi(T) has no "
-                     "closed form we can evaluate, so both are reconstructed from the "
-                     "derivation rather than confirmed empirically."),
-    "C6": ("MEDIUM", "The p-factor falsification is the strongest part: four independent "
-                     "estimates of the exponent (2.24, 2.98, 3.50, 3.63) all exceed the "
-                     "stated 1, every other quantity in the bound is held fixed to eight "
-                     "decimal places, and the solver's restart budget is ruled out. It is "
-                     "MEDIUM rather than HIGH because those four span 2.2-3.6, the six "
-                     "per-setting curve fits scatter (r^2 as low as 0.38) and n* is not "
-                     "monotone in p, so the exponent's VALUE is uncertain even though its "
-                     "excess over 1 is not. The sigma and pi_min "
-                     "exponents are NOT MEASURED, and the delta^-2 factor is not "
-                     "independently variable in this generative model."),
+    "C5": ("MEDIUM", "The cited Davis-Kahan constant is validated adversarially over 4,000 "
+                     "perturbations, and the eta-dependence -- which earlier revisions "
+                     "reported as NOT MEASURED -- is now measured directly from the error's "
+                     "own quantiles across confidence levels, holding at a tail exponent "
+                     "well below the stated 1/2. Two caveats keep this at MEDIUM rather than "
+                     "HIGH. The symbolic composition cannot fail: both sides of it are the "
+                     "same expression transcribed twice in one function, so it checks our "
+                     "transcription, not the theorem. And the stage-2 exponent is "
+                     "-0.4724 +/- 0.0098, whose 95% interval EXCLUDES -0.5 -- over a finite "
+                     "grid that is not a violation of an O(.) upper bound, but it is not "
+                     "confirmation of the exponent either. xi(T) has no closed form we can "
+                     "evaluate and remains reconstructed rather than measured."),
+    "C6": ("MEDIUM", "What stands: the mean bound is reproduced exactly from the paper's own derivation chain, the stated weight bound is not violated along its own sample-complexity boundary, and the displayed proof of the weight bound has a sigma^3 gap that is symbolic and exact. What does NOT stand: the previous revision recorded a FALSIFICATION of the p*log(p/eps) factor, and this revision WITHDRAWS it. The agreement test behind it compared only aggregate slope intervals while the two n* estimators differed per setting by up to 8.6x in opposite directions, and the confound audit that was supposed to make the exponent attributable was built from p-independent constants. Rebuilt, that audit finds a real confound: at fixed n the empirical M2 conditioning degrades with p and subspace leakage grows by two orders of magnitude, so part of any n*(p) growth is the moment estimate deteriorating rather than the stated factor being wrong. The sigma and pi_min exponents are NOT MEASURED, and the delta^-2 factor is not independently variable in this generative model."),
 }
 
 CLAIM_KEY = {
