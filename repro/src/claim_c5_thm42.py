@@ -19,15 +19,27 @@ n >= 8 C_1^2 eta / (xi(T)^2 delta^2 alpha^2).  Both steps are checked in sympy.
 Route B - independently validate the constant of the cited Davis-Kahan variant by
 adversarial search over symmetric perturbations, instead of taking it on trust.
 
-Route C - a non-circular calibrated measurement.  The estimator of Algorithm 1
-(sparse + low-rank decomposition of the sample precision, then rank-h eigen-
-decomposition) is implemented and run; we *search* for the smallest n reaching a
-target accuracy alpha, over a grid of alpha and of delta, and fit the exponents.
-No sample size is ever taken from the formula being tested.
+Route C - a non-circular calibrated measurement, decomposed by stage so that each
+number is attributed to the right thing:
+
+  stage 1  ||Theta^ - Theta*||_2 vs n - the input concentration that step (i)
+           bounds. Expected exponent -1/2.
+  stage 2  the spectral step with the true sparse component supplied, isolating
+           exactly what step (ii)'s Davis-Kahan half governs. Expected -1/2.
+  stage 3  the full Algorithm-1 pipeline including our proximal-gradient solve of
+           the sparse-plus-low-rank program. Reported, but treated as a property
+           of that solver at a finite iteration budget rather than as evidence
+           about the theorem, which presumes the estimator attains
+           Chandrasekaran et al.'s conditions.
+
+n*(alpha) and n*(delta) are found by SEARCH over a geometric grid on the stage-2
+curve; no sample size is ever taken from the formula being tested.  Because the
+theorem is an O(.) upper bound, every check is one-sided: measured growth must not
+EXCEED the stated growth.
 
 Limitation recorded honestly: xi(T) is Chandrasekaran's curvature constant and has
 no closed form we can evaluate, so the model is held fixed across each sweep and
-only the n and delta dependences are measured.
+only the n, alpha and delta dependences are measured.
 """
 
 from __future__ import annotations
