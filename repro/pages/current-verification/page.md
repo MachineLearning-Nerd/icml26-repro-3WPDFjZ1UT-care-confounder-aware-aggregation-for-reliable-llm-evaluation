@@ -52,9 +52,9 @@ assumption-satisfying counterexample. Finite experiments appear only as calibrat
 searches (binary search for `n*`, independent sweeps of each parameter), never by
 substituting into the formula under test.
 
-## Three results that cut against a flattering story
+## Four results that cut against a flattering story
 
-Both are stated here rather than buried, because a reproduction that only ever confirms
+They are stated here rather than buried, because a reproduction that only ever confirms
 its own hypotheses is not measuring anything.
 
 * A conjectured falsification of Theorem 4.3's weight bound **did not survive
@@ -82,14 +82,17 @@ its own hypotheses is not measuring anything.
   direction. Reporting it as a falsification would have been the most eye-catching result
   in this logbook and the wrong one.
 
-All three are also in [Limitations and deviations](#/limitations).
+All four are also in [Limitations and deviations](#/limitations).
 
 ## How to check any of this
 
 Every claim page carries the exact claim string, the paper's exact quantifiers, the
-executable verifier, the raw numbers inline, a downloadable extract, an independent
-re-derivation by a different route, and a negative control that fails for a stated
-reason. The [Visibility matrix](#/visibility-matrix) records that per claim. The single
+executable verifier, the raw numbers inline, a downloadable extract, and a negative
+control with a stated failure mode. The [Visibility matrix](#/visibility-matrix) records
+that per claim. Two gaps are named rather than papered over: Claim 3 has no permutation
+control on the Table 2 *accuracy* path (only on the MAE path, under Claims 1–2), and
+Claim 5's `sympy` reconstruction of the composed bound is checked by no second
+implementation. Both are in [Limitations](#/limitations). The single
 command and pinned environment are on
 [Fixed command, environment, seeds, runtime](#/environment-and-command).
 

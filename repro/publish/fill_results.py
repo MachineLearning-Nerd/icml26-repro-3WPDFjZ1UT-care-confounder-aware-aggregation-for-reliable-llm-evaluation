@@ -140,7 +140,34 @@ def c2_control(v):
 
 
 def c3_control(v):
-    return _control(v)
+    """C3's own control, plus an explicit statement of what it does NOT cover.
+
+    An earlier revision rendered C1's ASSET *MAE* control here, under prose describing a
+    Table 2 *accuracy* experiment. That was a mislabel: the number shown belonged to a
+    different claim, a different dataset and a different metric.
+    """
+    t = g(v, "independent_check", "table_percentages_exact_rational", default={})
+    a = g(v, "claims", "C1_C2_C3_tables", "table_arithmetic", default={})
+    rows = [
+        ["Correct strongest baseline (GLAD, 0.718) → 13.4 %",
+         f"{num(a.get('claim3_summarize_relative_improvement_pct'), 2)} %",
+         yesno(t.get("summarize_13_4_from_0p814_over_0p718"))],
+        ["**Control:** wrong baseline (0.705) must NOT reproduce 13.4 %",
+         f"{num(a.get('claim3_claimstring_pair_relative_pct'), 2)} %",
+         yesno(t.get("claimstring_0p705_does_not_reproduce_13_4"))],
+    ]
+    return table(["Setting", "Recomputed", "Behaves as required"], rows) + (
+        "\n\nThis is a genuine negative control for the **arithmetic** half of the claim: "
+        "an input the claim string got wrong must fail to produce the published figure, and "
+        "it does — 0.705 yields 15.46 %, not 13.4 %. A check that passed for both inputs "
+        "would have been measuring nothing.\n\n"
+        "**What this does not cover, stated plainly.** There is **no permutation control on "
+        "the Table 2 accuracy path**. The row-permutation control published under Claims 1 "
+        "and 2 runs on ASSET and on the continuous-score (MAE) pipeline; it is evidence "
+        "about that pipeline and not about the CivilComments accuracies reproduced here. "
+        "An earlier revision of this page displayed that ASSET control in this position, "
+        "which was a mislabel. See [Limitations item 18](#/limitations)."
+    )
 
 
 def c2_definitions(v):
@@ -606,7 +633,8 @@ CONFIDENCE = {
                    "simultaneously, in exact rational arithmetic, and confirmed against a "
                    "second independent transcription."),
     "C3": ("HIGH", "Every arithmetic assertion is decided exactly over all nine Table 2 "
-                   "methods, from a second independent transcription. Of Table 2's six "
+                   "methods, from a single transcription -- the independent checker "
+                   "re-derives the Summarize percentages but NOT the argmax. Of Table 2's six "
                    "columns exactly ONE -- CivilComments -- is reproduced at full scale "
                    "over five seeds; PKU-BETTER ships judge outputs but its released "
                    "labels are degenerate and it is BLOCKED, and the other four ship no "

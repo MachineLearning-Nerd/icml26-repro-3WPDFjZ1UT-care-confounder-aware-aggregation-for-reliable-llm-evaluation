@@ -408,7 +408,7 @@ def p_sweep_confound_audit() -> dict:
     return out
 
 
-def restart_budget_attribution(seeds=(0, 1, 2, 3, 4)) -> dict:
+def restart_budget_attribution(seeds=tuple(range(9))) -> dict:
     """Does n* grow with p because of the rate, or because of a fixed restart budget?
 
     The robust tensor power method is a non-convex search run with a fixed 30 restarts.
@@ -418,7 +418,10 @@ def restart_budget_attribution(seeds=(0, 1, 2, 3, 4)) -> dict:
     smallest p in the sweep at 3x the restart budget: if n* falls materially, the
     measured p-exponent is contaminated by the solver and cannot decide the theorem.
     """
-    out = {"restarts_baseline": 30, "restarts_tripled": 90, "rows": []}
+    # The seed set MUST match sample_complexity_sweeps(). Running 5 seeds against the
+    # sweep's 9 moved n* by 31-37% from the seed count alone -- larger than this control's
+    # own 20% threshold, so the control was measuring its own seed count.
+    out = {"restarts_baseline": 30, "restarts_tripled": 90, "seeds": list(seeds), "rows": []}
     for ppv in (4, 12):
         pt = 3 * ppv
         m = _model(np.random.default_rng(20260801), ppv)

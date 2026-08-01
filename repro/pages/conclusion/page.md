@@ -9,9 +9,11 @@ and the six claim pages linked from it.
 
 ## What CARE's evaluation survives, and what it does not
 
-**The method holds up where it can be checked.** On the two Table 2 columns and the one
-Table 1 column whose judge-score matrices the authors released, CARE reproduces with the
-authors' own code at `72f5b29`, over five seeds, against all nine competing methods.
+**The method holds up where it can be checked, which is two columns of twelve.** On
+CivilComments (Table 2) and ASSET (Table 1), CARE reproduces with the authors' own code
+at `72f5b29`, over five seeds — against all nine competing methods on CivilComments and
+all five on ASSET. The third released column, PKU-BETTER, yielded no number: its labels
+are degenerate and it is BLOCKED, not reproduced.
 That is the paper's real benchmark data, not a synthetic stand-in, and it directly
 answers the earlier judgement that this reproduction tested nothing on the paper's
 actual benchmarks.
@@ -67,7 +69,7 @@ dropped — see [Limitations and deviations](#/limitations), items 10 and 11.
 
 ## What remains blocked, and why
 
-Eight of the fourteen benchmark columns have no released judge-score matrix.
+Nine of the twelve benchmark columns have no released judge-score matrix.
 Regenerating one needs GPU inference over 11–20 LLM judges — the paper's own Appendix
 E.2 reports up to three hours per dataset on an A100 — and this campaign is authorised
 for CPU only. Those columns are recorded BLOCKED against that named capability. They are

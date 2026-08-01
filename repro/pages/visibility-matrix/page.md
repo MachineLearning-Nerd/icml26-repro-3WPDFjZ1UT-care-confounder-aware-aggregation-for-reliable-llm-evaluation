@@ -48,5 +48,9 @@ So that this table can be audited rather than trusted:
 | [`repro/publish/make_raw.py`](repro/publish/make_raw.py) | — builds every `raw/*.csv` mechanically from `verdict.json`, so a CSV cannot disagree with the run |
 | [`repro/publish/publish_space.py`](repro/publish/publish_space.py) | An upload that would drop a file present in the judged revision, modify a frozen historical page, or carry secret-shaped text |
 
-Each gate was tested against a deliberately broken copy of this Space to confirm it
-fails when it should, not only that it passes when everything is fine.
+Each gate has been exercised against a deliberately broken copy to confirm it fails when
+it should. Only one such test leaves a published artefact: the secret scanner, which was
+run against a copy carrying a planted token-shaped string and returned exit 1 naming
+`huggingface token`, then exit 0 on the clean candidate. **The other gate tests were run
+during development and their output is not published here**, so treat those as asserted
+rather than demonstrated.

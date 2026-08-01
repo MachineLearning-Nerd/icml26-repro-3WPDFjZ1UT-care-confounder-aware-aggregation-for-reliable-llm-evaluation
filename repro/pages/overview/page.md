@@ -21,8 +21,10 @@ Tables 1–2; three are theorem claims about Section 4.
 **The benchmark claims are reproduced on the paper's real benchmarks**, not on
 synthetic judges. CARE's aggregation is deterministic linear algebra on a fixed
 judge-score matrix, and the authors released those matrices for ASSET (Table 1)
-and for CivilComments and PKU-BETTER (Table 2). Those columns are reproduced
-end-to-end with the authors' own code over five seeds. For the other eight columns
+and for CivilComments and PKU-BETTER (Table 2). **Two** of those three are reproduced
+end-to-end with the authors' own code over five seeds; PKU-BETTER produced no number at
+all, because every label source in its release is constant and no accuracy can be
+computed from it, so it is recorded BLOCKED. For the other nine columns
 the authors released no judge scores, and regenerating them needs GPU inference
 over 11–20 LLM judges — the paper reports up to 3 hours per dataset on an A100
 (Appendix E.2). Those are recorded BLOCKED with that named missing capability.
@@ -37,7 +39,7 @@ a finite experiment is used it is calibrated by search, never by substituting in
 the formula under test.
 
 All research compute ran on Hugging Face `cpu-upgrade` (8 vCPU). No GPU was used, and
-no single job exceeded one hour: the benchmark stage is split into 25 shards, the
+no single job exceeded one hour: the benchmark stage is split into 15 shards, the
 longest of which took 31 minutes.
 
 ## Honesty notes

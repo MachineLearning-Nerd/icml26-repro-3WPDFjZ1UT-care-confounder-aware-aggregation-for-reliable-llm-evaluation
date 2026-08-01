@@ -18,7 +18,7 @@ jobs run 20–40× slower than they should.
 CARE's aggregation is deterministic linear algebra on a fixed `n × p` judge-score
 matrix. Producing that matrix is the expensive step and the paper reports doing it
 on an A100. The authors released the matrices for **ASSET**, **CivilComments** and
-**PKU-BETTER** and for nothing else, so those three columns are reproduced
+**PKU-BETTER** and for nothing else. Two of those three columns are reproduced
 end-to-end at full scale with the authors' own code (`scripts/fully_gaussian_main.py`
 and `scripts/gaussian_mixture_main.py`, official repo pinned at `72f5b29`), over
 five seeds `{2024, 2025, 2026, 2027, 2028}`, with all nine Table 2 methods

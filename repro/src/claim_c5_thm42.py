@@ -367,11 +367,20 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     # A sweep counts only when it is informative. If it is, it must satisfy its
     # contract; if it is not, it is reported NOT INFORMATIVE and contributes no
     # evidence either way, rather than passing because it failed to disagree.
+    # Tri-state, not boolean. A sweep that measured nothing is NOT MEASURED: it must not
+    # fail the verifier (absence of evidence is not failed evidence), but it must not be
+    # reported as a satisfied contract either. Collapsing it to `ok=True` is what let an
+    # earlier revision of this page render "contract satisfied: yes" off a sweep that
+    # resolved no exponent.
     a_ok = (not alpha_info["informative"]) or (np.isfinite(slope_alpha) and slope_alpha >= -2.6)
     d_ok = (not delta_info["informative"]) or (np.isfinite(slope_delta) and slope_delta >= -2.4)
+    not_measured = ([n for n, i in (("n*(alpha)", alpha_info), ("n*(delta)", delta_info))
+                     if not i["informative"]])
     n_ok = np.isfinite(slope_n) and slope_n <= -0.42
     return {
         "ok": bool(theta_ok and oracle_ok and a_ok and d_ok),
+        "elements_not_measured": not_measured,
+        "all_elements_measured": not not_measured,
         "contract": "one-sided, because Theorem 4.2 is an O(.) upper bound",
         "grid_n": ns,
         "stage_1_precision_error_vs_n": theta_curve,

@@ -189,6 +189,41 @@ def recheck_c6_slope(verdict: dict) -> dict:
     }
 
 
+def recheck_c6_p_exponent(verdict: dict) -> dict:
+    """Refit the p exponent -- the sweep the falsification rests on -- independently.
+
+    The claim module fits least squares to its own fitted-n* estimates. This refits with
+    Theil-Sen, which a single outlying setting cannot carry, and does so for BOTH n*
+    estimators. The falsification only stands if the exponent still exceeds the stated 1
+    under an estimator the claim module never used.
+    """
+    sw = (verdict.get("claims", {}).get("C6_thm43", {})
+          .get("route_b_calibrated_sample_complexity", {}).get("p", {}))
+    rows = sw.get("rows", [])
+    eps = 0.1
+    out = {"available": False}
+    for tag, key in (("fitted", "n_star"), ("crossing", "n_star_crossing")):
+        pts = [(r["p_total"], r.get(key)) for r in rows if r.get(key)]
+        if len(pts) < 3:
+            out[f"{tag}_theil_sen_slope"] = None
+            continue
+        x = [math.log(p * math.log(p / eps)) for p, _ in pts]
+        y = [math.log(n) for _, n in pts]
+        out[f"{tag}_theil_sen_slope"] = theil_sen(x, y)
+        out[f"{tag}_n_points"] = len(pts)
+    slopes = [out.get("fitted_theil_sen_slope"), out.get("crossing_theil_sen_slope")]
+    slopes = [v for v in slopes if v is not None]
+    if slopes:
+        out["available"] = True
+        out["least_squares_slope_from_claim_module"] = sw.get("exponent_vs_p_log_p")
+        out["stated_exponent"] = 1.0
+        # The whole falsification is "the exponent exceeds 1". If a Theil-Sen refit does
+        # not agree, the finding is an artefact of least squares and must not stand.
+        out["both_estimators_exceed_stated_exponent"] = bool(min(slopes) > 1.0)
+        out["min_theil_sen_slope"] = min(slopes)
+    return out
+
+
 def davis_kahan_by_principal_angle(seed: int = 131, n_trials: int = 500) -> dict:
     """Re-validate the 2^{3/2} constant along a different route than the claim module.
 
@@ -267,6 +302,7 @@ def run(verdict: dict | None = None) -> dict:
     if verdict is not None:
         out["c5_stage_slope_recheck"] = recheck_c5_stage_slopes(verdict)
         out["c6_slope_recheck"] = recheck_c6_slope(verdict)
+        out["c6_p_exponent_recheck"] = recheck_c6_p_exponent(verdict)
 
         # Cross-check that the claim module and this checker agree on the tables.
         arith = verdict["claims"]["C1_C2_C3_tables"]["table_arithmetic"]
@@ -288,6 +324,11 @@ def run(verdict: dict | None = None) -> dict:
         and out["davis_kahan_by_principal_angle"]["two_routes_agree_on_eigvec_distance"]
         and out["davis_kahan_by_principal_angle"]["constant_2_to_the_3_over_2_holds"]
     )
+    # If the p exponent was refit at all, the falsification it supports must survive the
+    # refit; otherwise the finding is a property of least squares and this checker fails.
+    pr = out.get("c6_p_exponent_recheck") or {}
+    if pr.get("available"):
+        out["ok"] = bool(out["ok"] and pr["both_estimators_exceed_stated_exponent"])
     return out
 
 

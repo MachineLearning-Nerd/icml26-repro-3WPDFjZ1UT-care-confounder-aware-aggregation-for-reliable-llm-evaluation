@@ -111,12 +111,16 @@ theorem predicts a constant error, the measured weight error would grow with `σ
 It did not. The fitted exponent was **0.0605 ± 1.1149** — consistent with zero — across
 `σ ∈ {1.00, 1.25, 1.50, 1.75, 2.00}`. The hypothesis is refuted by our own experiment.
 
-Consequently the Claim 6 verdict was changed from FALSIFIED to *VERIFIED
-(sample-complexity condition and mean bound) with a documented gap in the displayed
-proof of the weight bound*. The symbolic audit still finds the `σ³` factor missing from
-the written derivation, but a bound whose own quantity is never observed to be violated
-has not been falsified. Reporting it as a falsification would have been the more
-impressive result and the wrong one.
+Consequently *this* hypothesis — that the weight bound fails in `σ` — was withdrawn. The
+symbolic audit still finds the `σ³` factor missing from the written derivation, but a
+bound whose own quantity is never observed to be violated in `σ` has not been falsified
+in `σ`. Reporting it as a falsification would have been the more impressive result and
+the wrong one.
+
+To be unambiguous, because an earlier draft of this item said the opposite: the live
+Claim 6 verdict **is** a falsification, but of a *different* factor — the stated
+`p·log(p/ε)` term, reached by the route described in item 15 and 17, not by this `σ`
+probe.
 
 ## 11. The end-to-end pipeline does not attain `n^{-1/2}` at our solver's budget
 
@@ -241,3 +245,49 @@ two of the three sweeps failed those gates and are reported as NOT MEASURED — 
 gates were not tuned to let this one through. But the decision to look at `p` at all was
 prompted by a number, and a reader who discounts post-hoc findings should discount this
 one accordingly.
+
+## 18. Defects found by the pre-publication red team
+
+The candidate was reviewed blind — a reviewer given only the published artifact and the
+rubric, told nothing about where evidence lives. It found real defects, and they are
+listed here rather than quietly repaired, because the list is itself information about
+how far to trust the rest.
+
+**Wrong, now fixed:**
+
+* The informativeness gate **relabelled without gating**. A sweep reported NOT
+  INFORMATIVE still returned `ok = True`, which propagated to the claim and rendered as
+  "contract satisfied: yes". Claim 5 displayed VERIFIED off a `δ` sweep that resolved no
+  exponent. Contract results are now tri-state (PASS / FAIL / NOT MEASURED) and a claim
+  that did not measure an element says so.
+* Three "independent check" sections **described work that does not exist**: a second
+  symbolic derivation for Claim 5, a second transcription of Table 2 for Claim 3, and a
+  refit of the `p` sweep for Claim 6. The first two claims were removed; the third was
+  implemented, because the `p` sweep carries a falsification and had no independent check
+  at all.
+* The Claim 6 boundary table **labelled a ratio as an error**. The values shown were
+  `error_over_stated_unit`; the median weight errors are an order of magnitude smaller.
+* The restart-budget control ran **5 seeds against the sweep's 9**. That difference alone
+  moves `n*` by 31–37 %, larger than the control's own 20 % threshold, so it was
+  measuring its seed count. Both now use the same seeds.
+* Coverage was overstated on three pages (PKU-BETTER described as "reproduced
+  end-to-end" when it produced no number), the benchmark column count was wrong (14/8
+  rather than 12/9), the shard count was wrong (25 rather than 15), a heading said
+  "Three results" above four bullets, and this file's item 10 asserted the **opposite**
+  of the live Claim 6 verdict.
+* The Claim 3 negative-control block rendered Claim 1's ASSET **MAE** control under prose
+  describing a Table 2 **accuracy** experiment.
+
+**Known and unfixed, stated so the evaluator does not have to find them:**
+
+* **Claim 3 has no permutation control on the Table 2 accuracy path.** The control that
+  exists covers the arithmetic (a wrong baseline must not reproduce 13.4 %, and does
+  not). Building a permutation control for the classification pipeline was not attempted.
+* **Claim 5's symbolic reconstruction is checked by no second implementation.**
+* **The one fixed command does not by itself reproduce Claims 1–3.** It consumes cached
+  benchmark shards; producing those shards is a separate documented command, and they ran
+  at a different repository revision than the one recorded in `environment.git_sha`. See
+  item 19.
+* **No output of a deliberately-failing run is published**, except the secret scanner's.
+  The claim that each gate fails when it should is therefore asserted for the other
+  gates, not demonstrated.

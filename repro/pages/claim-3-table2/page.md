@@ -132,8 +132,14 @@ aggregators.
 ## Independent check
 
 [`independent_check.py`](repro/src/independent_check.py) recomputes the column-wise
-argmax and both Summarize percentages in exact `Fraction` arithmetic from a **second,
-independent transcription** of Table 2's full nine-method grid.
+both Summarize percentages in exact `Fraction` arithmetic, from literals typed
+independently of the claim module, and asserts that the paper's 13.4 % follows from
+GLAD's 0.718 and **not** from the 0.705 quoted in the circulated claim string.
+
+Being exact about the limit of this check: it re-derives the *percentages*, not the
+*argmax*. The nine-method grid is transcribed once, in the claim module; there is no
+second transcription of it, and the 5-of-6 count is therefore not independently
+recomputed. An earlier version of this page claimed otherwise.
 
 The value of the second transcription is not hypothetical here: an earlier draft of
 this reproduction transcribed only four of Table 2's nine methods and consequently

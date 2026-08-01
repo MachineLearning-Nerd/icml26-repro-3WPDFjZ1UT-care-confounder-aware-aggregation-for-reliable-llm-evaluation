@@ -14,7 +14,7 @@ extracts of that same file, so any figure quoted on a claim page can be located 
 | [`raw/table1_asset.csv`](raw/table1_asset.csv) | Table 1, ASSET column: per-method MAE reproduced from the authors' released judge-score matrix, per seed and aggregated, next to the published value |
 | [`raw/table2.csv`](raw/table2.csv) | Table 2, CivilComments and PKU-BETTER columns: all nine methods, per seed and aggregated, next to the published values |
 | [`raw/c4_constant_search.csv`](raw/c4_constant_search.csv) | Claim 4: the attained supremum of the Theorem D.4 ratio per configuration, over the Frobenius and spectral-norm balls |
-| [`raw/c5_rate.csv`](raw/c5_rate.csv) | Claim 5: the stage-1 / stage-2 / stage-3 error curves against `n`, and the `n*(alpha)` and `n*(delta)` search results |
+| [`raw/c5_rate.csv`](raw/c5_rate.csv) | Claim 5: the `n*(delta)` sweep rows, the Davis-Kahan constant check, and the Theil-Sen stage-slope recheck. The stage-1/2/3 error curves and the `n*(alpha)` search are **not** in this CSV; they are in [`raw/verdict.json`](raw/verdict.json) under `claims.C5_thm42.route_c_calibrated_rate` |
 | [`raw/c6_sigma_sweep.csv`](raw/c6_sigma_sweep.csv) | Claim 6: `n*` against `sigma_max`, `pi_min` and `p log(p/eps)`, plus the boundary probe of the weight bound |
 
 ## Source code
