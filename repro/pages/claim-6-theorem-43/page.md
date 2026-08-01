@@ -74,7 +74,7 @@ number was a property of the grid rather than of the estimator.
 [`repro/src/informativeness.py`](repro/src/informativeness.py) now makes that
 undetectable-by-reading condition machine-checkable. A sweep is admissible as evidence
 only if it has ≥ 3 usable points, ≥ 3 *distinct* values of `n*`, no pinning of every
-`n*` to a grid endpoint, and a fitted trend larger than its own standard error. A sweep
+`n*` to a grid endpoint, and a fitted trend whose 95 % interval excludes zero. A sweep
 failing any of these is reported **NOT INFORMATIVE**, contributes nothing in either
 direction, and is excluded from the verdict — rather than passing because it failed to
 disagree. The grid was also extended down to `n = 200` so the `π_min` search is no

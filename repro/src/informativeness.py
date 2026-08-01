@@ -9,7 +9,10 @@ disqualify the sweep rather than pass it:
   * fewer than three usable points, so no exponent is identifiable;
   * every n* pinned to an endpoint of the search grid, so the search was censored and
     the reported exponent is a property of the grid rather than of the estimator;
-  * a fitted trend no larger than its own standard error, so no exponent was resolved.
+  * a fitted trend whose 95% interval covers zero, so no exponent was resolved. The
+    threshold is 2 standard errors rather than 1: a slope of 0.60 +/- 0.56 has a 95%
+    interval of [-0.50, +1.71], and a sweep that cannot distinguish its exponent from
+    zero has not measured one, however comfortably it clears a one-sided contract.
 
 A sweep that fails any of these is reported NOT INFORMATIVE and excluded from `ok`.
 """
@@ -34,10 +37,11 @@ def informativeness(ys, slope, stderr, grid) -> dict:
         )
     if not (isinstance(slope, float) and math.isfinite(slope)):
         why.append("no finite slope")
-    elif isinstance(stderr, float) and math.isfinite(stderr) and abs(slope) <= stderr:
+    elif isinstance(stderr, float) and math.isfinite(stderr) and abs(slope) <= 2 * stderr:
         why.append(
-            f"the fitted trend {slope:.4f} is no larger than its standard error "
-            f"{stderr:.4f}; no exponent was resolved"
+            f"the fitted trend {slope:.4f} +/- {stderr:.4f} has a 95% interval "
+            f"[{slope - 1.96 * stderr:.4f}, {slope + 1.96 * stderr:.4f}] covering zero; "
+            "no exponent was resolved"
         )
     return {
         "informative": not why,

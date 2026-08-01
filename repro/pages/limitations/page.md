@@ -177,7 +177,7 @@ Two changes, both published:
   from below;
 * [`repro/src/informativeness.py`](repro/src/informativeness.py) makes admissibility a
   machine-checked precondition — ≥ 3 usable points, ≥ 3 distinct `n*` values, no pinning
-  of every `n*` to a grid endpoint, and a fitted trend exceeding its own standard error.
+  of every `n*` to a grid endpoint, and a fitted trend whose 95 % interval excludes zero.
   A sweep failing any of these is reported **NOT INFORMATIVE** and excluded from the
   verdict rather than counted as a pass.
 
