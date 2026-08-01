@@ -96,7 +96,9 @@ revision; each withdrawal is recorded with the reasoning that produced it.
   measured nothing: with the search grid floored at `n = 5 000`, every `π_min` setting
   returned `n* = 5 000`, giving an exponent of `0.000 ± 0.000` that satisfied a one-sided
   contract on a constant. The grid was extended, an admissibility precondition was made
-  machine-checkable, and two of the three sweeps are now reported as NOT MEASURED.
+  machine-checkable, and on the current run **all three** sweeps are reported as NOT
+  MEASURED — the `p` sweep joined them once its interval was computed with the correct
+  `t` quantile for a three-point fit.
 * Our own sparse-plus-low-rank solver does not reach `n^{-1/2}` end-to-end at its
   iteration budget. Rather than quote only the flattering stage, the error is decomposed
   so that the theorem-governed stage and the implementation-limited stage are reported

@@ -280,11 +280,13 @@ mid-campaign after a censored run had already shown a large exponent, and it was
 
 Both criteria, and this provenance, are in
 [`raw/claim_contract.json`](raw/claim_contract.json) under `C6`. The three admissibility
-gates were each fixed before their own outcomes were known, and two of the three sweeps
-failed those gates and are reported as NOT MEASURED — so the gates were not tuned to let
-anything through. They were nonetheless too weak: the `p` sweep cleared all three and was
-still not usable, which is why per-setting screening and the confound audit were added
-afterwards. The right lesson is not that post-hoc findings should be discounted a little
+gates were each fixed before their own outcomes were known, and every sweep that failed
+them is reported as NOT MEASURED — so the gates were not tuned to let anything through.
+They were nonetheless too weak at first: the `p` sweep cleared all three and was still not
+usable, which is why per-setting screening and the confound audit were added afterwards —
+and why, once the interval on a three-point fit was computed with `t(0.975, 1)` instead of
+the normal 1.96, the `p` sweep stopped clearing them at all. On the current run all three
+sweeps are NOT MEASURED. The right lesson is not that post-hoc findings should be discounted a little
 but that this particular one should never have been published, and the machinery that let
 it through is documented in items 23b–23f rather than removed.
 
@@ -660,6 +662,20 @@ in item 16 — the third Theorem 4.3 conclusion this campaign has had to withdra
 second withdrawn because a reviewer checked the statistics rather than the prose.
 `t_crit()` in [`repro/src/informativeness.py`](repro/src/informativeness.py) is now the
 single place any 95% interval is computed, and it takes the point count.
+
+**The same correction removed a second result, which was not foreseen when it was made.**
+The `t`-quantile fix was applied to close a defect on the σ probe. It also propagated to
+the `p` sweep, whose exponent survives on three of six settings — a two-parameter fit with
+**one** residual degree of freedom, where `t(0.975, 1) = 12.706` against the 1.96 that had
+been used. At the correct width the curve-crossing estimator's interval covers zero, so it
+resolves no exponent, and this logbook's own rule against accepting "agreement with an
+unresolved estimator" then disqualifies the sweep. The reviewer predicted this before the
+run; it is what happened. The consequence is that **none** of Theorem 4.3's three
+sample-complexity exponents is measured at this budget, where the previous revision
+reported one of three as measured. Nothing was being concluded from the `p` exponent — it
+had already been ruled unattributable by the confound audit — so no published verdict
+moves. But the honest summary of Claim 6's empirical half is now weaker than it was, and
+the pages say so rather than leaving the old count of "two of three NOT MEASURED" in place.
 
 **A claimed second route that did not exist.** Four pages and `verdict.json` said the σ³
 finding had been "re-derived by a second route". No such route was implemented. Rather

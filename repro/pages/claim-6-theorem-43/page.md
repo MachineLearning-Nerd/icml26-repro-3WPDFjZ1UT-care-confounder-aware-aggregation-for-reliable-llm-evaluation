@@ -123,15 +123,29 @@ estimate deteriorating rather than the `p·log(p/ε)` factor being wrong. The ex
 therefore **not attributable to the theorem**, and no falsification may rest on it.
 
 With the sweep repeated at 21 seeds and each decay curve continued three points past its
-crossing, the surviving settings give an exponent near 2.9 — still above 1, and still
-not usable, for exactly the reason above. It is reported as a measurement, not as a
-verdict.
+crossing, the surviving settings give an exponent above 1 — but it is **not usable**, for
+exactly the reason above.
 
-**What this claim does establish** is on the rest of this page: the mean bound is
-reproduced exactly from the paper's own derivation chain, the stated weight bound is not
-violated along its own sample-complexity boundary, and the displayed proof of the weight
-bound has a `σ³` gap that is symbolic and exact. The `σ` and `π_min` exponents are
-**NOT MEASURED**.
+**And it has since stopped being a measurement at all, for a second and independent
+reason.** Three of six settings survive the per-setting screen, so the exponent is fitted
+through three points: a two-parameter fit with **one** residual degree of freedom, where
+the correct multiplier is `t(0.975, 1) = 12.7`. An earlier revision used the normal 1.96
+here — the same defect as the σ probe (§ above) — and at that width both `n*` estimators
+appeared to resolve an exponent and to agree. At the correct width the curve-crossing
+estimator's interval covers zero: it resolves no exponent, and this logbook's own gate
+refuses agreement with an unresolved estimator. The `p` sweep is therefore now reported
+**NOT INFORMATIVE**, and the exponent above is not published as a measurement.
+
+The two reasons are independent and both are fatal to any conclusion: the exponent is not
+attributable to the theorem's factor (the confound above), *and* it is not resolved by the
+data (the interval here). The rendered table below carries the machine-generated status.
+
+**What this claim does establish** is on the rest of this page: the mean bound (I) is
+reproduced exactly from the paper's own derivation chain, by two independent routes, and
+the displayed proof of the weight bound (II) has a `σ³` gap that is symbolic and exact.
+What it does **not** establish: whether bound (II) *as stated* holds — the boundary probe
+that earlier revisions read as showing it does is uninformative — and **none** of the
+three sample-complexity exponents, in `σ`, `π_min` or `p`, is measured at this budget.
 
 **This test was not pre-registered, and that is recorded rather than hidden.** The
 contract written at the start of this campaign

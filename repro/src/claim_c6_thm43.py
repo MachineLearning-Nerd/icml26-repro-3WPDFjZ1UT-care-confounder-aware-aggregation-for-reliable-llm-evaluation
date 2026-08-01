@@ -796,9 +796,20 @@ def run() -> dict:
             "missing sigma^3 predicts, and its two estimators disagree eightfold. Earlier "
             "revisions published the same probe as EXCLUDING 3, using a normal quantile "
             "on 3 residual degrees of freedom; that reading is withdrawn. The "
-            "sample-complexity EXPONENTS in sigma, pi_min and p are likewise NOT MEASURED "
-            "at this budget: two sweeps are NOT INFORMATIVE and the third is not "
-            "attributable to the theorem's own factor (route_e_p_sweep_confound_audit)"
+            "sample-complexity EXPONENTS are likewise NOT MEASURED at this budget: "
+            + (
+                "all three sweeps (sigma, pi_min, p) are NOT INFORMATIVE. The p sweep "
+                "became so under the same correction: its exponent was published as "
+                "MEASURED while the interval on its second estimator was computed with a "
+                "normal quantile on ONE residual degree of freedom, and at the correct "
+                "t(0.975, 1) = 12.7 that estimator resolves no exponent at all. Its "
+                "exponent was in any case not attributable to the theorem's own factor "
+                "(route_e_p_sweep_confound_audit), so nothing that was being concluded "
+                "from it survives either way"
+                if not sweeps["informative_sweeps"] else
+                "informative sweeps: " + ", ".join(sweeps["informative_sweeps"])
+                + "; not informative: " + ", ".join(sweeps["uninformative_sweeps"])
+            )
         ),
         "findings": {
             "mean_bound_reproduced": sym["mean_bound_reproduced_exactly"],

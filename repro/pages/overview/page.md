@@ -55,11 +55,13 @@ longest of which took 31 minutes.
 
 This reproduction reports three negative results against itself, and one defect it
 found in the released data rather than in the paper. A conjectured falsification of
-Theorem 4.3's weight bound did not survive measurement, and is reported as a gap in the
-written proof rather than as a refutation. The full Algorithm-1 pipeline's empirical
+Theorem 4.3's weight bound is reported as a gap in the written *proof* rather than as a
+refutation of the bound, and the probe that two earlier revisions read as *corroborating*
+the bound is now reported as deciding nothing — its interval, at the correct `t` quantile
+for a five-point fit, contains both hypotheses. The full Algorithm-1 pipeline's empirical
 rate falls short of `n^{-1/2}` at our solver's iteration budget, and that is attributed
 to the solver rather than to the theorem. An earlier revision of this logbook passed a
 sample-complexity check that had measured nothing, because a censored search grid made
-every `n*` identical; the check is now machine-tested for informativeness and two of
-three sweeps are reported as NOT MEASURED. All are stated in
-[Limitations and deviations](#/limitations).
+every `n*` identical; those checks are now machine-tested for informativeness, and on the
+current run **all three** of Theorem 4.3's exponent sweeps are reported NOT MEASURED. All
+are stated in [Limitations and deviations](#/limitations).

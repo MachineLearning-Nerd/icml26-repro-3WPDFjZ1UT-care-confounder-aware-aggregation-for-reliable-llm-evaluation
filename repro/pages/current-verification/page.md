@@ -59,12 +59,17 @@ its own hypotheses is not measuring anything -- and the one that came out in the
 favour is kept in the same list, because a reproduction that only ever finds fault is
 not measuring anything either.
 
-* A conjectured falsification of Theorem 4.3's weight bound **did not survive
-  measurement**. Having found a missing `σ³` factor in the displayed derivation, we
-  predicted the weight error would *grow* with `σ` along the sample-complexity boundary.
-  It did not: the measured slope is 0.0605 ± 1.1149, whose 95 % interval excludes the 3
-  a missing `σ³` predicts and includes the 0 the theorem predicts. The finding was
-  downgraded from FALSIFIED to a documented gap in the displayed proof.
+* A conjectured falsification of Theorem 4.3's weight bound **is undecided, and two
+  earlier revisions said otherwise in opposite directions**. Having found a missing `σ³`
+  factor in the displayed derivation, we predicted the weight error would *grow* with `σ`
+  along the sample-complexity boundary; it did not appear to. Both the FALSIFIED verdict
+  and the "refuted by measurement" verdict that replaced it are now withdrawn. The probe
+  is a five-point fit with three residual degrees of freedom, and its 95 % interval —
+  computed with `t(0.975, 3) = 3.182` rather than the normal 1.96 an earlier revision
+  used — includes **both** the 0 the theorem predicts and the 3 a missing `σ³` predicts.
+  It discriminates nothing. What stands is the symbolic result: the displayed *derivation*
+  of the weight bound is falsified, exactly and by two independent routes; whether the
+  bound *as stated* holds is not decided here. See [Claim 6](#/claim-6-theorem-43).
 * A **claimed falsification of Theorem 4.3 was withdrawn by our own verifier.** The
   2026-08-01 revision reported that `n*` grows as `(p·log(p/ε))^{3.63 ± 0.80}` against a
   stated exponent of 1, "with both `n*` estimators agreeing". Only the two *aggregate*
@@ -75,6 +80,10 @@ not measuring anything either.
   with `p` — subspace leakage grows 259× across the sweep — so part of the measured
   growth is the moment estimate deteriorating rather than the `p·log(p/ε)` factor. The
   exponent is no longer attributable, and Theorem 4.3 is **not** recorded as falsified.
+  A later round removed it as a measurement outright: the surviving fit has three points
+  and therefore one residual degree of freedom, and at the correct `t(0.975, 1) = 12.7`
+  its second estimator resolves no exponent at all. The sweep is now NOT INFORMATIVE, so
+  **none** of Theorem 4.3's three sample-complexity exponents is measured at this budget.
 * The full Algorithm-1 pipeline's empirical error exponent falls short of `n^{-1/2}` at
   our solver's iteration budget. That shortfall is attributed to our proximal-gradient
   solver, not to the theorem, and the attribution is demonstrated rather than asserted
