@@ -1,0 +1,21 @@
+{
+  "shard": "t2:civilcomments:2027:main",
+  "dataset": "civilcomments",
+  "seed": 2027,
+  "part": "main",
+  "returncode": 0,
+  "runtime_s": 1716.1,
+  "values": {
+    "mv": 0.6971810520197617,
+    "avg": 0.6948561464690497,
+    "ws": 0.7416448706771287,
+    "uws": 0.7172333623946527,
+    "care_svd": 0.7817494914269107,
+    "care_tensor": 0.7526881720430108
+  },
+  "threads_pinned_to": 8,
+  "budget_s": 2700,
+  "within_budget": true,
+  "hf_job_id": "6a6db01c6b79c09949c1e360",
+  "git_sha": "f996a40cab02f902427f44a29b17d691fc778299"
+}

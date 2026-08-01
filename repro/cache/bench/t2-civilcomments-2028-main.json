@@ -1,21 +1,21 @@
 {
-  "shard": "t2:civilcomments:2025:main",
+  "shard": "t2:civilcomments:2028:main",
   "dataset": "civilcomments",
-  "seed": 2025,
+  "seed": 2028,
   "part": "main",
   "returncode": 0,
-  "runtime_s": 1537.1,
+  "runtime_s": 1649.4,
   "values": {
     "mv": 0.6925312409183377,
-    "avg": 0.6910781749491427,
+    "avg": 0.6916594013368207,
     "ws": 0.7401918047079338,
-    "uws": 0.7149084568439407,
-    "care_svd": 0.7826213310084278,
-    "care_tensor": 0.7477477477477478
+    "uws": 0.7140366172624237,
+    "care_svd": 0.7811682650392328,
+    "care_tensor": 0.7678000581226387
   },
   "threads_pinned_to": 8,
   "budget_s": 2700,
   "within_budget": true,
-  "hf_job_id": "6a6db0126b79c09949c1e359",
+  "hf_job_id": "6a6db0216b79c09949c1e363",
   "git_sha": "f996a40cab02f902427f44a29b17d691fc778299"
 }
