@@ -217,6 +217,13 @@ def c3_table2(v):
             ]
             for m in ds.get("methods", [])
         ]
+        if ds.get("status") == "BLOCKED":
+            out.append(
+                f"**{ds['dataset']}** — **BLOCKED**: {ds.get('reason', 'see label audit')}. "
+                "No accuracy is reported, because an accuracy computed against a "
+                "degenerate label is meaningless rather than merely inaccurate."
+            )
+            continue
         if not rows:
             out.append(f"**{ds['dataset']}** — not produced.")
             continue
@@ -228,6 +235,8 @@ def c3_table2(v):
     out.append(
         f"\nDatasets reproduced: **{t2.get('n_datasets_reproduced')} of "
         f"{t2.get('n_datasets_in_table2')}** Table 2 columns; seeds {t2.get('seeds')}. "
+        f"Blocked by the integrity precondition: "
+        f"{', '.join(t2.get('blocked_datasets') or []) or 'none'}. "
         f"Contract satisfied: {yesno(t2.get('ok'))}"
     )
     return "\n\n".join(out)
