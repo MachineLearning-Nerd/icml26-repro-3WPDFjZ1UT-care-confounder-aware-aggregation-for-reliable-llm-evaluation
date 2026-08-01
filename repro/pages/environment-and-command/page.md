@@ -1,0 +1,125 @@
+# Fixed command, environment, seeds, runtime
+
+Everything below is what an evaluator needs to re-run this reproduction from
+scratch. The full source of every file referenced here is published in this Space
+under `repro/`.
+
+## The one run command
+
+```bash
+uv run python repro/src/run_all.py
+```
+
+This is the single fixed command for every node of the experiment tree. Variants
+live in committed code; nothing is switched by an environment variable or an
+alternate command line. The script exits **1** if any claim contract or the
+independent checker fails, and prints the complete verdict JSON to stdout between
+`===CARE_VERDICT_BEGIN===` and `===CARE_VERDICT_END===`.
+
+## Bootstrap actually used on Hugging Face
+
+Published here as [`repro/orx/run_hf_job.sh`](repro/orx/run_hf_job.sh):
+
+```bash
+BRANCH=main
+CARE_SHA=72f5b29a822d9934d31777c10a5c38369884c9dc
+REPO=https://github.com/MachineLearning-Nerd/icml26-repro-3WPDFjZ1UT-care-confounder-aware-aggregation-for-reliable-llm-evaluation.git
+
+git clone --depth 1 --branch "$BRANCH" "$REPO" repo && cd repo
+git clone --filter=blob:none https://github.com/SprocketLab/CARE.git external/CARE
+git -C external/CARE checkout "$CARE_SHA"
+export CARE_OFFICIAL_DIR="$PWD/external/CARE"
+export PYTHONHASHSEED=0
+uv sync --frozen
+uv run python repro/src/run_all.py
+```
+
+The authors' repository is pinned by SHA, so the judge-score matrices are
+byte-identical across runs.
+
+## Pinned environment
+
+`uv` with a committed lockfile; exactly one repository-level `.venv`, reused by
+every experiment node. Both inputs are published here as byte-identical copies of the
+repository-root files that `uv sync --frozen` actually reads:
+[`repro/env/pyproject.toml`](repro/env/pyproject.toml) and
+[`repro/env/uv.lock`](repro/env/uv.lock).
+
+| Package | Version |
+|---|---|
+| Python | 3.11.13 |
+| numpy | 2.1.3 |
+| scipy | 1.14.1 |
+| pandas | 2.2.3 |
+| scikit-learn | 1.5.2 |
+| cvxpy | 1.5.4 |
+| snorkel | 0.10.0 |
+| sympy | 1.13.3 |
+| mpmath | 1.3.0 |
+| torch | 2.4.1+cpu |
+
+`torch` is pinned to the CPU wheel index explicitly rather than through
+`[tool.uv] torch-backend`, which not every `uv` version honours;
+`grep -c nvidia uv.lock` returns **0**.
+
+## Compute
+
+| | |
+|---|---|
+| Provider | Hugging Face Jobs |
+| Flavor requested | `cpu-upgrade` |
+| Estimated cores needed beforehand | 4–8 (small dense linear algebra, no BLAS-bound kernels above 40×40; the Table 2 stage is single-threaded in the authors' code) |
+| CPU quota actually granted | 8 vCPU (read from `/sys/fs/cgroup/cpu.max` at runtime and recorded in the verdict JSON) |
+| RAM | 32 GB |
+| Accelerator | none — **no GPU was used at any point** |
+| Price | $0.03 / hour |
+
+### Measured cost per stage
+
+Recorded from the job log, not estimated after the fact.
+
+| Stage | Work | Wall clock |
+|---|---|---|
+| Table 1, ASSET | 5 seeds × `fully_gaussian_main.py`, γ-grid of 11 values each | 49–61 s per seed after the first; the first seed additionally fetches the authors' ~71 MB judge data |
+| Table 2, CivilComments + PKU-BETTER | 5 seeds × `gaussian_mixture_main.py`, nine methods including the Dawid–Skene / GLAD / MACE harness | **≈ 6 730 s (112 min) per seed** |
+| Claim 4 | symbolic D.3, exact D.4 supremum, both counterexamples | 53.0 s |
+| Claim 5 | symbolic chain, 4 000-trial Davis–Kahan search, three-stage calibrated sweep | 111.8 s |
+| Claim 6 | symbolic chain, calibrated `n*` sweeps, boundary probe | 331.3 s |
+
+Table 2 dominates by two orders of magnitude. The per-seed cost is genuine, not an
+artefact of thread starvation: each seed must get its **own** `--cache-path`, because
+the authors' cache is keyed by dataset rather than by seed, so sharing one cache across
+seeds would make seeds 2–5 return seed 1's cached result and silently collapse the
+seed-to-seed variation the standard deviations are computed from. Paying five full
+fits is the correct choice, and the reason the run takes hours rather than minutes.
+
+The seed count was **not** reduced to shorten the run.
+
+`repro/src/threads.py` is imported before numpy, scipy and torch and pins
+`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+`NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS` to that cgroup quota. Without
+it these libraries size their pools from the *host's* core count, and the job runs
+20–40× slower through pure thread contention.
+
+## Seeds
+
+| Stage | Seeds |
+|---|---|
+| Table 1 (ASSET) and Table 2 (CivilComments, PKU-BETTER) | `2024, 2025, 2026, 2027, 2028` — passed to the authors' `--seed`, which drives the validation split and numpy RNG |
+| Claim 4 adversarial supremum | `20260801` |
+| Claim 4 finite-perturbation sweep | `7`, 400 random models |
+| Claim 4 negative controls | `3` |
+| Claim 5 Davis–Kahan search | `5`, 4,000 random symmetric perturbations |
+| Claim 5 calibrated rate | model seed `4242`, replicate seeds `0…6` |
+| Claim 6 model | `20260801`; replicate seeds `0…4` |
+| Independent checker | `99` (finite differences) |
+
+`PYTHONHASHSEED=0` is exported in the job, so dictionary-ordering effects cannot
+vary between runs.
+
+## Where the numbers come from
+
+Every number displayed anywhere in this logbook is read out of the single verdict
+JSON produced by the command above, which is published verbatim at
+[`raw/verdict.json`](raw/verdict.json). The per-claim CSV extracts under `raw/`
+are derived from that same file.

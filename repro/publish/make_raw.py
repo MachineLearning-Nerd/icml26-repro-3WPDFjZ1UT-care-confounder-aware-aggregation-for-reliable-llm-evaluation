@@ -17,7 +17,7 @@ from pathlib import Path
 # path it came from, so a renamed inner key changes a tag rather than losing a row.
 TARGETS = {
     "table1_asset.csv": ["claims.C1_C2_C3_tables.table1_asset"],
-    "table2.csv": ["claims.C1_C2_C3_tables.table2"],
+    "table2.csv": ["claims.C1_C2_C3_tables.table2_civilcomments_pku_better"],
     "c4_constant_search.csv": [
         "claims.C4_prop41.thm_d4_exact_supremum",
         "claims.C4_prop41.thm_d4_finite_perturbation",
@@ -26,10 +26,12 @@ TARGETS = {
     "c5_rate.csv": [
         "claims.C5_thm42.route_c_calibrated_rate",
         "claims.C5_thm42.route_b_davis_kahan_constant",
+        "independent_check.c5_stage_slope_recheck",
     ],
     "c6_sigma_sweep.csv": [
         "claims.C6_thm43.route_b_calibrated_sample_complexity",
         "claims.C6_thm43.route_c_boundary_sigma_probe",
+        "independent_check.c6_slope_recheck",
     ],
 }
 
