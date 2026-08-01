@@ -338,3 +338,29 @@ over all n, versus a search for a crossing at four separate targets) and could d
 the curve were not a clean power law. But it should be read as an internal consistency
 check, not as corroboration from a new direction, and the Claim 5 page's phrase "reported
 as evidence" overstates it in that respect.
+
+## 21. Claim 2's falsification was found by exploration, and the earlier page understated it
+
+The unit-dependence of the paper's 17.37% statistic was not predicted in advance. It was
+found while enumerating candidate definitions for a different purpose -- deciding which
+definition the paper used -- and the pre-registered contract for Claim 2 contains no
+element about unit invariance. Two consequences, both stated rather than smoothed over:
+
+* **The contract element is post-hoc.** `aggregation_convention_audit` was written after
+  the discrepancy was observed. What is *not* post-hoc is the criterion it applies:
+  invariance under a change of units on one benchmark is a property any across-benchmark
+  average must have, and it was fixed independently of what the numbers turned out to be.
+  The criterion could have exonerated the paper's statistic and did not.
+* **The 2026-08-01 revision of the Claim 2 page reported the same discrepancy and then
+  declined to draw a conclusion from it**, saying it was "a finding about the paper's
+  headline statistic, not as an error in it". That page had the pooled-versus-unweighted
+  numbers (17.37% versus 15.19%) and the ASSET-dominance observation already. What it
+  lacked was the invariance test that makes the finding decidable, and its framing was
+  weaker than its own evidence supported. That was an error of nerve in the write-up, not
+  a gap in the measurement, and it is recorded here rather than quietly corrected.
+
+One further scope limit: the verdict is about the published *summary statistic*, not
+about CARE's benchmark performance. CARE-SVD improves on AVG on all six Table 1
+datasets. Only one of those six columns (ASSET) is independently reproduced here; the
+other five rest on the paper's own reported values, so the 15.19% figure inherits the
+paper's numbers for five datasets and is only as reliable as they are.

@@ -36,6 +36,37 @@ The check is stricter than the claim: as well as counting CARE wins, the recompu
 column winners are compared cell-by-cell against the **bold cells** the paper typesets,
 so a mismatch between the paper's prose and its own table would be caught.
 
+### What "CARE is best on 5 of 6" counts
+
+The count of 5 aggregates over **two** methods: it takes, per dataset, whichever of
+CARE-SVD and CARE-Tensor is stronger. A count stated for a method is a claim about one
+method held to one configuration everywhere, so we also ask what each fixed
+configuration achieves on its own. The criterion is stated independently of the
+outcome; it could have left the headline count intact, and for one variant it nearly
+does.
+
+<!-- FILL:c3.single_config -->
+*(pending release run)*
+<!-- /FILL -->
+
+**This result runs in the paper's favour more than against it, and is reported that
+way.** No single configuration reaches 5 of 6 — the best is CARE-Tensor at 3 — so the
+headline count does carry a scope qualification. But CARE-Tensor held fixed across all
+six datasets is never worse than **2nd of 9 methods**, at a mean rank of **1.50**, while
+the strongest single baseline (MACE) wins only **1** column. On the paper's own table
+the substantive superiority claim survives the stricter reading comfortably; it is the
+specific integer 5 that depends on selecting the variant per dataset.
+
+The qualification is also **disclosed in the paper**, which states "with CARE-Tensor
+leading on three (PKU-BETTER, SHP, and Summarize)". A reader who works through that
+parenthesis can recover the split. This is therefore recorded as a scope qualification
+on the count, **not** as a falsification and not as an undisclosed practice.
+
+One asymmetry is worth naming because it is invisible in the count: CARE-SVD is **last
+of all nine methods on SHP** (0.543) while CARE-Tensor **wins** that same column
+(0.695). The two variants are not interchangeable, which is precisely why the choice
+between them cannot be made after seeing the results.
+
 ## 3c — the Summarize figure, and a defect in the claim string
 
 The claim string quotes the pair `0.814 ± 0.001` vs `0.705 ± 0.000`. In Table 2:

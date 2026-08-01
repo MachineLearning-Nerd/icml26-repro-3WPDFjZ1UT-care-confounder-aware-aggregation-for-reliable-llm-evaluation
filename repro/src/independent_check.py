@@ -72,6 +72,70 @@ def table_percentages_exact() -> dict:
     }
 
 
+def c2_unit_invariance_exact() -> dict:
+    """Re-decide Claim 2's falsification in exact rationals, independently of numpy.
+
+    The claim module reaches its verdict in floating point. Because the verdict turns
+    on one statistic being *exactly* invariant and another not, a float implementation
+    is exactly the wrong tool to confirm it with: `unweighted_spread == 0.0` could be
+    rounding. Fractions make the invariance exact rather than approximate.
+    """
+
+    def frac(xs):
+        return [Fraction(x) for x in xs]
+
+    avg, mv, care = frac(_T1_AVG), frac(_T1_MV), frac(_T1_CARE)
+    n = len(avg)
+
+    def scaled(xs, c, i=0):
+        out = list(xs)
+        out[i] = out[i] * c
+        return out
+
+    def pooled(base, care_, c, i=0):
+        b, k = scaled(base, c, i), scaled(care_, c, i)
+        return (sum(b) / n - sum(k) / n) / (sum(b) / n) * 100
+
+    def unweighted(base, care_, c, i=0):
+        b, k = scaled(base, c, i), scaled(care_, c, i)
+        return sum((x - y) / x for x, y in zip(b, k)) / n * 100
+
+    factors = [Fraction(1, 100), Fraction(1, 10), Fraction(1, 4), Fraction(1), Fraction(10)]
+    pooled_avg = [pooled(avg, care, c) for c in factors]
+    pooled_mv = [pooled(mv, care, c) for c in factors]
+    unw_avg = [unweighted(avg, care, c) for c in factors]
+    unw_mv = [unweighted(mv, care, c) for c in factors]
+
+    # Exact equality, not a tolerance: every rescaling must give the identical rational.
+    unweighted_exactly_invariant = len(set(unw_avg)) == 1 and len(set(unw_mv)) == 1
+    pooled_spread = float(max(pooled_avg) - min(pooled_avg))
+    orderings = {a > m for a, m in zip(pooled_avg, pooled_mv)}
+
+    # The weighted-mean identity, in exact arithmetic.
+    w = [a / sum(avg) for a in avg]
+    r = [(a - c) / a for a, c in zip(avg, care)]
+    identity_exact = sum(wi * ri for wi, ri in zip(w, r)) * 100 == pooled(avg, care, Fraction(1))
+
+    return {
+        "unweighted_across_benchmark_avg_vs_AVG_pct": float(unw_avg[0]),
+        "unweighted_across_benchmark_avg_vs_MV_pct": float(unw_mv[0]),
+        "unweighted_exactly_invariant_under_unit_change": bool(unweighted_exactly_invariant),
+        "pooled_spread_across_unit_changes_pct": pooled_spread,
+        "pooled_ordering_flips": bool(len(orderings) > 1),
+        "weighted_mean_identity_exact": bool(identity_exact),
+        "asset_weight_share": float(w[0]),
+        "paper_headline_pct": 17.37,
+        "discrepancy_pp": abs(float(unw_avg[0]) - 17.37),
+        "falsified_as_worded": bool(
+            unweighted_exactly_invariant
+            and identity_exact
+            and pooled_spread > 1.0
+            and len(orderings) > 1
+            and abs(float(unw_avg[0]) - 17.37) > 1.0
+        ),
+    }
+
+
 # --- 2. Proposition 4.1 counterexample in 60-digit arithmetic ---------------
 def prop41_counterexample_mpmath(dps: int = 60) -> dict:
     mp.mp.dps = dps
@@ -295,6 +359,7 @@ def recheck_c5_stage_slopes(verdict: dict) -> dict:
 def run(verdict: dict | None = None) -> dict:
     out = {
         "table_percentages_exact_rational": table_percentages_exact(),
+        "c2_unit_invariance_exact": c2_unit_invariance_exact(),
         "prop41_counterexample_mpmath": prop41_counterexample_mpmath(),
         "first_order_formula_vs_finite_difference": first_order_by_finite_difference(),
         "davis_kahan_by_principal_angle": davis_kahan_by_principal_angle(),
@@ -311,6 +376,17 @@ def run(verdict: dict | None = None) -> dict:
             "pooled_vs_AVG": abs(pooled["vs_AVG"] - out["table_percentages_exact_rational"]["pooled_vs_AVG_pct"]) < 1e-6,
             "pooled_vs_MV": abs(pooled["vs_MV"] - out["table_percentages_exact_rational"]["pooled_vs_MV_pct"]) < 1e-6,
         }
+        # The C2 verdict is only as good as the two implementations agreeing on it.
+        conv = verdict["claims"]["C1_C2_C3_tables"].get("aggregation_convention_audit")
+        if conv is not None:
+            e = out["c2_unit_invariance_exact"]
+            out["agreement_with_claim_module"]["c2_falsified_as_worded"] = bool(
+                conv["falsified_as_worded"] == e["falsified_as_worded"]
+            )
+            out["agreement_with_claim_module"]["c2_unweighted_average"] = bool(
+                abs(conv["unweighted_across_benchmark_average_vs_AVG_pct"]
+                    - e["unweighted_across_benchmark_avg_vs_AVG_pct"]) < 1e-6
+            )
 
     t = out["table_percentages_exact_rational"]
     out["ok"] = bool(
@@ -323,6 +399,8 @@ def run(verdict: dict | None = None) -> dict:
         and out["first_order_formula_vs_finite_difference"]["analytic_formula_confirmed"]
         and out["davis_kahan_by_principal_angle"]["two_routes_agree_on_eigvec_distance"]
         and out["davis_kahan_by_principal_angle"]["constant_2_to_the_3_over_2_holds"]
+        and out["c2_unit_invariance_exact"]["weighted_mean_identity_exact"]
+        and out["c2_unit_invariance_exact"]["unweighted_exactly_invariant_under_unit_change"]
     )
     # If the p exponent was refit at all, the falsification it supports must survive the
     # refit; otherwise the finding is a property of least squares and this checker fails.

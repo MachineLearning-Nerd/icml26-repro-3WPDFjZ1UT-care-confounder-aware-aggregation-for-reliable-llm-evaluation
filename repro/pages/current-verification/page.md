@@ -52,10 +52,12 @@ assumption-satisfying counterexample. Finite experiments appear only as calibrat
 searches (binary search for `n*`, independent sweeps of each parameter), never by
 substituting into the formula under test.
 
-## Four results that cut against a flattering story
+## Six results that cut against a flattering story, and one that does not
 
 They are stated here rather than buried, because a reproduction that only ever confirms
-its own hypotheses is not measuring anything.
+its own hypotheses is not measuring anything -- and the one that came out in the paper's
+favour is kept in the same list, because a reproduction that only ever finds fault is
+not measuring anything either.
 
 * A conjectured falsification of Theorem 4.3's weight bound **did not survive
   measurement**. Having found a missing `σ³` factor in the displayed derivation, we
@@ -73,6 +75,21 @@ its own hypotheses is not measuring anything.
   by a three-stage decomposition in which the theorem-governed stage is measured
   separately.
 
+* The paper's headline **17.37% average improvement is not an average across
+  benchmarks**, and this revision says so where the previous one flinched. "Improvement
+  of the mean MAE" is identically an MAE-weighted mean of the per-dataset improvements,
+  and because ASSET is scored on a 0–100 scale while the other five benchmarks sit near
+  1, ASSET absorbs 84.4% of the weight. The statistic is therefore not invariant to a
+  unit change on a single benchmark: report ASSET on 0–10 and the figure moves, and the
+  paper's ordering — a larger gain over AVG than over MV — **reverses**. The
+  unit-invariant across-benchmark average is 15.19%. The 2026-08-01 revision of that
+  page had these numbers and still called it "a finding … not an error"; that was an
+  error of nerve, and it is recorded rather than quietly fixed.
+* A check that ran **in the paper's favour**. Asking whether any single CARE
+  configuration attains "best on 5 of 6" found that none does — the best is CARE-Tensor
+  at 3 — but also that CARE-Tensor held fixed across all six datasets is never worse
+  than 2nd of 9 methods, against the strongest single baseline's 1 column. The headline
+  integer needs a family reading; the superiority behind it does not.
 * A Table 2 column we expected to reproduce turned out to be **unscoreable**. Reproducing
   PKU-BETTER returned accuracies of exactly 0.0 for four methods and exactly 1.0 for
   CARE-Tensor. Read carelessly, MV scoring 0.000 against a published 0.701 is a
@@ -82,7 +99,7 @@ its own hypotheses is not measuring anything.
   direction. Reporting it as a falsification would have been the most eye-catching result
   in this logbook and the wrong one.
 
-All four are also in [Limitations and deviations](#/limitations).
+All of them are also in [Limitations and deviations](#/limitations).
 
 ## How to check any of this
 

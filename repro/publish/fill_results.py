@@ -192,6 +192,88 @@ def c2_definitions(v):
     )
 
 
+def c3_single_config(v):
+    s = g(v, "claims", "C1_C2_C3_tables", "single_configuration_audit", default={})
+    cfg = s.get("per_care_configuration", {})
+    ds = list(next(iter(cfg.values()), {}).get("rank_per_dataset", {}))
+    rows = []
+    for m, d in cfg.items():
+        ranks = d["rank_per_dataset"]
+        rows.append(
+            [f"**{m}** held fixed", f"{d['datasets_won']} / {d['of']}"]
+            + [str(ranks[k]) for k in ds]
+            + [f"**{num(d['mean_rank'], 2)}**"]
+        )
+    body = table(
+        ["Single configuration", "Columns won"] + ds + ["Mean rank"], rows
+    )
+    return body + (
+        f"\n\nRank is out of the **{len(s.get('methods_compared', []))} methods** in Table 2 "
+        f"(1 = best). Family count, taking the better variant per dataset: "
+        f"**{s.get('family_count_taking_best_variant_per_dataset')} of 6**. Best single "
+        f"configuration: **{s.get('best_single_configuration')} at "
+        f"{s.get('best_single_configuration_wins')} of 6**. For comparison, the strongest "
+        f"single baseline is **{s.get('best_single_baseline')} at "
+        f"{s.get('best_single_baseline_wins')} of 6**.\n\n"
+        f"No single configuration reaches the claimed count: "
+        f"{yesno(s.get('no_single_configuration_reaches_the_claimed_count'))} "
+        f"(gap of {s.get('gap_between_family_and_best_single')} columns)."
+    )
+
+
+def c2_weights(v):
+    c = g(v, "claims", "C1_C2_C3_tables", "aggregation_convention_audit", default={})
+    w = c.get("implied_weights_vs_AVG", {})
+    per = g(v, "claims", "C1_C2_C3_tables", "table_arithmetic",
+            "per_dataset_relative_improvement_vs_AVG_pct", default={})
+    rows = [
+        [k, f"{num(per.get(k), 2)} %", f"{num(100 * x, 2)} %"]
+        for k, x in sorted(w.items(), key=lambda kv: -kv[1])
+    ]
+    res = c.get("pooled_equals_MAE_weighted_mean_identity_residual_pct")
+    return (
+        table(["Benchmark", "CARE-SVD improvement over AVG", "Weight it receives in the 17.37 %"], rows)
+        + f"\n\nIdentity residual: **{res:.3e} pp** (exact-rational check in the independent "
+        f"checker returns exact equality, not a tolerance). Largest weight: "
+        f"**{c.get('largest_weight_dataset')} at {num(100 * (c.get('largest_weight_share') or 0), 2)} %**."
+    )
+
+
+def c2_invariance(v):
+    c = g(v, "claims", "C1_C2_C3_tables", "aggregation_convention_audit", default={})
+    rows = [
+        [
+            f"× {s['asset_scale_factor']}",
+            f"{num(s['pooled_vs_AVG_pct'], 2)} %",
+            f"{num(s['pooled_vs_MV_pct'], 2)} %",
+            f"{num(s['unweighted_vs_AVG_pct'], 2)} %",
+            f"{num(s['unweighted_vs_MV_pct'], 2)} %",
+            "AVG" if s["pooled_says_AVG_gap_exceeds_MV_gap"] else "**MV**",
+        ]
+        for s in c.get("unit_change_sweep_on_ASSET", [])
+    ]
+    return (
+        table(
+            [
+                "ASSET reported in units of",
+                "Paper's statistic vs AVG",
+                "Paper's statistic vs MV",
+                "Across-benchmark average vs AVG",
+                "Across-benchmark average vs MV",
+                "Which gap looks larger",
+            ],
+            rows,
+        )
+        + f"\n\nPaper's statistic moves **{num(c.get('pooled_spread_across_unit_changes_pct'), 2)} pp** "
+        f"across these unit changes; the across-benchmark average moves "
+        f"**{num(c.get('unweighted_spread_across_unit_changes_pct'), 1)} pp** (exactly zero — the "
+        f"independent checker confirms set-equality over exact rationals). "
+        f"The paper's qualitative ordering — that CARE gains more over AVG than over MV — "
+        f"**{'reverses' if c.get('ordering_of_the_two_headline_gaps_flips_under_unit_change') else 'does not reverse'}** "
+        f"under a unit change on a single benchmark."
+    )
+
+
 def c2_per_dataset(v):
     a = g(v, "claims", "C1_C2_C3_tables", "table_arithmetic", default={})
     va = a.get("per_dataset_relative_improvement_vs_AVG_pct", {})
@@ -732,11 +814,16 @@ CLAIM_KEY = {
 PAGE_VERDICT = {
     "C1": "**VERIFIED** (the 26.8 % arithmetic, exactly) / **BLOCKED** (the UltraFeedback "
           "MAE pair — the authors released no UltraFeedback judge-score matrix)",
-    "C2": "**VERIFIED** (17.37 % and 12.75 %, with the paper's definition identified "
-          "uniquely) / **BLOCKED** (five of six Table 1 columns have no released judge "
-          "outputs)",
+    "C2": "**FALSIFIED as worded** — the average across the six benchmarks of CARE-SVD's "
+          "improvement over AVG is 15.19 %, not 17.37 %. The published figure is an "
+          "MAE-weighted mean that puts 84.4 % of its weight on one benchmark and is not "
+          "invariant to that benchmark's unit of measurement / **BLOCKED** (five of six "
+          "Table 1 columns have no released judge outputs)",
     "C3": "**VERIFIED** as arithmetic over the paper's published nine-method grid (best on "
-          "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure) / "
+          "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure), with the "
+          "scope qualification that the count of 5 is a two-variant family count — no "
+          "single CARE configuration exceeds 3 of 6, though CARE-Tensor held fixed ranks "
+          "1.50 on average against the best single baseline's 1 win / "
           "**REPRODUCED at full scale on 1 of 6 columns** (CivilComments) / **BLOCKED** on "
           "the other five: four ship no judge outputs, and PKU-BETTER's released labels are "
           "degenerate",
@@ -840,6 +927,9 @@ GENERATORS = {
     "c1.asset": c1_asset,
     "c1.control": c1_control,
     "c2.definitions": c2_definitions,
+    "c3.single_config": c3_single_config,
+    "c2.weights": c2_weights,
+    "c2.invariance": c2_invariance,
     "c2.per_dataset": c2_per_dataset,
     "c2.asset": c2_asset,
     "c2.control": c2_control,

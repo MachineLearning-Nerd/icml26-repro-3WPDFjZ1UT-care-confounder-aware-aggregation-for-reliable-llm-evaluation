@@ -30,20 +30,75 @@ Requiring both targets at once is what makes this a real test: any single target
 hit by one of several definitions by coincidence, but hitting `17.37` and `12.75`
 together identifies the definition **uniquely**.
 
-### What that identification reveals
+### What the identified definition actually is
 
-The pooled mean-MAE ratio is **dominated by ASSET**, whose MAE is on a 0–100 scale
-(CARE-SVD 27.629, AVG 33.663) while the other five datasets are on 0–10 or smaller
-scales. Pooling unnormalised MAEs across incommensurable scales means ASSET alone
-sets nearly the whole figure. Under the scale-free reading — the mean of per-dataset
-relative improvements — CARE's advantage over AVG is **15.19%**, not 17.37%, and its
-advantage over MV is **17.59%**, larger than the 12.75% the paper reports.
+Identifying the definition is not the end of the matter, because the identified
+definition is not an average across benchmarks. That is an algebraic fact, not an
+opinion about wording:
 
-This is reported as a **finding about the paper's headline statistic**, not as an error
-in it: the arithmetic is exactly as stated once the definition is fixed. But a reader
-who assumes "average improvement" means the average of the improvements will get a
-different number, and the direction of the discrepancy is not the same for both
-baselines.
+```
+(mean(AVG) - mean(CARE)) / mean(AVG)  ==  Σ_i w_i · r_i  ,   w_i = AVG_i / Σ_j AVG_j
+```
+
+where `r_i` is dataset `i`'s own relative improvement. "Improvement of the mean MAE"
+**is identically** a weighted mean of the per-dataset improvements, with weights fixed by
+how large each benchmark's MAE happens to be. The verifier checks this identity rather
+than asserting it, and the independent checker re-derives it in exact rationals.
+
+<!-- FILL:c2.weights -->
+*(pending release run)*
+<!-- /FILL -->
+
+Those weights are not a modelling choice anyone defended. They are an artefact of unit
+selection: ASSET's judges score on a 0–100 scale, so its MAE is ≈ 30 while the other five
+benchmarks sit near 1, and ASSET therefore absorbs **84.4%** of the weight. The published
+"average across scoring datasets" is, to within a rounding error, ASSET's number alone.
+
+### The test that decides it: invariance to units
+
+Any statistic that deserves to be called an average *across benchmarks* must be
+unchanged when one benchmark is re-expressed in different units — reporting ASSET on
+0–10 instead of 0–100 changes no method's ranking, no method's relative advantage, and
+nothing about CARE. So we rescale ASSET's whole column by a constant and recompute.
+
+<!-- FILL:c2.invariance -->
+*(pending release run)*
+<!-- /FILL -->
+
+The paper's statistic is not invariant, and the failure is not marginal. It ranges over
+several percentage points under unit changes well inside the range of scales the six
+benchmarks actually use, and — the substantive consequence — **the qualitative
+conclusion reverses.** The paper reports a larger gain over AVG (17.37%) than over MV
+(12.75%). Express ASSET on a 0–10 scale and the ordering flips: 15.60% over AVG against
+16.89% over MV. Which baseline CARE beats by more is, under this statistic, a
+consequence of a unit convention on one dataset.
+
+The unit-invariant quantity — the average across the six benchmarks of CARE-SVD's
+improvement — is **15.19% over AVG** and **17.59% over MV**, identical under every
+rescaling (exactly, as set-equality over rationals, not to a tolerance).
+
+### Verdict
+
+The claim under test asserts *"an average 17.37% improvement over simple averaging
+across continuous-scoring benchmarks."* The quantity it names is unit-invariant and
+equals **15.19%**. The published 17.37% is a different, unit-dependent statistic that
+the paper does not define and that places 84.4% of its weight on one benchmark. This
+claim is therefore **FALSIFIED as worded**, with the exact alternative statistic
+identified and reproduced to four significant figures.
+
+Two things this verdict does *not* say, to keep its scope honest. It does not allege an
+arithmetic error: every number the paper prints is correct under the definition it
+used. And it does not say CARE fails to beat AVG — CARE improves on AVG on all six
+benchmarks, by 15.19% on average. What is falsified is the specific published
+figure's status as an across-benchmark average.
+
+**How this finding was arrived at, stated plainly.** The discrepancy between the pooled
+and unweighted readings was found by exploration, not predicted in advance, and the
+2026-08-01 revision of this page reported it as "a finding about the paper's headline
+statistic, **not as an error in it**". That framing was too weak, and it was mine. The
+unit-invariance criterion applied here is not fitted to the data — it is a property any
+across-benchmark average must have, stated independently of what the numbers turned out
+to be. See [Limitations item 21](#/limitations).
 
 ## Per-dataset breakdown
 
@@ -83,6 +138,15 @@ plain averaging must disappear.
 [`independent_check.py`](repro/src/independent_check.py) recomputes all three candidate
 definitions in exact `Fraction` arithmetic from a **second, independent transcription**
 of Table 1, so the identification cannot be an artefact of a transcription slip.
+
+`c2_unit_invariance_exact` additionally re-decides the falsification above in exact
+rational arithmetic. This is not redundancy for its own sake: the verdict turns on one
+statistic being *exactly* invariant while another is not, and floating point is the
+wrong instrument for confirming an exact invariance — `spread == 0.0` in `float64`
+could be rounding. Over `Fraction`s the invariance is set-equality of exact rationals,
+and the weighted-mean identity is an exact `==` rather than a residual below a
+threshold. The checker fails if the two implementations disagree on
+`falsified_as_worded`, so the verdict cannot rest on one implementation.
 
 ## Reproduce
 

@@ -221,6 +221,176 @@ def table_arithmetic() -> dict:
     }
 
 
+def single_configuration_audit() -> dict:
+    """Does any single CARE configuration attain the best accuracy on 5 of 6 datasets?
+
+    `table_arithmetic` confirms "5 of 6" by taking, per dataset, the better of CARE-SVD
+    and CARE-Tensor. That is a count for a *family*, and it is achievable only by an
+    oracle that already knows which variant wins each dataset. The criterion applied
+    here is stated independently of the outcome: a claim that a method is best on k of n
+    benchmarks is a claim about one method, evaluated with one configuration everywhere.
+    """
+    n_ds = len(TABLE2_DATASETS)
+    all_methods = [m for m, v in TABLE2_ACC.items() if all(x is not None for x in v)]
+
+    per_config = {}
+    for m in TABLE2_CARE:
+        wins, ranks = 0, []
+        for j in range(n_ds):
+            col = {k: TABLE2_ACC[k][j] for k in all_methods}
+            if max(col, key=col.get) == m:
+                wins += 1
+            # rank 1 == best of the nine methods on this dataset
+            ranks.append(1 + sorted(col.values(), reverse=True).index(col[m]))
+        per_config[m] = {
+            "datasets_won": wins,
+            "of": n_ds,
+            "rank_per_dataset": dict(zip(TABLE2_DATASETS, ranks)),
+            "mean_rank": round(float(np.mean(ranks)), 4),
+            "worst_rank": int(max(ranks)),
+            "worst_rank_dataset": TABLE2_DATASETS[int(np.argmax(ranks))],
+        }
+
+    best_single = max(per_config, key=lambda m: per_config[m]["datasets_won"])
+    best_single_wins = per_config[best_single]["datasets_won"]
+    family_wins, target = PROSE["table2_best_of_n_datasets"]
+
+    # Best baseline as a single configuration, for a like-for-like comparison.
+    baseline_best = {}
+    for m in TABLE2_BASELINES:
+        if all(x is not None for x in TABLE2_ACC[m]):
+            baseline_best[m] = sum(
+                1
+                for j in range(n_ds)
+                if max({k: TABLE2_ACC[k][j] for k in all_methods}.items(), key=lambda kv: kv[1])[0] == m
+            )
+    top_baseline = max(baseline_best, key=baseline_best.get) if baseline_best else None
+
+    return {
+        "methods_compared": all_methods,
+        "per_care_configuration": per_config,
+        "family_count_taking_best_variant_per_dataset": family_wins,
+        "best_single_configuration": best_single,
+        "best_single_configuration_wins": best_single_wins,
+        "paper_claimed_wins": family_wins,
+        "no_single_configuration_reaches_the_claimed_count": bool(best_single_wins < target),
+        "gap_between_family_and_best_single": int(family_wins - best_single_wins),
+        "best_single_baseline": top_baseline,
+        "best_single_baseline_wins": baseline_best.get(top_baseline),
+        "note": (
+            "The '5 of 6' count is attained by the CARE family only when the better of "
+            "CARE-SVD and CARE-Tensor is selected separately for each dataset. Held to a "
+            f"single configuration, the strongest is {best_single} at {best_single_wins} "
+            f"of {target}. The paper does disclose the split ('with CARE-Tensor leading "
+            "on three'), so this is a scope qualification on the headline count rather "
+            "than an undisclosed one."
+        ),
+        "ok": True,
+    }
+
+
+def aggregation_convention_audit() -> dict:
+    """Decide whether 17.37% is an average *across benchmarks* at all.
+
+    `table_arithmetic` establishes only that the pooled mean-MAE ratio reproduces the
+    paper's two headline figures. That leaves the substantive question open: is the
+    pooled figure a legitimate reading of "averaged across scoring datasets"? This
+    function answers it without appealing to anyone's intuition about wording, by
+    testing the pooled statistic against the one property any across-benchmark average
+    must have -- invariance to each benchmark's unit of measurement.
+    """
+    mv = np.array(TABLE1_MAE["MV"], dtype=float)
+    avg = np.array(TABLE1_MAE["AVG"], dtype=float)
+    care = np.array(TABLE1_MAE["CARE-SVD"], dtype=float)
+
+    def pooled(base, c=1.0, i=0):
+        b, k = base.copy(), care.copy()
+        b[i], k[i] = b[i] * c, k[i] * c
+        return (b.mean() - k.mean()) / b.mean() * 100.0
+
+    def unweighted(base, c=1.0, i=0):
+        b, k = base.copy(), care.copy()
+        b[i], k[i] = b[i] * c, k[i] * c
+        return float((((b - k) / b) * 100.0).mean())
+
+    # (1) Exact algebraic identity: the pooled ratio IS a weighted mean of the
+    # per-dataset relative improvements, with weights proportional to the baseline's
+    # own MAE. The weights are therefore fixed by each benchmark's label scale.
+    r_avg = (avg - care) / avg
+    w_avg = avg / avg.sum()
+    identity_residual = abs(float((w_avg * r_avg).sum() * 100.0) - pooled(avg))
+
+    r_mv = (mv - care) / mv
+    w_mv = mv / mv.sum()
+    identity_residual_mv = abs(float((w_mv * r_mv).sum() * 100.0) - pooled(mv))
+
+    i_asset = TABLE1_DATASETS.index("ASSET")
+
+    # (2) Unit-change sweep on a single benchmark. Rescaling one dataset's MAEs
+    # (reporting ASSET on 0-10 instead of 0-100, say) changes nothing about any
+    # method's relative performance anywhere, so no across-benchmark average may move.
+    sweep = []
+    for c in (0.01, 0.1, 0.25, 0.5, 1.0, 2.0, 10.0):
+        sweep.append(
+            {
+                "asset_scale_factor": c,
+                "pooled_vs_AVG_pct": round(pooled(avg, c, i_asset), 4),
+                "pooled_vs_MV_pct": round(pooled(mv, c, i_asset), 4),
+                "unweighted_vs_AVG_pct": round(unweighted(avg, c, i_asset), 4),
+                "unweighted_vs_MV_pct": round(unweighted(mv, c, i_asset), 4),
+                "pooled_says_AVG_gap_exceeds_MV_gap": bool(
+                    pooled(avg, c, i_asset) > pooled(mv, c, i_asset)
+                ),
+            }
+        )
+
+    pooled_range = max(s["pooled_vs_AVG_pct"] for s in sweep) - min(
+        s["pooled_vs_AVG_pct"] for s in sweep
+    )
+    unweighted_range = max(s["unweighted_vs_AVG_pct"] for s in sweep) - min(
+        s["unweighted_vs_AVG_pct"] for s in sweep
+    )
+    orderings = {s["pooled_says_AVG_gap_exceeds_MV_gap"] for s in sweep}
+
+    target_avg = PROSE["avg_relative_improvement_over_AVG_pct"]
+    unweighted_1 = unweighted(avg)
+    gap = abs(unweighted_1 - target_avg)
+
+    return {
+        # The identity must hold to machine precision or the decomposition below is
+        # not describing the paper's statistic at all.
+        "pooled_equals_MAE_weighted_mean_identity_residual_pct": identity_residual,
+        "pooled_equals_MAE_weighted_mean_identity_residual_vs_MV_pct": identity_residual_mv,
+        "identity_holds": bool(identity_residual < 1e-9 and identity_residual_mv < 1e-9),
+        "implied_weights_vs_AVG": dict(
+            zip(TABLE1_DATASETS, [round(float(x), 5) for x in w_avg])
+        ),
+        "largest_weight_dataset": TABLE1_DATASETS[int(w_avg.argmax())],
+        "largest_weight_share": float(w_avg.max()),
+        "unit_change_sweep_on_ASSET": sweep,
+        "pooled_spread_across_unit_changes_pct": round(float(pooled_range), 4),
+        "unweighted_spread_across_unit_changes_pct": round(float(unweighted_range), 12),
+        "pooled_is_unit_dependent": bool(pooled_range > 1.0),
+        "unweighted_is_unit_invariant": bool(unweighted_range < 1e-9),
+        "ordering_of_the_two_headline_gaps_flips_under_unit_change": bool(len(orderings) > 1),
+        "unweighted_across_benchmark_average_vs_AVG_pct": round(float(unweighted_1), 4),
+        "paper_headline_pct": target_avg,
+        "discrepancy_pp": round(float(gap), 4),
+        # The claim under test asserts an average improvement ACROSS BENCHMARKS of
+        # 17.37%. That quantity is unit-invariant and equals 15.19%. FALSIFIED is
+        # asserted only when every leg holds.
+        "falsified_as_worded": bool(
+            identity_residual < 1e-9
+            and identity_residual_mv < 1e-9
+            and pooled_range > 1.0
+            and unweighted_range < 1e-9
+            and len(orderings) > 1
+            and gap > 1.0
+        ),
+        "ok": True,
+    }
+
+
 # --------------------------------------------------------------------------
 # End-to-end reproduction from the authors' released judge outputs
 # --------------------------------------------------------------------------
@@ -572,12 +742,17 @@ def run(outdir: Path | None = None) -> dict:
     labels = label_audit.audit(root)
     blocked = set(labels.get("blocked_datasets", []))
     arith = table_arithmetic()
+    conv = aggregation_convention_audit()
+    single = single_configuration_audit()
     cov = coverage_audit(root)
 
     if root is None:
         return {
             "claim": "C1/C2/C3 - Tables 1 and 2",
             "table_arithmetic": arith,
+            "aggregation_convention_audit": conv,
+        "single_configuration_audit": single,
+            "single_configuration_audit": single,
             "coverage_audit": cov,
             "ok": False,
             "verdict": "BLOCKED - official repository (judge-score matrices) not present",
@@ -594,13 +769,15 @@ def run(outdir: Path | None = None) -> dict:
         "official_repo_sha": sha,
         "official_repo_sha_matches_pin": bool(sha_ok),
         "table_arithmetic": arith,
+        "aggregation_convention_audit": conv,
+        "single_configuration_audit": single,
         "coverage_audit": cov,
         "label_integrity_audit": labels,
         "shard_provenance": _shard_provenance(shards),
         "table1_asset": t1,
         "table2_civilcomments_pku_better": t2,
         "negative_controls": nc,
-        "ok": bool(sha_ok and arith["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
+        "ok": bool(sha_ok and arith["ok"] and conv["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
     }
 
 
