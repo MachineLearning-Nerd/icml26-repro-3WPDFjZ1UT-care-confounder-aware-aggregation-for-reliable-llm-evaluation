@@ -227,7 +227,7 @@ def sample_complexity_sweeps(seeds=(0, 1, 2, 3, 4)) -> dict:
         rows.append({"pi_min": pmin, "errors": c, "n_star": _n_star(NS_GRID, c)})
     ok_rows = [r for r in rows if r["n_star"]]
     s_pi, se_pi = _fit([r["pi_min"] for r in ok_rows], [r["n_star"] for r in ok_rows]) if len(ok_rows) >= 3 else (float("nan"), float("nan"))
-    info_pi = informativeness([r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID)
+    info_pi_min = informativeness([r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID)
     out["pi_min"] = {
         "rows": rows, "exponent": s_pi, "stderr": se_pi,
         "stated_exponent": -2.0, "requirement": "exponent >= -2 - 2*stderr",
