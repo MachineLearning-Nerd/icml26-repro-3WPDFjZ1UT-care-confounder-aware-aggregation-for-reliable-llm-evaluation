@@ -188,12 +188,14 @@ means rescaling the spectrum, which also changes the conditioning of the problem
 measured `n*(δ)` is correspondingly non-monotonic in `δ`, and the fitted exponent is
 positive with a standard error nearly as large as the estimate.
 
-We therefore state what this sweep does and does not support. It **does** establish that
-`n*` does not blow up faster than `δ^{-2}` over the range swept, which is the one-sided
-direction Theorem 4.2's `O(·)` asserts. It **does not** confirm the `δ^{-2}` factor
-itself: a bound that is loose over the swept range is consistent with many exponents,
-and the confounded sweep cannot separate them. Claim 5's verdict rests on the stage-2
-`n^{-1/2}` measurement and the reconstructed symbolic derivation, not on this sweep.
+The measured exponent is 0.6023 ± 0.5641 — 1.1 standard errors from zero — so the sweep
+fails the admissibility test in `informativeness.py` and is reported **NOT INFORMATIVE**.
+It supports **nothing in either direction**: not the `δ^{-2}` factor, and not a bound on
+it either. An earlier draft of this page claimed the sweep at least established that `n*`
+does not grow faster than `δ^{-2}`; that claim has been removed, because a sweep that
+resolved no exponent cannot bound one. Claim 5's verdict rests on the stage-2 `n^{-1/2}`
+measurement, the `n*(α)` exponent (−1.9584 ± 0.0537, 36 standard errors from zero), and
+the reconstructed symbolic derivation — not on this sweep.
 
 ## 15. What the `p`-factor falsification does and does not cover
 
