@@ -224,3 +224,18 @@ the 0 the theorem predicts, so it does discriminate between the two hypotheses. 
 interval is wide, and a narrower one would need more `σ` settings than the one-hour job
 cap allows. The claim page states the discrimination in exactly these terms rather than
 calling the hypothesis refuted outright.
+
+## 17. The `p`-factor test was post-hoc
+
+The campaign's claim contract, written before any measurement, gives Claim 6 a single
+falsification criterion: the `σ` boundary. The `p`-exponent criterion was added
+mid-campaign after a censored run had already shown a large exponent, and it is the
+`p` criterion that produced this logbook's falsification.
+
+Both criteria, and this provenance, are in
+[`raw/claim_contract.json`](raw/claim_contract.json) under `C6`. The three admissibility
+gates the finding had to clear were each fixed before their own outcomes were known, and
+two of the three sweeps failed those gates and are reported as NOT MEASURED — so the
+gates were not tuned to let this one through. But the decision to look at `p` at all was
+prompted by a number, and a reader who discounts post-hoc findings should discount this
+one accordingly.

@@ -63,7 +63,25 @@ is exactly the right comparison, and `n*` should then scale as `p·log(p/ε)` it
 
 The three audits that make this attributable — both estimators resolving the exponent,
 the restart-budget control, and the constancy of every other quantity in the bound — are
-published in full below and were written before the outcome was known.
+published in full below, and each was written before its own outcome was known.
+
+**This test was not pre-registered, and that is recorded rather than hidden.** The
+contract written at the start of this campaign
+([`raw/claim_contract.json`](raw/claim_contract.json), entry `C6`) names only the `σ`
+boundary criterion. The `p` criterion was added mid-campaign, and the honest sequence is
+this: while repairing a censored search grid — every `π_min` setting had been returning
+`n* = 5 000`, the grid floor — the `p` sweep became measurable for the first time and
+immediately exceeded its bound. The criterion was written down before that sweep was
+re-run on the corrected grid, but *after* a censored run had already shown a large
+exponent. So the **decision to test the `p` factor was prompted by seeing a large
+number**, even though every gate the finding had to clear was fixed in advance. Both the
+original and the added criterion are in the contract file, with this provenance attached.
+
+A reader who discounts post-hoc findings should discount this one accordingly. What
+does not depend on the ordering: the exponent is resolved by two independent estimators,
+`δ`, `σ`, `π_min`, the mean separation and `cond(M₂)` are identical to eight decimal
+places across every `p`, and tripling the solver's restart budget moves `n*` by at most
+1.3 %.
 
 **Scope, stated precisely.** This falsifies the stated `p·log(p/ε)` factor *as tested
 with the algorithm the theorem names* (Anandkumar et al.'s robust tensor power method
