@@ -58,9 +58,15 @@ Both are stated here rather than buried, because a reproduction that only ever c
 its own hypotheses is not measuring anything.
 
 * A conjectured falsification of Theorem 4.3's weight bound **did not survive
-  measurement**. The prediction was that the error would be σ-free along the
-  sample-complexity boundary; it was not, and the finding was downgraded from
-  FALSIFIED to a documented gap in the displayed proof.
+  measurement**. Having found a missing `σ³` factor in the displayed derivation, we
+  predicted the weight error would *grow* with `σ` along the sample-complexity boundary.
+  It did not: the measured slope is 0.0605 ± 1.1149, whose 95 % interval excludes the 3
+  a missing `σ³` predicts and includes the 0 the theorem predicts. The finding was
+  downgraded from FALSIFIED to a documented gap in the displayed proof.
+* A **different** part of Theorem 4.3 *was* falsified, and not the part we set out to
+  attack. With `σ`, `δ` and `π_min` held fixed, the sample size needed for a fixed
+  accuracy grows as `(p·log(p/ε))^{3.63 ± 0.80}` against a stated exponent of 1, with
+  both `n*` estimators resolving the excess and the solver's restart budget ruled out.
 * The full Algorithm-1 pipeline's empirical error exponent falls short of `n^{-1/2}` at
   our solver's iteration budget. That shortfall is attributed to our proximal-gradient
   solver, not to the theorem, and the attribution is demonstrated rather than asserted

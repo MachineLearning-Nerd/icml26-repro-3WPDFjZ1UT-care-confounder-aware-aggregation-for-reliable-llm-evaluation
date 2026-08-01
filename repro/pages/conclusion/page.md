@@ -31,13 +31,18 @@ appendix statement survives both, and we derive a strictly tighter constant — 
 than 4 — for its perturbation bound. None of this threatens Algorithm 1, which works
 with the eigenvectors of `L̂` regardless.
 
-**Two theorem claims are corroborated with named gaps rather than declared closed.**
-Theorem 4.2's composition and its cited Davis–Kahan constant are established directly,
-but its `η`-dependence is a tail statement we do not measure and `ξ(T)` has no closed
-form we can evaluate. Theorem 4.3's sample-complexity exponents are located by
-calibrated search, but the displayed proof of its weight bound loses a `σ³` factor that
-the stated result nonetheless survives. Both are recorded as MEDIUM confidence with the
-reason attached.
+**Theorem 4.2 is corroborated with named gaps rather than declared closed.** Its
+composition and its cited Davis–Kahan constant are established directly, but its
+`η`-dependence is a tail statement we do not measure and `ξ(T)` has no closed form we
+can evaluate. Recorded as MEDIUM confidence with the reason attached.
+
+**Theorem 4.3 is partly verified and partly falsified.** Its mean bound is reproduced
+exactly and its weight bound is not violated along its own `σ` boundary, but the
+displayed proof of that weight bound loses a `σ³` factor. Separately, the stated
+`p·log(p/ε)` sample-complexity factor is **FALSIFIED**: with every other quantity in the
+bound held fixed, `n*` grows as `(p·log(p/ε))^{3.63 ± 0.80}` against a stated exponent
+of 1. The `σ⁶` and `π_min^{-2}` exponents are reported as NOT MEASURED — both sweeps
+failed the admissibility test rather than passing a one-sided contract by default.
 
 ## What this reproduction got wrong
 
@@ -47,7 +52,14 @@ dropped — see [Limitations and deviations](#/limitations), items 10 and 11.
 * We predicted the missing `σ³` factor in Theorem 4.3 would be *observable* along the
   sample-complexity boundary. It was not. The verdict was downgraded from FALSIFIED to a
   documented proof gap. Reporting the falsification would have been the more striking
-  result and the wrong one.
+  result and the wrong one. (The falsification this logbook *does* report is of a
+  different factor, reached by a different route, and gated on three audits written
+  before its outcome was known.)
+* An earlier revision of the Claim 6 page passed a sample-complexity check that had
+  measured nothing: with the search grid floored at `n = 5 000`, every `π_min` setting
+  returned `n* = 5 000`, giving an exponent of `0.000 ± 0.000` that satisfied a one-sided
+  contract on a constant. The grid was extended, an admissibility precondition was made
+  machine-checkable, and two of the three sweeps are now reported as NOT MEASURED.
 * Our own sparse-plus-low-rank solver does not reach `n^{-1/2}` end-to-end at its
   iteration budget. Rather than quote only the flattering stage, the error is decomposed
   so that the theorem-governed stage and the implementation-limited stage are reported

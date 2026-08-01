@@ -42,10 +42,13 @@ longest of which took 31 minutes.
 
 ## Honesty notes
 
-This reproduction reports two negative results against itself, and one defect it found
-in the released data rather than in the paper. A conjectured
-falsification of Theorem 4.3's weight bound did not survive measurement, and is
-reported as a gap in the written proof rather than as a refutation. The full
-Algorithm-1 pipeline's empirical rate falls short of `n^{-1/2}` at our solver's
-iteration budget, and that is attributed to the solver rather than to the theorem.
-Both are stated in [Limitations and deviations](#/limitations).
+This reproduction reports three negative results against itself, and one defect it
+found in the released data rather than in the paper. A conjectured falsification of
+Theorem 4.3's weight bound did not survive measurement, and is reported as a gap in the
+written proof rather than as a refutation. The full Algorithm-1 pipeline's empirical
+rate falls short of `n^{-1/2}` at our solver's iteration budget, and that is attributed
+to the solver rather than to the theorem. An earlier revision of this logbook passed a
+sample-complexity check that had measured nothing, because a censored search grid made
+every `n*` identical; the check is now machine-tested for informativeness and two of
+three sweeps are reported as NOT MEASURED. All are stated in
+[Limitations and deviations](#/limitations).
