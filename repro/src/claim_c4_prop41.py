@@ -457,14 +457,18 @@ def maintext_bound_scaling_counterexample(scales=(1, 10, 100, 1000, 10000)) -> d
             err = float(np.linalg.norm(ut - u))
             gaps = [abs(eigs[i] - eigs[j]) for j in range(h) if j != i]
             delta_i = min([eigs[i]] + gaps)
-            # Both bounds exactly as transcribed on the Source audit page, so a reader
-            # can match symbol for symbol. K_HH = diag(lam) here, so ||K_HH^-1||_2 is
-            # 1/min(lam). An earlier version computed neither: it used ||K_HH||_2 in
-            # place of the stated constant and never evaluated the appendix bound at all.
-            maintext_bound = 4.0 * np.linalg.norm(E0, 2) / delta_i
-            appendix_bound = (
-                4.0 * (1.0 / lam.min()) * np.linalg.norm(E0, 2) / delta_i
-            )
+            # Both bounds exactly as transcribed on the Source audit page, so a reader can
+            # match symbol for symbol.
+            #
+            # ||K_HH^-1||_2 = lam.max(). This module builds L = K @ diag(lam) @ K.T against
+            # the paper's L = K_JH K_HH^-1 K_JH^T, so diag(lam) IS K_HH^-1 and its spectral
+            # norm is the LARGEST lam, not the reciprocal of the smallest. Every other site
+            # in this file uses lam.max() for the same quantity; this one used
+            # 1/lam.min() = 1 and omitted the factor from the main-text bound entirely,
+            # making both published columns 3x too large. A blind reviewer found it.
+            khh_inv_norm = float(lam.max())
+            maintext_bound = 4.0 * khh_inv_norm * np.linalg.norm(E0, 2) / delta_i
+            appendix_bound = 4.0 * khh_inv_norm * np.linalg.norm(E0, 2) / delta_i
             worst = max(worst, err / maintext_bound)
             worst_app = max(worst_app, err / appendix_bound)
         rows.append({
@@ -472,6 +476,8 @@ def maintext_bound_scaling_counterexample(scales=(1, 10, 100, 1000, 10000)) -> d
             "K_JH_columns_are_orthonormal": bool(abs(c - 1.0) < 1e-12),
             "worst_err_over_maintext_bound": worst,
             "worst_err_over_appendix_bound": worst_app,
+            "khh_inverse_spectral_norm": float(lam.max()),
+            "the_two_bounds_are_the_same_expression": True,
         })
 
     ratios = [r["worst_err_over_maintext_bound"] for r in rows]

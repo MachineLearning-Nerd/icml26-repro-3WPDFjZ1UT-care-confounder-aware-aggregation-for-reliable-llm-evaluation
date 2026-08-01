@@ -809,3 +809,64 @@ inference is not that the artifact is converging on correct — it is that a sel
 change to this codebase has a meaningful chance of introducing a defect of the same class it
 is fixing, and that the only thing that has reliably caught those is an adversarial reader
 who was told nothing about where to look.
+
+## 29. A fifth blind reviewer found sixteen conclusion-level defects, three of them created by item 28's repairs
+
+The candidate built after item 28 was reviewed blind a fifth time. The reviewer scored
+Claim 4 at full credit and the other five partial — the same distribution as the two
+rounds before it — and listed twenty defects, sixteen marked conclusion-level.
+
+**Three were introduced by the previous round's repairs, and all three were of a class
+this page already tabulates as a recurring pattern.**
+
+* Correcting the ASSET adjudication from a per-seed standard deviation to a standard error
+  renamed two verdict keys. The renderer was not updated, so both claim pages printed
+  "sits **—** sd from Table 1's value and **—** from Table 7's" while still printing, in
+  bold, the conclusions computed from the two missing numbers. This is the **fourth**
+  recurrence of the "key lookup that never matched" failure that item 26 documents as a
+  pattern, and it was created by the fix for item 28.
+* The negative-control repair added a "shared-configuration cross-check" and this page
+  claimed it "gates the run". Once both controls were unified onto a single deterministic
+  call, that check compared a function against itself: it tested that the interpreter is
+  deterministic and could never fail. It is replaced by a live test — the same
+  configuration measured from an **independent** seed stream, required to agree within a
+  stated factor — which can fail and now does gate the run.
+* `single_configuration_audit` acquired a computed `ok` in an earlier round, recorded at
+  item 25 as "It has one now." It had two: a later `"ok": True` in the same dict literal
+  silently overwrote it, so the live gate was unconditional. An AST scan for duplicate keys
+  across every module is what found it, and found one more in the renderer registry.
+
+**One long-standing numerical error, on the only claim scored at full credit.** Claim 4's
+counterexample computed `‖K_HH⁻¹‖₂` as `1/min(dᵢ)` in one place and omitted it entirely in
+another, where the rest of the module correctly uses `max(dᵢ)`. Both published bound
+columns, and the headline maximum violation factor, were **3× too large**. Both verdicts
+survive — the ratio still grows without bound in `c`, and the appendix bound still holds
+where its hypotheses apply — but five numbers and one explanatory paragraph were wrong. The
+paragraph explained the two bound columns being equal by asserting `‖K_HH⁻¹‖₂ = 1`; they are
+equal because they are the same expression, and the norm is 3.
+
+**Four retractions that had not propagated.** A `class_balance` figure withdrawn on the
+Claim 3 page survived in this file and in `label_audit.py`; item 11 called −0.47
+"consistent with `n^{-1/2}`" while the Claim 5 material called the same number's interval
+exclusive of −1/2 (neither is supportable, and both are now replaced by the one-sided
+reading the theorem actually makes); item 27 described a non-monotone NC2 and a saturation
+story the Claim 6 page had already withdrawn; and Claim 3's negative-control heading still
+promised a permutation experiment three lines above the rendered block stating that no such
+experiment exists.
+
+**What five rounds of this say, stated plainly.** Defect counts have been 19, 20, 13, 20
+and 20. They are not converging, and the per-claim scores have been identical for three
+consecutive rounds. The honest interpretation is not that the artifact is nearly correct —
+it is that self-directed repair of this codebase introduces defects at roughly the rate it
+removes them, and that essentially every one of them has been caught by an adversarial
+reader who was told nothing about where to look, never by the author. What has changed
+across rounds is severity: the defects now being found are wrong numbers and stale
+sentences rather than wrong conclusions. What has not changed is the rate.
+
+The remaining conclusion-level findings from this round that are **not** repaired here are
+listed by the reviewer as D2, D7, D8, D9, D12 and D13. They concern how strong a claim the
+verdict strings make about one-sided contracts, whether the Claim 6 "two independent routes"
+are genuinely independent given both read the same transcription, and whether a 25-pair rank
+statistic built from 5 + 5 seeds supports the word "reliable". They are real questions, they
+are recorded here rather than repaired, and a reader should treat the corresponding verdict
+language as stronger than the evidence strictly licenses.

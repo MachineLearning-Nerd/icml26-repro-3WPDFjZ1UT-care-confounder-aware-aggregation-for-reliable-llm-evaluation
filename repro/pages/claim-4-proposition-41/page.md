@@ -122,8 +122,18 @@ applies, and at `c = 1` it is satisfied. An earlier version of this page asserte
 appendix bound was "satisfied at every `c` — the same data confirms it", which was both
 outside the theorem's hypotheses and unsupported: no appendix bound was computed at all,
 and the quantity the code did evaluate used `‖K_HH‖₂` rather than the stated constant.
-Both bounds are now evaluated exactly as transcribed on
-[Source audit](#/source-audit).
+
+That correction was itself incomplete, and a later blind reviewer found the rest of it.
+The revision that added the appendix bound computed `‖K_HH⁻¹‖₂` as `1/min(dᵢ)` and left it
+out of the main-text bound altogether, where every other computation in the module reads it
+as `max(dᵢ)` — which is correct, since this construction builds `L = K_JH·diag(λ)·K_JHᵀ`
+against the paper's `L = K_JH K_HH⁻¹ K_JHᵀ`, making `diag(λ)` itself `K_HH⁻¹`. Both bound
+columns were consequently **3× too large**, as was the maximum violation factor. Both
+verdicts survive the correction unchanged — the ratio still grows linearly in `c`, so the
+main-text bound is still unbounded, and the appendix ratio at `c = 1` is still well under 1
+— but five published numbers were wrong and are now right. Both bounds are evaluated
+exactly as transcribed on [Source audit](#/source-audit), from a single
+`‖K_HH⁻¹‖₂` that the verdict publishes so it can be checked.
 
 **This defeats the `≲` as well as a `≤`.** The main text writes the bound with `≲`,
 which hides an unspecified constant, so a single violated instance would prove nothing.
