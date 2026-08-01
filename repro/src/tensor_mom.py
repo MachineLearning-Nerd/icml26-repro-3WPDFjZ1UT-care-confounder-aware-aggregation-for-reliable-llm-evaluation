@@ -94,13 +94,20 @@ def robust_tensor_power(T, k, rng, n_restarts=30, n_iters=60, n_deflate_iters=30
     return np.array(lams), np.array(vecs).T
 
 
-def recover_weights(M2, M3, k, rng):
-    """Whiten, run the tensor power method, and return the recovered mixture weights."""
+def recover_weights(M2, M3, k, rng, floor_ratio=1e-6):
+    """Whiten, run the tensor power method, and return the recovered mixture weights.
+
+    The population M2 is PSD of rank k, but its finite-sample estimate need not be,
+    so the top-k eigenvalues are floored at `floor_ratio` times the largest before
+    whitening. Returning None instead would silently drop the noisiest settings and
+    bias the sigma sweep towards the easy end.
+    """
     s, U = np.linalg.eigh(M2)
     idx = np.argsort(s)[::-1][:k]
     s, U = s[idx], U[:, idx]
-    if np.any(s <= 0):
+    if s[0] <= 0 or not np.all(np.isfinite(s)):
         return None
+    s = np.maximum(s, floor_ratio * s[0])
     W = U @ np.diag(s ** -0.5)
     Tw = np.einsum("ijk,ia,jb,kc->abc", M3, W, W, W, optimize=True)
     lams, _ = robust_tensor_power(Tw, k, rng)

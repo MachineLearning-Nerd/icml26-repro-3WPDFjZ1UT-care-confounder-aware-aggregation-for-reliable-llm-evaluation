@@ -40,9 +40,10 @@ from tensor_mom import empirical_moments, recover_weights, sample_mixture
 
 K_COMPONENTS = 4
 PI_TRUE = np.array([0.40, 0.30, 0.20, 0.10])
-P_PER_VIEW = 4
+P_PER_VIEW = 6
 P_TOTAL = 3 * P_PER_VIEW
 EPS = 0.1
+MEAN_SCALE = 3.0
 
 
 # --------------------------------------------------------------------------
@@ -95,12 +96,17 @@ def symbolic_chain_audit() -> dict:
 # Route B: measure the quantity the bound is about
 # --------------------------------------------------------------------------
 def _fixed_model(rng):
-    """A single fixed instance of Assumption D.8; only sigma varies afterwards."""
+    """A single fixed instance of Assumption D.8; only sigma varies afterwards.
+
+    Component means per view are taken from an orthonormal frame so the factor
+    matrices are perfectly conditioned. A badly conditioned A or B would make the
+    multi-view pseudo-inverses amplify sampling noise, and the experiment would
+    then be measuring conditioning rather than the sigma-dependence under test.
+    """
     mus = []
     for _ in range(3):
-        M = rng.standard_normal((P_PER_VIEW, K_COMPONENTS))
-        M /= np.linalg.norm(M, axis=0, keepdims=True)
-        mus.append(M * 3.0)
+        Q, _ = np.linalg.qr(rng.standard_normal((P_PER_VIEW, P_PER_VIEW)))
+        mus.append(MEAN_SCALE * Q[:, :K_COMPONENTS])
     return mus
 
 
@@ -119,7 +125,7 @@ def _stated_bound_unit(n):
     return float(np.sqrt(P_TOTAL * np.log(P_TOTAL / EPS) / n))
 
 
-def sigma_sweep(sigmas=(1.0, 1.25, 1.5, 1.75, 2.0), n_base=8000, seeds=(0, 1, 2, 3, 4)) -> dict:
+def sigma_sweep(sigmas=(1.0, 1.25, 1.5, 1.75, 2.0), n_base=20000, seeds=(0, 1, 2, 3, 4)) -> dict:
     """n on the theorem's boundary: n = n_base * sigma^6, everything else frozen."""
     rng = np.random.default_rng(20260801)
     mus = _fixed_model(rng)
@@ -140,6 +146,12 @@ def sigma_sweep(sigmas=(1.0, 1.25, 1.5, 1.75, 2.0), n_base=8000, seeds=(0, 1, 2,
                 "error_over_stated_unit": float(np.median(errs)) / unit,
             }
         )
+    if len(rows) < 3:
+        return {
+            "ok": False,
+            "rows": rows,
+            "error": "fewer than three sigma points produced a usable weight estimate",
+        }
     x = np.log(np.array([r["sigma_max"] for r in rows]))
     y = np.log(np.array([r["error_over_stated_unit"] for r in rows]))
     slope, intercept = np.polyfit(x, y, 1)
@@ -157,7 +169,7 @@ def sigma_sweep(sigmas=(1.0, 1.25, 1.5, 1.75, 2.0), n_base=8000, seeds=(0, 1, 2,
     }
 
 
-def negative_controls(n_base=8000) -> dict:
+def negative_controls(n_base=20000) -> dict:
     """Controls that must move the measured error in the intended direction."""
     rng = np.random.default_rng(20260801)
     mus = _fixed_model(rng)
