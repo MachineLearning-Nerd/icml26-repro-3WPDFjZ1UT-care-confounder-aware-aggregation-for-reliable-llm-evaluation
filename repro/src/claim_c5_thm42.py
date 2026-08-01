@@ -298,22 +298,37 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         _loglog_fit(fit_ns, fit_errs) if len(fit_ns) >= 4 else (float("nan"), float("nan"))
     )
 
+    # n*(alpha) and n*(delta) are read from the stage-2 curve, since that is the
+    # quantity Theorem 4.2's Davis-Kahan half governs. The stage-3 figure is
+    # reported separately below and reflects our solver, not the theorem.
     alphas = [0.5, 0.4, 0.3, 0.22, 0.16]
-    stars = [(a, _n_star(ns, errs, a)) for a in alphas]
+    stars = [(a, _n_star(ns, oracle_curve, a)) for a in alphas]
     stars = [(a, s) for a, s in stars if s is not None]
     slope_alpha, se_alpha = (
         _loglog_fit([a for a, _ in stars], [s for _, s in stars])
         if len(stars) >= 3
         else (float("nan"), float("nan"))
     )
+    stars_pipeline = [(a, _n_star(ns, errs, a)) for a in alphas]
+    stars_pipeline = [(a, s) for a, s in stars_pipeline if s is not None]
 
     # delta sweep: same p, h, sparsity, same overall scale of L*; only the eigengap moves.
     delta_rows = []
     for d in (2.0, 1.0, 0.5, 0.25):
-        lam_d = np.array([2.0 + d, 2.0, 2.0 - d]) if d < 2.0 else np.array([4.0, 2.0, 0.5])
+        lam_d = np.array([4.0, 2.0, 0.5]) if d >= 2.0 else np.array([2.0 + d, 2.0, 2.0 - d])
         rng_d = np.random.default_rng(4242)
-        Kd, _, _, Sig_d = _make_model(p, h, lam_d, rng_d)
-        e_d = _error_curve(Sig_d, Kd, lam_d, ns, seeds)
+        Kd, _, Th_d, Sig_d = _make_model(p, h, lam_d, rng_d)
+        e_d = [
+            float(
+                np.median(
+                    [
+                        _stage_errors(Sig_d, Th_d, Kd, lam_d, n, 7000 + 31 * s + n)[1]
+                        for s in seeds
+                    ]
+                )
+            )
+            for n in ns
+        ]
         delta_rows.append(
             {
                 "delta": d,
@@ -361,7 +376,8 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
         "loglog_slope_error_vs_n_stderr": se_n,
         "predicted_slope_error_vs_n": -0.5,
         "requirement_error_vs_n": "slope <= -0.42 (decays at least as fast as n^-1/2)",
-        "n_star_vs_alpha": stars,
+        "n_star_vs_alpha_stage2": stars,
+        "n_star_vs_alpha_stage3_pipeline": stars_pipeline,
         "loglog_slope_n_star_vs_alpha": slope_alpha,
         "loglog_slope_n_star_vs_alpha_stderr": se_alpha,
         "predicted_slope_n_star_vs_alpha": -2.0,

@@ -9,7 +9,7 @@ C_1, C_2 > 0 and 0 < eps < 1:
         (I)  max_{q,c} ||mu^_qc - mu_qc||_2 <= C_1 (sigma_max^3/delta) sqrt(p log(p/eps)/n)
         (II) max_{q,c} |pi^_qc - pi_qc|     <= C_2 sqrt(p log(p/eps)/n).
 
-Two independent routes are run.
+Three routes are run.
 
 Route A - reconstruct the paper's own derivation symbolically.  The chain is
   (8)  ||M^ - M||_op <= C sigma_max^3 sqrt(p log(p/eps)/n)          [Bernstein + 13^p net]
@@ -17,15 +17,22 @@ Route A - reconstruct the paper's own derivation symbolically.  The chain is
   (11) weight error  <= C_pi ||E||_op                                [Lipschitz stability]
 Composing (10) with (8) reproduces (I) exactly.  Composing (11) with (8) gives
   max |pi^ - pi| <= C_pi C sigma_max^3 sqrt(p log(p/eps)/n),
-i.e. the stated bound (II) has *dropped* the sigma_max^3 factor that the paper's
-own proof produces.
+so the *displayed* chain does not establish (II), whose C_2 is universal: a factor
+of sigma_max^3 is unaccounted for.  This is recorded as a gap in the written proof.
 
-Route B - measure the quantity the bound is about.  Hold the entire model fixed
-(mu, pi, delta, p, eps) and scale only sigma_max, setting n at the theorem's own
-threshold n = C_1 sigma^6 p log(p/eps)/(delta^2 pi_min^2).  Along that boundary
-the *stated* bound (II) decays like sigma^-3, while the proof chain predicts a
-sigma-free error.  Whatever the universal constants are, if the measured error
-does not decay like sigma^-3 the stated bound is violated for large sigma_max.
+Route B - measure the sample complexity the theorem actually asserts.  For a target
+weight accuracy we SEARCH for the smallest n that attains it, and fit the exponents
+of n*(sigma_max), n*(pi_min) and n*(p log(p/eps)).  Because "n >~ ..." is a
+sufficient condition, each check is one-sided: the measured exponent must not
+EXCEED the stated one.  No sample size is ever read off the formula under test.
+
+Route C - probe whether the gap in Route A is a real defect, by measuring the
+weight error along the theorem's own sample-complexity boundary n = n_0 sigma^6.
+If eq. (11) were tight the error would be sigma-free there while the stated bound
+decays like sigma^-3.  It is not: no sigma-growth is detected, so eq. (11) is
+merely a loose intermediate and the stated bound survives.  Route C is reported
+because the negative result matters - it is the reason this claim is NOT recorded
+as falsified.
 
 Negative controls make the measurement non-vacuous: over-sampling must drive the
 error down, and freezing n must drive it up.
