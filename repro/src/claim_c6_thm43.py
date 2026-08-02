@@ -301,7 +301,11 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
     rng = np.random.default_rng(20260801)
     mus = _model(rng, P_PER_VIEW)
     rows = []
-    for sigma in (1.0, 1.3, 1.7, 2.2):
+    # 7 points, not 4. The interval that decides informativeness is t(0.975, k-2)*se,
+    # so going from 4 to 7 points drops the multiplier from 4.303 to 2.571 and shrinks
+    # se as well. The RANGE is deliberately unchanged: n* grows like sigma^6, so buying
+    # degrees of freedom at the top of the range would cost ~6x the runtime per step.
+    for sigma in (1.0, 1.15, 1.35, 1.55, 1.8, 2.0, 2.2):
         c = _curve(mus, PI_TRUE, sigma, P_TOTAL, NS_GRID, seeds)
         f = _n_star_fit(NS_GRID, c)
         rows.append({"sigma_max": sigma, "errors": c, "n_star": f["n_star"],
@@ -331,7 +335,8 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
 
     # pi_min sweep: predicted exponent >= -2 (n* grows no faster than pi_min^-2).
     rows = []
-    for pmin in (0.25, 0.15, 0.10, 0.06):
+    # 7 points over the same range, for the same reason as the sigma sweep above.
+    for pmin in (0.25, 0.215, 0.185, 0.155, 0.125, 0.09, 0.06):
         rest = (1.0 - pmin) / 3.0
         pi = np.array([rest, rest, rest, pmin])
         c = _curve(mus, pi, 1.0, P_TOTAL, NS_GRID, seeds)

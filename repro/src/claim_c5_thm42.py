@@ -326,10 +326,21 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     stars_pipeline = [(a, _n_star(ns, errs, a)) for a in alphas]
     stars_pipeline = [(a, s) for a, s in stars_pipeline if s is not None]
 
-    # delta sweep: same p, h, sparsity, same overall scale of L*; only the eigengap moves.
+    # delta sweep. The eigengap delta = lam[0] - lam[1] is varied while BOTH ends of the
+    # spectrum are pinned: lam[0] = 4.0 and lam[-1] = 1.0 for every setting, so the
+    # spectral range and the conditioning of L* do not move with delta and only the
+    # middle eigenvalue does.
+    #
+    # An earlier version used `[4.0, 2.0, 0.5] if d >= 2.0 else [2.0+d, 2.0, 2.0-d]`,
+    # under a comment claiming the overall scale was held fixed. It was not: d = 2.0 was
+    # special-cased onto a different spectrum family (0.5 where the formula gives 0), and
+    # for d < 2 the smallest eigenvalue 2-d moved with d as well. Changing delta therefore
+    # also changed the conditioning, and the resulting n*(delta) was non-monotonic
+    # (25694, 5649, 3060, 7839 for d = 2, 1, 0.5, 0.25) -- the wrong sign at the top of
+    # the range. That was a confounded design, not sampling noise.
     delta_rows = []
-    for d in (2.0, 1.0, 0.5, 0.25):
-        lam_d = np.array([4.0, 2.0, 0.5]) if d >= 2.0 else np.array([2.0 + d, 2.0, 2.0 - d])
+    for d in (0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5):
+        lam_d = np.array([4.0, 4.0 - d, 1.0])
         rng_d = np.random.default_rng(4242)
         Kd, _, Th_d, Sig_d = _make_model(p, h, lam_d, rng_d)
         e_d = [
