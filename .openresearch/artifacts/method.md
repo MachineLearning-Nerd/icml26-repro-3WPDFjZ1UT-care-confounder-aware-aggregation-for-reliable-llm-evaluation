@@ -10,9 +10,9 @@ All variants live in committed code. Two environment variables do affect what ru
 an earlier version of this sentence wrongly denied it: `CARE_OFFICIAL_DIR` selects the
 authors' checkout, and `CARE_ENTRY` selects the shard entrypoint inside the job
 bootstrap. Neither changes a claim's result; both are recorded here rather than left as
-a false absolute (see Limitations item 19). All research compute runs on Hugging Face
-`cpu-upgrade` (8 vCPU, 32 GB); the local machine is used only to read and edit the
-repository. `repro/src/threads.py` is imported before numpy/scipy/torch and pins
+a false absolute (see Limitations item 19). Prior benchmark shards ran on Hugging Face
+`cpu-upgrade`; the fixed-entrypoint release run used local 8-CPU compute.
+`repro/src/threads.py` is imported before numpy/scipy/torch and pins
 every BLAS/OpenMP pool to the container's real cgroup quota, without which these
 jobs run 20–40× slower than they should.
 
@@ -31,8 +31,10 @@ Independently, the *arithmetic* content of the three claims — 26.8 %, 17.37 %,
 12.75 %, 13.4 %, and "best on 5 of 6" — is decided exactly against the published
 tables, including which definition of "average relative improvement" the paper
 actually used. This is done twice: once in `claim_c123_benchmarks.py` in floating
-point, and once in `independent_check.py` in exact `Fraction` arithmetic against a
-separate hand transcription of Table 1.
+point, and once in `independent_check.py` in exact `Fraction` arithmetic against separate
+hand transcriptions of Tables 1 and 2. Claim 3's official generated `0.814/0.705` pair is
+evaluated literally; changing only 0.705 to the actual strongest baseline 0.718 is a
+repair control that recovers the paper's nearby 13.4% prose.
 
 **Negative control.** Each judge column of the ASSET matrix is independently
 row-permuted. This preserves every judge's marginal distribution but destroys the
@@ -76,26 +78,25 @@ counterexamples.
 
 ## Claim 5 — Theorem 4.2
 
-1. **Derivation.** The two cited bounds are composed in `sympy` and checked to
-   reproduce both the stated rate and the stated `n ≥ 8C₁²η/(ξ(T)²δ²α²)`.
-2. **The cited constant, independently.** 4,000 random symmetric perturbations
-   search for a violation of `‖û−u‖ ≤ 2^{3/2}‖Δ‖₂/gap` — the Yu et al. (2015)
-   variant the proof invokes — rather than taking it on trust.
-3. **Calibrated, non-circular scaling.** Algorithm 1's estimator is implemented
-   directly (proximal-gradient sparse-plus-low-rank on the sample precision with a
-   PSD projection on `L`, then rank-`h` eigen-decomposition). We *search* for the
-   smallest `n` reaching a target accuracy `α`, over a geometric grid and a range
-   of `α` and of `δ`, and fit the exponents. No sample size is ever taken from the
-   formula under test.
+1. **Sign counterexample.** At exact recovery, `-u` is an equally valid eigenvector.
+   D.5's raw distance is 2 against a zero right-hand side; the sign-aligned control used
+   correctly in D.4 is zero.
+2. **Missing-zero-gap family.** For `L*=2u₁u₁ᵀ+a u_hu_hᵀ` and
+   `E=(a/r)(u_hvᵀ+vu_hᵀ)` with `v` in the nullspace, the last eigenvector's error is
+   independent of `a`. D.5's gap `2-a` makes the normalized violation diverge like
+   `1/a`; the required full-spectrum gap `a` keeps it bounded. A separate 2x2
+   implementation independently reproduces every row.
+3. **Assumption control.** Set `n=(r/a)^2`; the minimum signal divided by the
+   `n^-1/2` noise is fixed at `r/sqrt(p)`, so a sufficiently large fixed `r` satisfies
+   any finite Chandrasekaran signal constant while the violation still diverges.
+4. **Estimator-independent lower bound.** Two CARE-factorizable Gaussian precision
+   models rotate only the weak direction. With `n=(c/a)^2` their exact n-sample KL stays
+   below 0.033, so Le Cam forces error with probability above 0.436 on one model while
+   D.5 permits only 0.0996 failure and its positive-eigenvalue-gap rate tends to zero.
+   Using the correct gap to zero restores the nonvanishing rate scale.
 
-**Negative controls.** (a) Skipping the sparse-plus-low-rank step and
-eigen-decomposing the raw precision must stay biased at every `n` — otherwise the
-`S+L` step is doing nothing and the check is vacuous. (b) Column-scrambled data
-must never recover the directions.
-
-**Limitation.** `ξ(T)` is Chandrasekaran et al.'s curvature constant and has no
-closed form we can evaluate, so it is held fixed across each sweep: its `1/ξ(T)`
-factor is reconstructed from the derivation, not measured.
+The prior symbolic composition, constant search, rate sweeps, and negative controls
+remain in the run and archive. They are not load-bearing for the literal falsification.
 
 ## Claim 6 — Theorem 4.3
 
@@ -122,14 +123,14 @@ mean the measurement is saturated rather than informative.
 ## Independent checker
 
 `repro/src/independent_check.py` re-derives the load-bearing numbers by different
-routes: exact `Fraction` arithmetic on a second transcription of Table 1;
+routes: exact `Fraction` arithmetic on second transcriptions of Tables 1 and 2;
 60-digit `mpmath` for the Proposition 4.1 counterexample; central finite
-differences against the analytic first-order perturbation formula; and a Theil–Sen
-slope for the Theorem 4.3 sweep instead of least squares.
+differences against the analytic first-order perturbation formula; direct 2x2
+diagonalization of the D.5 missing-gap family; direct trace/log-determinant Gaussian KL;
+and a Theil–Sen slope for the Theorem 4.3 sweep instead of least squares.
 
 ## Exit contract
 
 `run_all.py` exits `1` if any claim contract or the independent checker fails, and
 prints the complete verdict JSON to stdout between `===CARE_VERDICT_BEGIN===` and
-`===CARE_VERDICT_END===` — job filesystems are discarded on exit, so stdout is the
-only durable channel.
+`===CARE_VERDICT_END===`; it also writes the local artifact used to render this release.

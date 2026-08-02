@@ -3,3 +3,4 @@ external/
 __pycache__/
 *.pyc
 .openresearch/artifacts/*.json
+!.openresearch/artifacts/claim_contract.json

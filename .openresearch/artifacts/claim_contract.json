@@ -1,0 +1,163 @@
+{
+  "paper": "3WPDFjZ1UT",
+  "arxiv": "2603.00039",
+  "title": "CARE: Confounder-Aware Aggregation for Reliable LLM Evaluation",
+  "source": {
+    "url": "https://ar5iv.labs.arxiv.org/html/2603.00039",
+    "sha256": "2e733a1609e1dd907dd839b9eed8d9fb7d88549f45d40fafbca7af94ee5e77ea",
+    "retrieved_utc": "2026-08-01T04:20:00Z",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+  },
+  "official_code": {
+    "url": "https://github.com/SprocketLab/CARE",
+    "sha": "72f5b29a822d9934d31777c10a5c38369884c9dc",
+    "released_judge_score_matrices": [
+      "ASSET",
+      "CivilComments",
+      "PKU-BETTER"
+    ],
+    "usable_for_a_metric": [
+      "ASSET",
+      "CivilComments"
+    ],
+    "released_but_unusable": {
+      "PKU-BETTER": "every released label source is constant (gold_label_binary=0, gold_label_num=1, was_swapped=False), so no accuracy can be computed; verified by repro/src/label_audit.py"
+    }
+  },
+  "fixed_run_command": "uv run python repro/src/run_all.py",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "CARE-SVD reduces mean absolute error to 0.623 +- 0.006 versus 0.851 +- 0.000 for majority-vote aggregation on UltraFeedback, a 26.8% error reduction (Table 1).",
+      "anchor": "Table 1, UltraFeedback column; Section 5.1 prose",
+      "assumptions": [
+        "5,000 examples sampled from openbmb/UltraFeedback",
+        "11-20 LLM judges scoring 0-10, per Appendix E.4",
+        "gamma_n tuned on a 15% validation split over the grid in Appendix E.3"
+      ],
+      "machine_checkable_contract": {
+        "arithmetic": "abs((MV_UF - CARE_UF)/MV_UF*100 - 26.8) < 0.05 using Table 1 entries",
+        "empirical": "reproduce MAE for MV and CARE-SVD on UltraFeedback from the authors' judge-score matrix and match 0.851 / 0.623 within the published std"
+      },
+      "status_of_empirical_half": "BLOCKED - the authors released no judge-score matrix for UltraFeedback; regenerating it needs GPU inference (Appendix E.2 reports an NVIDIA A100, up to 3 h per dataset). This campaign is CPU-only by authorisation.",
+      "substituted_full_scale_evidence": "the same Table 1 quantity is reproduced end-to-end on ASSET, the one Table 1 column whose judge outputs were released",
+      "post_hoc_elements": [
+        {
+          "id": "internal_consistency_table1_vs_table7",
+          "provenance": "POST-HOC. Added after Appendix E.8 was read; the pre-registered C1/C2 contracts contain no element about cross-table consistency. The criterion itself was fixed before the z-scores were computed: two published reports of one quantity must agree within z <= 2 of their own combined reported standard deviations.",
+          "what_is_compared": "Table 1's CARE-SVD row against Appendix E.8 Table 7's '1st Factor' row, which the appendix states is the same setup and the same default heuristic.",
+          "decides": "per dataset, |m_table1 - m_table7| / sqrt(s_table1^2 + s_table7^2) <= 2",
+          "would_falsify_the_consistency_element": "any dataset exceeding z = 2",
+          "cannot_decide": "which of the two published values is correct; that needs the judge-score matrix, which exists only for ASSET",
+          "scope": "a finding about the paper's internal reporting consistency, not about whether CARE works; both tables agree that CARE-SVD beats AVG on all six datasets",
+          "implemented_by": [
+            "repro/src/claim_c123_benchmarks.py:appendix_consistency_audit",
+            "repro/src/independent_check.py:appendix_consistency_exact"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "CARE achieves an average 17.37% improvement over simple averaging across continuous-scoring benchmarks (Table 1).",
+      "anchor": "Section 5.1: 'Averaged across scoring datasets, CARE-SVD yields a 17.37% relative improvement over AVG and a 12.75% improvement over MV.'",
+      "machine_checkable_contract": {
+        "definition_identification": "enumerate candidate definitions of 'average relative improvement' and identify which reproduces BOTH 17.37% and 12.75% from Table 1 in exact rational arithmetic",
+        "empirical": "reproduce the AVG and CARE-SVD MAE entries of Table 1 for every scoring dataset",
+        "unit_invariance": "SCOPE QUALIFICATION established if, when ASSET's (MV, AVG, CARE-SVD) triple is rescaled by c: (a) the pooled mean-MAE ratio equals a baseline-MAE-weighted mean of per-dataset improvements as an exact identity, (b) the pooled statistic moves by more than 1 pp across c, (c) the unweighted across-benchmark average is exactly invariant, (d) the AVG-vs-MV ordering flips for some c, and (e) the unweighted average differs from 17.37 by more than 1 pp. This element CANNOT falsify the claim and an earlier revision of this file wrongly said it could: condition (c) holds by algebra -- (c*a - c*k)/(c*a) = (a - k)/a -- so the unweighted mean is unit-invariant identically, and (a) is likewise an identity. What the element establishes is the SIZE and DIRECTION of the weighting, which is not predictable from the algebra, and that is a qualification on the scope of a correctly reported number, not an error in it. The published verdict is VERIFIED with a quantified scope qualification; the field the code sets is `scope_qualification_established`."
+      },
+      "status_of_empirical_half": "PARTIAL - 1 of 6 scoring datasets (ASSET) has released judge outputs; the other five are BLOCKED for the same reason as C1.",
+      "contract_provenance": {
+        "definition_identification": "pre-registered before measurement",
+        "empirical": "pre-registered before measurement",
+        "unit_invariance": "POST-HOC - added 2026-08-01 after the pooled/unweighted discrepancy was observed. Reframed 2026-08-01 from 'FALSIFIED as worded if ...' to 'SCOPE QUALIFICATION established if ...' after a blind reviewer showed the invariance half of the criterion is an algebraic identity that cannot fail. The candidate carrying the FALSIFIED reading was never uploaded. See Limitations items 21 and 23a."
+      },
+      "post_hoc_elements": [
+        {
+          "id": "internal_consistency_table1_vs_table7",
+          "provenance": "POST-HOC. Added after Appendix E.8 was read; the pre-registered C1/C2 contracts contain no element about cross-table consistency. The criterion itself was fixed before the z-scores were computed: two published reports of one quantity must agree within z <= 2 of their own combined reported standard deviations.",
+          "what_is_compared": "Table 1's CARE-SVD row against Appendix E.8 Table 7's '1st Factor' row, which the appendix states is the same setup and the same default heuristic.",
+          "decides": "per dataset, |m_table1 - m_table7| / sqrt(s_table1^2 + s_table7^2) <= 2",
+          "would_falsify_the_consistency_element": "any dataset exceeding z = 2",
+          "cannot_decide": "which of the two published values is correct; that needs the judge-score matrix, which exists only for ASSET",
+          "scope": "a finding about the paper's internal reporting consistency, not about whether CARE works; both tables agree that CARE-SVD beats AVG on all six datasets",
+          "implemented_by": [
+            "repro/src/claim_c123_benchmarks.py:appendix_consistency_audit",
+            "repro/src/independent_check.py:appendix_consistency_exact"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "statement": "On classification/preference datasets, CARE attains the best accuracy on 5 of 6 datasets, including a 13.4% relative improvement over the baseline on Summarize (0.814 +- 0.001 vs 0.705 +- 0.000) (Table 2).",
+      "anchor": "Table 2; Section 5.1 prose",
+      "machine_checkable_contract": {
+        "structural": "recompute the per-column argmax over all nine Table 2 methods; assert CARE wins exactly 5 of 6 and that CARE-Tensor leads on PKU-BETTER, SHP and Summarize",
+        "literal_generated_pair": "FALSIFIED iff exact rational arithmetic gives abs((0.814 - 0.705)/0.705*100 - 13.4) > 0.05 percentage points",
+        "repair_control": "replacing only 0.705 with the actual strongest Summarize baseline 0.718 must recover 13.4 within 0.05 percentage points",
+        "empirical": "reproduce the CivilComments and PKU-BETTER columns from the authors' judge-score matrices, all nine methods, five seeds"
+      },
+      "literal_verdict": "FALSIFIED: the explicit pair gives 15.4609929%, not 13.4%; the nearby paper prose is correct only with GLAD at 0.718, which gives 13.3704735%.",
+      "note": "The generated challenge claim, not a paraphrase of the nearby paper prose, is authoritative. Both readings are decided explicitly and independently.",
+      "status_of_empirical_half": "PARTIAL - of Table 2's six columns, only CivilComments can be reproduced. Four have no released judge outputs (GPU-blocked, Appendix E.2). PKU-BETTER has judge outputs but its released labels are constant, so it is BLOCKED by a failed integrity precondition, not scored.",
+      "integrity_preconditions": [
+        "the dataset's released gold labels must have >= 2 distinct values and a minority class >= 1%; a dataset failing this is BLOCKED, never FALSIFIED"
+      ]
+    },
+    {
+      "id": "C4",
+      "statement": "Proposition 4.1 establishes identifiability of latent-judge directions up to sign and permutation under shared confounders, with perturbation stability bounds (Section 4).",
+      "anchor": "Proposition 4.1 (Section 4); Assumptions D.1-D.2, Theorem D.3, Theorem D.4 (Appendix D.2)",
+      "assumptions_as_stated": {
+        "main_text": "K_HH = diag(d_1..d_h), d_1 > ... > d_h > 0; columns of K_JH ORTHOGONAL",
+        "appendix": "K_HH^-1 = diag(lambda_1..lambda_h), lambda_1 > ... > lambda_h > 0; columns of K_JH ORTHONORMAL"
+      },
+      "machine_checkable_contract": {
+        "identifiability": "symbolic proof that L k_i = lambda_i k_i and rank(L - lambda_i I) = p - 1 for a parameterised family of orthonormal K",
+        "stability_constant": "sup over E of ||u~_i - s u_i|| delta_i / (||K_HH^-1||_2 ||E||_2) <= 4",
+        "counterexample_search": "construct K_JH, K'_JH satisfying every main-text hypothesis with the same L but columns not related by sign/permutation; and a family on which the main-text bound is violated by an unbounded factor"
+      }
+    },
+    {
+      "id": "C5",
+      "statement": "Theorem 4.2 gives a finite-sample convergence rate of O(sqrt(eta/n) * 1/(xi(T)*delta)) for the spectral estimation path (Section 4).",
+      "anchor": "Theorem 4.2 (Section 4) = Theorem D.5, proved in Appendix D.6 from Chandrasekaran et al. (2012) Thm 4.1 and Yu et al. (2015) Thm 2",
+      "machine_checkable_contract": {
+        "literal_sign_counterexample": "at exact recovery, choose the equally valid eigenvector -u; D.5's raw distance is 2 and its RHS is 0, while the sign-aligned control is 0",
+        "missing_zero_gap_family": "for L*=2u1u1^T+a*uhuh^T and E=(a/r)(uhv^T+vuh^T), prove error/(||E||/delta_paper) diverges as a->0 while the ratio using delta_full=a stays bounded",
+        "minimum_signal_control": "couple n=(r/a)^2 so a/sqrt(p/n)=r/sqrt(p); a fixed sufficiently large r meets any finite minimum-signal constant while the paper-gap violation still diverges",
+        "gaussian_two_point_lower_bound": "construct two CARE-factorizable Gaussian models with weak eigenvectors separated by theta, n-sample KL bounded under n=(c/a)^2, and a Le Cam error-probability lower bound above D.5's failure budget while its paper-gap rate tends to zero",
+        "derivation": "symbolically compose the two cited bounds and check they yield the stated rate and the stated n >= 8 C_1^2 eta /(xi^2 delta^2 alpha^2)",
+        "cited_constant": "search for a symmetric perturbation violating ||u^ - u|| <= 2^{3/2}||Delta||_2/gap",
+        "calibrated_scaling": "run the Algorithm-1 estimator and SEARCH for the smallest n reaching accuracy alpha; fit exponents of n*(alpha) and n*(delta) and compare with -2 and -2"
+      },
+      "literal_verdict": "FALSIFIED by the sign counterexample, the missing-zero-gap family, and a Gaussian two-point minimax lower bound that decides the statistical rate itself. The previous finite-grid sweeps are retained but do not carry the verdict.",
+      "non_circularity": "the formulation counterexamples are exact; the missing-gap result is symbolic in a, and the statistical lower bound is recomputed independently from the direct 2x2 Gaussian trace/log-determinant KL formula."
+    },
+    {
+      "id": "C6",
+      "statement": "Theorem 4.3 gives a sample complexity bound n >~ sigma_max^6/(delta^2 pi_min^2) p log(p/eps) for recovering the mixture parameters (mu_qc, pi_qc) (Section 4).",
+      "anchor": "Theorem 4.3 (Section 4) = Theorem D.9, proved in Appendix D.6",
+      "machine_checkable_contract": {
+        "derivation": "compose the paper's own eq. (8), (10)-(12) and eq. (11) and compare each composed bound with the stated one",
+        "empirical": "hold mu, pi, delta, p, eps fixed, scale sigma_max, set n at the theorem's own threshold, and measure max|pi^ - pi| against C_2 sqrt(p log(p/eps)/n)"
+      },
+      "falsification_criterion": {
+        "pre_registered": "the stated weight bound is violated if the measured error does not decay like sigma^-3 along the theorem's own sample-complexity boundary, since no fixed universal C_2 can then satisfy it for all sigma_max.",
+        "added_after_baseline": {
+          "criterion": "the stated p*log(p/eps) factor is falsified if, with sigma, delta and pi_min held fixed, the measured exponent of n* on p*log(p/eps) exceeds 1 by more than two standard errors under BOTH n* estimators",
+          "added_utc": "2026-08-01",
+          "why_added": "The pre-registered criterion tests only the sigma boundary. While repairing a censored search grid (every pi_min setting had returned n* = 5000, the grid floor) the p sweep became measurable for the first time and immediately exceeded its bound. The criterion was written before that sweep was re-run with the corrected grid, but AFTER the censored run had already shown a large p-exponent.",
+          "honest_status": "POST-HOC. This is a post-hoc test, not a pre-registered one. The three admissibility gates it must clear (both n* estimators resolving and agreeing, the restart-budget attribution, and the constancy audit of every other quantity in the bound) were each written before their own outcomes were known, but the decision to test the p factor at all was prompted by seeing a large exponent."
+        }
+      }
+    }
+  ],
+  "verdict_vocabulary": [
+    "VERIFIED",
+    "FALSIFIED",
+    "BLOCKED"
+  ],
+  "verifier_exit_contract": "repro/src/run_all.py exits 1 if any claim contract or the independent checker fails."
+}

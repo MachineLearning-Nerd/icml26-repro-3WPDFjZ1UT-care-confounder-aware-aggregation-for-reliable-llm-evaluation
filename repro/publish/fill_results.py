@@ -185,6 +185,30 @@ def c3_control(v):
     )
 
 
+def c3_literal(v):
+    literal = g(v, "claims", "C1_C2_C3_tables", "claim3_literal_audit", default={})
+    independent = g(v, "independent_check", "table2_second_transcription", default={})
+    rows = [
+        [
+            "Generated claim: `(0.814−0.705)/0.705`",
+            f"**{num(literal.get('quoted_pair_relative_improvement_pct'), 6)} %**",
+            yesno(literal.get("quoted_pair_matches_13p4_at_printed_precision")),
+        ],
+        [
+            "Repair control: `(0.814−0.718)/0.718`",
+            f"{num(literal.get('nearby_paper_prose_relative_improvement_pct'), 6)} %",
+            yesno(literal.get("nearby_paper_prose_matches_13p4_at_printed_precision")),
+        ],
+    ]
+    return (
+        table(["Reading", "Exact/recomputed result", "13.4% at printed precision?"], rows)
+        + f"\n\nIndependent second transcription agrees that the generated literal is false: "
+        f"{yesno(not independent.get('generated_claim_literal_holds', True))}. "
+        f"Positive repair control passes: "
+        f"{yesno(literal.get('positive_control_replace_0p705_with_0p718_repairs_arithmetic'))}."
+    )
+
+
 def c2_definitions(v):
     a = g(v, "claims", "C1_C2_C3_tables", "table_arithmetic", default={})
     defs = a.get("candidate_definitions", {})
@@ -921,11 +945,14 @@ def verdicts(v):
     rows = []
     for cid, key, title, slug in order:
         blk = claims.get(key, {})
+        verdict = PAGE_VERDICT.get(cid) or blk.get("verdict", "—")
+        if callable(verdict):
+            verdict = verdict(v)
         rows.append(
             [
                 cid,
                 f"[{title}](#/{slug})",
-                PAGE_VERDICT.get(cid) or blk.get("verdict", "—"),
+                verdict,
                 yesno(blk.get("ok")),
                 f"{num(blk.get('runtime_s'), 1)} s",
             ]
@@ -937,7 +964,8 @@ def verdicts(v):
         f"independent checker: {yesno(ic.get('ok'))} · "
         f"total runtime {num(v.get('total_runtime_s'), 1)} s · "
         f"Git SHA `{env.get('git_sha', '—')}` · "
-        f"{env.get('cgroup_cpu_quota', '—')} vCPU on `{env.get('CARE_HF_FLAVOR', 'cpu-upgrade')}`."
+        f"{env.get('cgroup_cpu_quota', '—')} vCPU on "
+        f"`{env.get('hf_flavor') if env.get('hf_flavor') not in (None, 'unset') else 'local CPU'}`."
     )
     return table(["#", "Claim", "Verdict", "Contract passes", "Runtime"], rows) + tail
 
@@ -1093,6 +1121,53 @@ def c5_controls(v):
     return table(["Control", "Behaves as required"], rows) + f"\n\nAll controls: {yesno(nc.get('ok'))}."
 
 
+def c5_counterexamples(v):
+    ce = g(v, "claims", "C5_thm42", "route_0_literal_counterexamples", default={})
+    sign = ce.get("sign_counterexample") or {}
+    gap = ce.get("missing_zero_eigenspace_gap_counterexample") or {}
+    statistical = ce.get("gaussian_two_point_lower_bound") or {}
+    independent = g(v, "independent_check", "theorem_d5_counterexamples_independent", default={})
+    rows = [
+        [
+            num(x.get("smallest_positive_eigenvalue_a"), 4),
+            num(x.get("perturbation_norm"), 8),
+            num(x.get("aligned_eigenvector_error"), 8),
+            num(x.get("error_over_perturbation_div_paper_gap"), 3),
+            num(x.get("error_over_perturbation_div_full_gap"), 6),
+        ]
+        for x in gap.get("rows", [])
+    ]
+    lower_rows = statistical.get("rows", [])
+    lower_probability = min(
+        (x.get("le_cam_error_probability_lower_bound", 1) for x in lower_rows),
+        default=None,
+    )
+    return (
+        table(
+            [
+                "a",
+                "‖E‖₂=a/r",
+                "aligned error",
+                "error ÷ (‖E‖/δpaper)",
+                "error ÷ (‖E‖/δfull)",
+            ],
+            rows,
+        )
+        + f"\n\nSign counterexample: raw distance "
+        f"{num(sign.get('raw_distance_for_equally_valid_negative_eigenvector'), 1)}, "
+        f"right-hand side {num(sign.get('advertised_rhs_at_exact_recovery'), 1)}; "
+        f"sign-aligned control {num(sign.get('control_sign_aligned_distance'), 1)}.\n\n"
+        f"Paper-gap ratio diverges: {yesno(gap.get('paper_ratio_diverges'))}. "
+        f"Corrected full-gap ratio stays bounded: "
+        f"{yesno(gap.get('corrected_ratio_stays_bounded'))}. "
+        f"Gaussian two-point lower bound falsifies the statistical rate itself: "
+        f"{yesno(statistical.get('literal_statistical_theorem_falsified'))}; its minimum "
+        f"Le Cam error probability is {num(lower_probability, 4)} against the theorem's "
+        f"{num(statistical.get('theorem_failure_probability_budget'), 4)} failure budget. "
+        f"Independent 2×2/KL route passes: {yesno(independent.get('ok'))}."
+    )
+
+
 # --- Claim 6 extras --------------------------------------------------------
 def c6_symbolic(v):
     a = g(v, "claims", "C6_thm43", "route_a_symbolic_chain_audit", default={})
@@ -1228,37 +1303,26 @@ CONFIDENCE = {
                    "target selects the pooled mean-MAE ratio on its own, in exact rational "
                    "arithmetic, and the identification is confirmed against a second "
                    "independent transcription."),
-    "C3": ("HIGH", "Every arithmetic assertion is decided exactly over all nine Table 2 "
-                   "methods, and the nine-method grid is transcribed TWICE by hand and "
-                   "compared cell by cell before the argmax is recomputed from the second "
-                   "copy, so the 5-of-6 count does not rest on one transcription. The "
-                   "recomputed winners are also checked against the cells the paper "
-                   "typesets bold. An earlier revision of this line said the argmax was "
-                   "NOT independently recomputed; that was true of that revision and is "
-                   "no longer true. What remains outside any check: both transcriptions "
-                   "were taken from the same rendered source, so a systematic misreading "
-                   "would survive both. Empirically, one of six Table 2 columns is "
-                   "reproduced end-to-end; four ship no judge outputs and PKU-BETTER's "
-                   "released labels are degenerate."),
+    "C3": ("HIGH", "The official generated claim is decided in exact Fraction arithmetic: "
+                   "its explicit 0.814/0.705 pair gives 15.461%, not 13.4%. A positive "
+                   "repair control changes only 0.705 to the actual strongest baseline, "
+                   "0.718, and recovers 13.3705%, so the check can distinguish the false "
+                   "generated conjunction from the paper's correct nearby prose. A second "
+                   "hand transcription agrees across all 54 Table 2 cells and independently "
+                   "recomputes the 5-of-6 conjunct. One column is also reproduced at full "
+                   "scale; that empirical evidence is preserved but is not needed for the "
+                   "literal falsification."),
     "C4": ("HIGH", "Symbolic over a parameterised family, plus exact counterexamples that "
                    "satisfy the paper's own hypotheses. Deterministic; no seeds to vary."),
-    "C5": ("MEDIUM", "The cited Davis-Kahan constant holds across a random (not adversarial) "
-                     "search, and is confirmed by the independent checker re-running the search "
-                     "on its own draws over 500 trials; the eta-dependence -- which earlier revisions reported as "
-                     "NOT MEASURED -- is now measured directly from the error's own quantiles "
-                     "across confidence levels, holding at a tail exponent well below the "
-                     "stated 1/2. The load-bearing symbolic result is the sample-complexity "
-                     "inversion, which sympy SOLVES and then compares against a separately "
-                     "transcribed expression; the same check falsifies Theorem 4.3, so it is "
-                     "not vacuous. Two caveats keep this at MEDIUM rather than HIGH. The "
-                     "composition flag alongside it cannot fail -- both sides are the same "
-                     "product transcribed twice in one function -- so it checks our "
-                     "transcription, not the theorem, and it is labelled that way rather than "
-                     "counted as evidence. And the stage-2 exponent is -0.4724 +/- 0.0098; its "
-                     "residual-based interval falls just outside -0.5, which over a finite grid "
-                     "is neither a violation of an O(.) upper bound nor confirmation of the "
-                     "exponent, and is not read as excluding -1/2. xi(T) has no closed form we "
-                     "can evaluate and remains reconstructed rather than measured."),
+    "C5": ("HIGH", "The literal theorem has two exact formulation defects: it omits sign "
+                     "alignment even at zero noise and omits the last positive eigenvalue's "
+                     "gap to the zero eigenspace. The second defect is exercised by a symbolic "
+                     "family whose paper-normalized violation diverges while the corrected "
+                     "full-gap ratio remains bounded. A two-model Gaussian Le Cam bound then "
+                     "shows this is not merely a gap in the displayed proof: every estimator "
+                     "fails at probability above the theorem's budget on one model while the "
+                     "advertised paper-gap rate tends to zero. An independent 2x2 "
+                     "eigendecomposition and direct trace/log-determinant KL route agrees."),
     "C6": ("MEDIUM", "What stands is exact and symbolic: composing the paper's own cited results reproduces the mean bound (I) with no residual factor, and fails to reproduce the stated weight bound (II) by exactly sigma_max^3 -- a factor that grows without bound, so no universal constant absorbs it. That is a defect in the displayed derivation, established in sympy and re-derived by a second route. It is NOT a falsification of bound (II) itself: whether that bound happens to hold by some other argument is not decided here, and the boundary probe two earlier revisions read as deciding it resolves nothing at the correct t quantile. What does NOT stand: two earlier revisions each reported a falsification of this theorem -- one in sigma, one in the p*log(p/eps) factor -- and BOTH have been withdrawn on this campaign's own evidence. The rebuilt confound audit finds a real confound in the second: at fixed n the empirical M2 conditioning degrades with p and subspace leakage grows by two orders of magnitude, so part of any n*(p) growth is the moment estimate deteriorating rather than the stated factor being wrong. The sample-complexity exponents in sigma, pi_min and p are therefore NOT MEASURED at this budget, and the delta^-2 factor is not independently variable in this generative model. MEDIUM, not HIGH, because the strongest result here is about a proof rather than about the theorem's truth."),
 }
 
@@ -1521,22 +1585,64 @@ def _v_c5(v):
     )
 
 
+def _v_c3_literal(v):
+    literal = g(v, "claims", "C1_C2_C3_tables", "claim3_literal_audit", default={})
+    independent = g(v, "independent_check", "table2_second_transcription", default={})
+    return (
+        "**FALSIFIED as the official generated claim is literally written.** Its explicit "
+        f"pair `0.814 vs 0.705` gives **{num(literal.get('quoted_pair_relative_improvement_pct'), 4)} %**, "
+        "not 13.4 %. The nearby paper prose is a different, correct statement: using "
+        "GLAD's actual strongest-baseline value 0.718 gives "
+        f"**{num(literal.get('nearby_paper_prose_relative_improvement_pct'), 4)} %**, which "
+        "rounds to 13.4 %. Thus replacing only the generated claim's wrong baseline repairs "
+        "the arithmetic, while retaining 0.705 is rejected. The 5-of-6 conjunct is "
+        f"independently recomputed and holds ({independent.get('care_wins')}/"
+        f"{independent.get('of_datasets')}); one false numerical conjunct is enough to "
+        "falsify the generated conjunction. This result needs no missing judge outputs."
+    )
+
+
+def _v_c5_literal(v):
+    ce = g(v, "claims", "C5_thm42", "route_0_literal_counterexamples", default={})
+    gap = ce.get("missing_zero_eigenspace_gap_counterexample") or {}
+    sign = ce.get("sign_counterexample") or {}
+    statistical = ce.get("gaussian_two_point_lower_bound") or {}
+    independent = g(v, "independent_check", "theorem_d5_counterexamples_independent", default={})
+    rows = gap.get("rows") or []
+    largest = rows[-1].get("error_over_perturbation_div_paper_gap") if rows else None
+    corrected = rows[-1].get("error_over_perturbation_div_full_gap") if rows else None
+    lower_rows = statistical.get("rows") or []
+    lower_probability = min(
+        (x.get("le_cam_error_probability_lower_bound", 1) for x in lower_rows),
+        default=None,
+    )
+    return (
+        "**FALSIFIED as literally stated, by exact counterexamples plus a Gaussian minimax "
+        "lower bound.** First, D.5 omits the sign minimisation written explicitly in D.4: "
+        "at exact recovery an equally valid eigenvector `-u` has distance "
+        f"{num(sign.get('raw_distance_for_equally_valid_negative_eigenvector'), 1)} against "
+        "a zero right-hand side; sign alignment reduces it to "
+        f"{num(sign.get('control_sign_aligned_distance'), 1)}. Second, D.5 defines `δ` only "
+        "between positive eigenvalues, although Yu-Wang-Samworth requires separation from "
+        "the whole spectrum. For `L*=2u₁u₁ᵀ+a u_hu_hᵀ` and a perturbation of norm `a/r` "
+        "coupling `u_h` to a null direction, the last eigenvector rotates by a nonzero "
+        "angle independent of `a`, while the advertised right-hand side tends to zero. "
+        f"The paper-normalized violation ratio reaches **{num(largest, 1)}×** on the grid "
+        "and diverges; using the correct full-spectrum gap keeps the ratio at "
+        f"{num(corrected, 4)}. A two-model Gaussian Le Cam construction forces error with "
+        f"probability at least **{num(lower_probability, 4)}**, above D.5's "
+        f"**{num(statistical.get('theorem_failure_probability_budget'), 4)}** failure "
+        "budget, while the paper-gap rate tends to zero. Restoring the full gap makes the "
+        "lower and upper scales match. The independent 2x2/KL implementation agrees: "
+        f"**{independent.get('ok')}**."
+    )
+
+
 PAGE_VERDICT = {
     "C1": _v_c1,
     "C2": _v_c2,
-    "C3": "**VERIFIED** as arithmetic over the paper's published nine-method grid (best on "
-          "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure), decided "
-          "exactly and recomputed from a **second, independent hand transcription of all "
-          "54 cells**, with the recomputed column winners checked against the cells the "
-          "paper typesets in bold. Scope qualification: the count of 5 is a two-variant "
-          "family count — no single CARE configuration exceeds 3 of 6, though CARE-Tensor "
-          "held fixed across all six ranks 1.50 on average against the best single "
-          "baseline's 1 win, and the paper discloses the split. "
-          "**REPRODUCED at full scale on CivilComments** — all nine methods, five seeds, "
-          "the authors' own baseline harness. **BLOCKED** on the other five: four ship no "
-          "judge outputs, and PKU-BETTER's released labels are constant, which an "
-          "executable precondition detects and reports before any accuracy is computed",
-    "C5": _v_c5,
+    "C3": _v_c3_literal,
+    "C5": _v_c5_literal,
     "C6": _v_c6,
 }
 
@@ -1663,6 +1769,7 @@ GENERATORS = {
     "c3.summarize": c3_summarize,
     "c3.table2": c3_table2,
     "c3.control": c3_control,
+    "c3.literal": c3_literal,
     "c3.label_audit": c3_label_audit,
     "c4.d3": c4_d3,
     "c4.d4": c4_d4,
@@ -1672,6 +1779,7 @@ GENERATORS = {
     "c5.dk": c5_dk,
     "c5.results": c5_results,
     "c5.controls": c5_controls,
+    "c5.counterexamples": c5_counterexamples,
     "c6.symbolic": c6_symbolic,
     "c6.boundary": c6_boundary,
     "c6.results": c6_results,

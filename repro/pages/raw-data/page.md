@@ -13,8 +13,9 @@ extracts of that same file, so any figure quoted on a claim page can be located 
 | [`raw/method.md`](raw/method.md) | How each contract becomes an executable check |
 | [`raw/table1_asset.csv`](raw/table1_asset.csv) | Table 1, ASSET column: per-method MAE reproduced from the authors' released judge-score matrix, per seed and aggregated, next to the published value |
 | [`raw/table2.csv`](raw/table2.csv) | Table 2, CivilComments and PKU-BETTER columns: all nine methods, per seed and aggregated, next to the published values |
+| [`raw/c3_literal_audit.csv`](raw/c3_literal_audit.csv) | Claim 3: exact generated-pair decision and independent second-transcription controls |
 | [`raw/c4_constant_search.csv`](raw/c4_constant_search.csv) | Claim 4: the attained supremum of the Theorem D.4 ratio per configuration, over the Frobenius and spectral-norm balls |
-| [`raw/c5_rate.csv`](raw/c5_rate.csv) | Claim 5: the `n*(delta)` sweep rows, the Davis-Kahan constant check, and the Theil-Sen stage-slope recheck. The stage-1/2/3 error curves and the `n*(alpha)` search are **not** in this CSV; they are in [`raw/verdict.json`](raw/verdict.json) under `claims.C5_thm42.route_c_calibrated_rate` |
+| [`raw/c5_rate.csv`](raw/c5_rate.csv) | Claim 5: literal sign/eigengap/Gaussian lower-bound evidence plus the preserved `n*(delta)` sweep, Davis-Kahan constant search, and independent rechecks. Full nested records remain in [`raw/verdict.json`](raw/verdict.json) |
 | [`raw/c6_sigma_sweep.csv`](raw/c6_sigma_sweep.csv) | Claim 6: `n*` against `sigma_max`, `pi_min` and `p log(p/eps)`, plus the boundary probe of the weight bound |
 
 ## Source code
@@ -28,7 +29,7 @@ produced `verdict.json`:
 | [`repro/src/paper_source.py`](repro/src/paper_source.py) | Frozen transcription of Tables 1–2 and the prose quantifiers, plus the source SHA-256 |
 | [`repro/src/claim_c123_benchmarks.py`](repro/src/claim_c123_benchmarks.py) | Claims 1–3: benchmark reproduction, table arithmetic, coverage audit, negative control |
 | [`repro/src/claim_c4_prop41.py`](repro/src/claim_c4_prop41.py) | Claim 4: symbolic Theorem D.3, the exact Theorem D.4 constant, and the two counterexamples |
-| [`repro/src/claim_c5_thm42.py`](repro/src/claim_c5_thm42.py) | Claim 5: derivation audit, Davis–Kahan constant search, stage-decomposed rate |
+| [`repro/src/claim_c5_thm42.py`](repro/src/claim_c5_thm42.py) | Claim 5: literal sign/eigengap counterexamples, Gaussian lower bound, derivation audit, and preserved stage-decomposed rate |
 | [`repro/src/claim_c6_thm43.py`](repro/src/claim_c6_thm43.py) | Claim 6: derivation audit, calibrated sample-complexity sweeps, boundary probe |
 | [`repro/src/tensor_mom.py`](repro/src/tensor_mom.py) | Multi-view moments and the robust tensor power method of Anandkumar et al. (2014) |
 | [`repro/src/independent_check.py`](repro/src/independent_check.py) | Independent checker — different routes for the same numbers |

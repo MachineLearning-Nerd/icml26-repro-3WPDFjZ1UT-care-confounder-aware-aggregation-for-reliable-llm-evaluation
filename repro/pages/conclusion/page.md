@@ -4,7 +4,7 @@
 *(pending release run)*
 <!-- /FILL -->
 
-Full detail per claim is on [Current verification (2026-08-01)](#/current-verification)
+Full detail per claim is on [Current verification (2026-08-03)](#/current-verification)
 and the six claim pages linked from it.
 
 ## What CARE's evaluation survives, and what it does not
@@ -17,6 +17,14 @@ are degenerate and it is BLOCKED, not reproduced.
 That is the paper's real benchmark data, not a synthetic stand-in, and it directly
 answers the earlier judgement that this reproduction tested nothing on the paper's
 actual benchmarks.
+
+**Claim 3's official generated conjunction is false even though its nearby paper prose is
+correct.** The generated claim explicitly couples 13.4% to `0.814 vs 0.705`; exact rational
+arithmetic gives 15.461%. Replacing only 0.705 with GLAD's actual strongest-baseline value
+0.718 gives 13.3705%, recovering the paper's nearby prose. A second hand transcription of
+all 54 Table 2 cells independently confirms both results and the surviving 5-of-6
+conjunct. This is a literal falsification with a positive repair control, independent of
+the unreleased benchmark matrices.
 
 **The headline percentages are exact, but one of them is fragile.** Requiring 17.37 %
 and 12.75 % *simultaneously* identifies the paper's definition of "average improvement"
@@ -44,12 +52,16 @@ appendix statement survives both, and we derive a strictly tighter constant — 
 than 4 — for its perturbation bound. None of this threatens Algorithm 1, which works
 with the eigenvectors of `L̂` regardless.
 
-**Theorem 4.2 is corroborated with named gaps rather than declared closed.** Its
-composition and its cited Davis–Kahan constant are established directly, and its
-`η`-dependence — recorded by earlier revisions as unmeasurable — is now measured, by
-reading the error's own quantiles against `η(q) = −log((1−q)/2)`: the bound holds and is
-conservative. What remains genuinely unmeasured is `ξ(T)`, which has no closed form we
-can evaluate.
+**Theorem 4.2 is false as literally stated.** D.5 omits the sign alignment that D.4
+includes, so an equally valid `-u` has distance 2 at exact recovery against a zero
+right-hand side. More substantively, D.5 defines `δ` only between positive eigenvalues,
+omitting the last direction's separation from the zero eigenspace required by the cited
+Yu–Wang–Samworth result. An exact family makes the paper-normalized perturbation ratio
+diverge while the full-gap control stays bounded. A Gaussian two-point Le Cam argument
+then forces every estimator to exceed a fixed eigenvector-error threshold with probability
+above 0.436, beyond D.5's 0.0996 failure budget, while its advertised paper-gap rate tends
+to zero. An independent 2x2 trace/log-determinant route agrees. The prior finite-grid
+corroboration remains published, but it no longer carries the verdict.
 
 **Theorem 4.3's displayed proof is defective; the theorem itself is not thereby decided.**
 Composing the paper's own cited results reproduces its mean bound exactly and overshoots

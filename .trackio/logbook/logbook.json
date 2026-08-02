@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "title": "Reproduction: CARE: Confounder-Aware Aggregation for Reliable LLM Evaluation",
+  "space_id": "DineshAI/3WPDFjZ1UT",
+  "root": {
+    "slug": "index",
+    "title": "Reproduction: CARE: Confounder-Aware Aggregation for Reliable LLM Evaluation",
+    "file": "pages/index.md",
+    "children": [
+      {"slug": "executive-summary", "title": "Executive summary", "file": "pages/executive-summary/page.md", "children": []},
+      {"slug": "claim-1", "title": "Claim 1 — UltraFeedback MAE", "file": "pages/claim-1/page.md", "children": []},
+      {"slug": "claim-2", "title": "Claim 2 — Average improvement", "file": "pages/claim-2/page.md", "children": []},
+      {"slug": "claim-3", "title": "Claim 3 — Table 2", "file": "pages/claim-3/page.md", "children": []},
+      {"slug": "claim-4", "title": "Claim 4 — Proposition 4.1", "file": "pages/claim-4/page.md", "children": []},
+      {"slug": "claim-5", "title": "Claim 5 — Theorem 4.2", "file": "pages/claim-5/page.md", "children": []},
+      {"slug": "claim-6", "title": "Claim 6 — Theorem 4.3", "file": "pages/claim-6/page.md", "children": []},
+      {"slug": "conclusion", "title": "Conclusion", "file": "pages/conclusion/page.md", "children": []}
+    ]
+  }
+}

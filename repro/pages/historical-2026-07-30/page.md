@@ -7,7 +7,7 @@ live judge scored 5/12. That revision described synthetic-judge Monte-Carlo chec
 description, and it is wrong. It is kept here only so nothing from the judged revision is
 lost.
 
-The current verification is **[Current verification (2026-08-01)](#/current-verification)**,
+The current verification is **[Current verification (2026-08-03)](#/current-verification)**,
 which supersedes it. The historical verifier itself is preserved unchanged at
 [Historical rejected baseline — verifier](#/verification-run) and its output at
 [Historical rejected baseline — evidence](#/evidence).

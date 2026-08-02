@@ -109,9 +109,24 @@ and its proof bounds `‖Δ‖₂ ≤ 2‖K_JH‖₂‖K_HH^{-1}‖₂‖E‖₂
 > `max_{i≤h} ‖û_i − u_i‖₂ = O( sqrt(η/n) · 1/(ξ(T) δ) )."
 
 Proof chain (Appendix D.6): Chandrasekaran et al. (2012) Thm 4.1 gives
-`‖L̂_n − L*‖₂ ≤ C₁ sqrt(ε/n)/ξ(T)`; Yu et al. (2015) Thm 2 gives
-`‖û_i − u_i‖₂ ≤ 2^{3/2}‖L̂_n − L*‖₂/δ`; composing gives the stated rate, inverted to
+`‖L̂_n − L*‖₂ ≤ C₁ sqrt(ε/n)/ξ(T)`; CARE then invokes Yu et al. (2015), Corollary 3, for
+`‖û_i − u_i‖₂ ≤ 2^{3/2}‖L̂_n − L*‖₂/δ_i`; composing gives the stated rate, inverted to
 `n ≥ 8C₁²η/(ξ(T)²δ²α²)`.
+
+**Literal discrepancy audited in Claim 5.** D.5 defines
+`δ=min_(1≤i<j≤h)|λ_i-λ_j|`, using only the `h` positive eigenvalues, and writes the
+ordinary vector distance `‖û_i-u_i‖₂`. D.4 immediately above instead defines the
+full-spectrum gap `δ_i=min{λ_i,min_(j≠i)|λ_i-λ_j|}` and includes sign alignment
+`‖ũ_i-s_i u_i‖₂`. Yu Corollary 3 requires adjacent population gaps; for the last positive
+eigenvector of rank-h `L*`, this includes `λ_h-λ_(h+1)=λ_h-0`. D.5's proof first invokes
+that `δ_i`, then replaces it with the weaker positive-eigenvalue-only `δ`. These exact
+differences are the inputs to the sign, nullspace-gap, and Gaussian two-point audits; no
+finite-grid slope is used to infer them.
+
+| Frozen cited source | SHA-256 | Audited anchor |
+|---|---|---|
+| Yu, Wang & Samworth, arXiv:1405.0680 | `6f4bc8b6a3cc768097102e54379ca894e92302ab5f9a9516fb55b71116ae0cd4` | Corollary 3 uses adjacent population eigengaps, including the gap to zero |
+| Chandrasekaran, Parrilo & Willsky, arXiv:1008.1290 | `3c7c5ae5941a5bee218bb5e38c06b70d2120f00ce0b1623a048fae09a5706716` | Theorem 4.1 minimum-signal condition scales with the noise/regularization level |
 
 ### Theorem 4.3 (Section 4) = Theorem D.9
 

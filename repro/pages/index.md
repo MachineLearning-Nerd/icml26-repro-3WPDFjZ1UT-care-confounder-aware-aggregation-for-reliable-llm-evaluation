@@ -2,7 +2,7 @@
 
 arXiv [2603.00039](https://arxiv.org/abs/2603.00039) · OpenReview [3WPDFjZ1UT](https://openreview.net/forum?id=3WPDFjZ1UT) · authors' code [SprocketLab/CARE](https://github.com/SprocketLab/CARE) @ `72f5b29`
 
-**Start here: [Current verification (2026-08-01)](#/current-verification).** It carries the
+**Start here: [Current verification (2026-08-03)](#/current-verification).** It carries the
 per-claim verdicts, the exact command, and links to every raw artifact. The pages
 labelled *Historical rejected baseline* are the superseded 2026-07-30 revision, kept
 reachable but no longer the verifier.
@@ -11,7 +11,7 @@ reachable but no longer the verifier.
 
 | Page | What it holds |
 | --- | --- |
-| [Current verification (2026-08-01)](#/current-verification) | Verdict table, what changed, and the answer to each earlier criticism |
+| [Current verification (2026-08-03)](#/current-verification) | Verdict table, what changed, and the answer to each earlier criticism |
 | [Claim 1 — UltraFeedback MAE](#/claim-1-ultrafeedback) | |
 | [Claim 2 — 17.37% over averaging](#/claim-2-average-improvement) | |
 | [Claim 3 — Table 2, best on 5 of 6](#/claim-3-table2) | |

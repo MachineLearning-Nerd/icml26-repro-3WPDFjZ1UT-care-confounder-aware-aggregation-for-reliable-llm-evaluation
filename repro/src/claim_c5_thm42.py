@@ -265,6 +265,7 @@ def davis_kahan_constant_check(seed: int = 5, n_trials: int = 4000) -> dict:
                 worst = max(worst, err / bound)
     return {
         "ok": bool(worst <= 1.0),
+        "n_trials": n_trials,
         "constant_checked": 2 ** 1.5,
         "worst_err_over_bound": worst,
         "no_violation_found": bool(worst <= 1.0),

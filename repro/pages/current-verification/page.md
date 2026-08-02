@@ -1,4 +1,4 @@
-# Current verification (2026-08-01)
+# Current verification (2026-08-03)
 
 **This is the current verifier and the current evidence.** It supersedes the
 2026-07-30 revision `2a647ca068d0943b4c3a54d2f7940594fac5287f`, which the live judge
@@ -51,6 +51,14 @@ constants analytically, and — where the statement is false — by an exact
 assumption-satisfying counterexample. Finite experiments appear only as calibrated
 searches (binary search for `n*`, independent sweeps of each parameter), never by
 substituting into the formula under test.
+
+**3. Two previously inconclusive claims now have literal decisions.** Claim 3's generated
+`0.814 vs 0.705` comparison is false in exact rational arithmetic, while a repair control
+using the actual strongest baseline 0.718 recovers the paper's nearby prose. Claim 5 omits
+both eigenvector sign alignment and the gap from the last positive eigenvalue to zero. Its
+missing-gap counterexample is symbolic, and a Gaussian two-point Le Cam lower bound shows
+the advertised statistical rate itself fails—not merely the paper's displayed proof.
+Both are independently recomputed.
 
 ## What cuts against a flattering story, and what cuts for it
 
@@ -132,10 +140,11 @@ All of them are also in [Limitations and deviations](#/limitations).
 Every claim page carries the exact claim string, the paper's exact quantifiers, the
 executable verifier, the raw numbers inline, a downloadable extract, and a negative
 control with a stated failure mode. The [Visibility matrix](#/visibility-matrix) records
-that per claim. Two gaps are named rather than papered over: Claim 3 has no permutation
-control on the Table 2 *accuracy* path (only on the MAE path, under Claims 1–2), and
-Claim 5's `sympy` reconstruction of the composed bound is checked by no second
-implementation. Both are in [Limitations](#/limitations). The single
+that per claim. Claim 3 has no permutation control on the Table 2 *accuracy* path (only
+on the MAE path, under Claims 1–2); that remains disclosed but is irrelevant to its exact
+literal arithmetic decision. Claim 5's decisive eigengap and Gaussian-KL evidence is
+checked by an independent 2x2 implementation. Remaining gaps are in
+[Limitations](#/limitations). The single
 command and pinned environment are on
 [Fixed command, environment, seeds, runtime](#/environment-and-command).
 

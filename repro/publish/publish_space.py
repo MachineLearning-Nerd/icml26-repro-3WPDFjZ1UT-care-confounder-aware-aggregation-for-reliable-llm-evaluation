@@ -22,10 +22,24 @@ from pathlib import Path
 from huggingface_hub import HfApi, get_token, hf_hub_download, snapshot_download
 
 REPO = "DineshAI/3WPDFjZ1UT"
-JUDGED_REV = "2a647ca068d0943b4c3a54d2f7940594fac5287f"
+JUDGED_REV = "dc8ad3cbfe52bef166c0da1dfcf2c8fec9d01dc5"
 
 # Every path we are allowed to write. Text only.
 ALLOWLIST = [
+    ".trackio/metadata.json",
+    ".trackio/logbook/logbook.json",
+    ".trackio/logbook/poster_embed.html",
+    ".trackio/logbook/pages/index.md",
+    ".trackio/logbook/pages/executive-summary/page.md",
+    ".trackio/logbook/pages/claim-1/page.md",
+    ".trackio/logbook/pages/claim-2/page.md",
+    ".trackio/logbook/pages/claim-3/page.md",
+    ".trackio/logbook/pages/claim-4/page.md",
+    ".trackio/logbook/pages/claim-5/page.md",
+    ".trackio/logbook/pages/claim-6/page.md",
+    ".trackio/logbook/pages/conclusion/page.md",
+    "archive/dc8ad3cb/pages/claim-3-table2/page.md",
+    "archive/dc8ad3cb/pages/claim-5-theorem-42/page.md",
     "logbook.json",
     "pages/index.md",
     "pages/overview/page.md",
@@ -85,13 +99,14 @@ ALLOWLIST = [
     "raw/method.md",
     "raw/table1_asset.csv",
     "raw/table2.csv",
+    "raw/c3_literal_audit.csv",
     "raw/c5_rate.csv",
     "raw/c6_sigma_sweep.csv",
     "raw/c4_constant_search.csv",
 ]
 
 PAGE_TREE = [
-    ("current-verification", "Current verification (2026-08-01)"),
+    ("current-verification", "Current verification (2026-08-03)"),
     ("claim-1-ultrafeedback", "Claim 1 - UltraFeedback MAE"),
     ("claim-2-average-improvement", "Claim 2 - 17.37% over averaging"),
     ("claim-3-table2", "Claim 3 - Table 2, best on 5 of 6"),
@@ -159,7 +174,8 @@ def sync_pages_and_code(work: Path) -> None:
         n += 1
     code = 0
     for rel in ALLOWLIST:
-        if not (rel.startswith("repro/") or rel in SOURCE_MAP):
+        if not (rel.startswith("repro/") or rel.startswith(".trackio/")
+                or rel.startswith("archive/") or rel in SOURCE_MAP):
             continue
         src = repo / SOURCE_MAP.get(rel, rel)
         if not src.exists():

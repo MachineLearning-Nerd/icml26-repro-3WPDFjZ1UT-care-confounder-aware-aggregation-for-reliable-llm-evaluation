@@ -40,21 +40,23 @@ Table 1 and is decided exactly. The empirical half needs judge outputs that do n
 exist publicly for the datasets those percentages are about. Both halves are
 reported separately; neither is presented as the other.
 
-## 3. Claim 3's circulated claim string disagrees with the paper
+## 3. Claim 3's generated claim disagrees with the paper prose
 
 The claim string quotes the Summarize comparison as "0.814 ± 0.001 vs
 0.705 ± 0.000". In Table 2, 0.705 is the WS / Dawid–Skene entry. The paper's own
 words are "over the strongest baseline", which on the Summarize column is GLAD at
-0.718. Both readings are computed and reported; the paper's own wording is treated
-as the claim under test.
+0.718. Both readings are computed and reported. The current generated challenge claim is
+the literal target: its explicit pair gives 15.461%, not 13.4%, and is falsified. The
+paper's nearby prose is retained as a positive repair control and gives 13.3705%.
 
-## 4. `ξ(T)` is not measured
+## 4. `ξ(T)` is not measured by the preserved finite-grid sweep
 
 Theorem 4.2's bound carries a `1/ξ(T)` factor, where `ξ(T)` is Chandrasekaran et
 al.'s tangent-space curvature constant. It has no closed form we can evaluate, so
 the model is held fixed across each sweep and only the `n`, `α` and `δ`
-dependences are measured. The `1/ξ(T)` factor is reconstructed from the
-derivation, not empirically confirmed.
+dependences are measured. The `1/ξ(T)` factor is reconstructed from the derivation, not
+empirically confirmed. This limits the old sweep; it does not affect the current literal
+falsification, whose fixed tangent space keeps `ξ(T)` from absorbing the omitted gap.
 
 ## 5. Theorem 4.2's η-dependence — resolved in this revision
 
@@ -146,14 +148,15 @@ symbolic result on the mean bound and on the displayed derivation of the weight 
 
 ## 11. The end-to-end pipeline does not attain `n^{-1/2}` at our solver's budget
 
-For Claim 5, the full Algorithm-1 pipeline's empirical error exponent is about
+For Claim 5, the preserved full Algorithm-1 pipeline's empirical error exponent is about
 **−0.35**, short of the `−1/2` the theorem's rate implies. This is a limitation of our
 proximal-gradient sparse-plus-low-rank solver at a finite iteration budget, not evidence
-against Theorem 4.2 — and that attribution is **demonstrated, not asserted**: with the
+against the theorem's corrected full-gap form — and that attribution is **demonstrated,
+not asserted**: with the
 sparse part supplied exactly, the same pipeline's eigenvector error decays at **−0.47**
 and `‖Θ̂ − Θ‖₂` at **−0.51**, both consistent with `n^{-1/2}`.
 
-The claim page therefore reads `n*(α)` and `n*(δ)` from the stage the theorem governs
+The preserved sweep therefore reads `n*(α)` and `n*(δ)` from the stage the theorem governs
 and reports the end-to-end figure separately, labelled as a statement about our
 implementation. A reproduction that quoted only the −0.35 figure would understate the
 theorem; one that quoted only the −0.47 figure would hide a real limitation of this
@@ -226,9 +229,9 @@ fails the admissibility test in `informativeness.py` and is reported **NOT INFOR
 It supports **nothing in either direction**: not the `δ^{-2}` factor, and not a bound on
 it either. An earlier draft of this page claimed the sweep at least established that `n*`
 does not grow faster than `δ^{-2}`; that claim has been removed, because a sweep that
-resolved no exponent cannot bound one. Claim 5's verdict rests on the stage-2 `n^{-1/2}`
-measurement, the `n*(α)` exponent (−1.9584 ± 0.0537, 36 standard errors from zero), and
-the reconstructed symbolic derivation — not on this sweep.
+resolved no exponent cannot bound one. Claim 5's current verdict rests instead on the
+zero-noise sign counterexample, the symbolic missing-zero-gap family, and the Gaussian
+two-point lower bound. None depends on this sweep.
 
 ## 15. Which factors of Theorem 4.3 this campaign can and cannot speak to
 
@@ -348,7 +351,9 @@ how far to trust the rest.
 * **Claim 3 has no permutation control on the Table 2 accuracy path.** The control that
   exists covers the arithmetic (a wrong baseline must not reproduce 13.4 %, and does
   not). Building a permutation control for the classification pipeline was not attempted.
-* **Claim 5's symbolic reconstruction is checked by no second implementation.**
+* **Claim 5's older symbolic composition has no second implementation.** It is no longer
+  decisive. The current eigengap family and Gaussian KL are recomputed independently by
+  direct 2x2 methods.
 * **The one fixed command does not by itself reproduce Claims 1–3.** It consumes cached
   benchmark shards; producing those shards is a separate documented command, and they ran
   at a different repository revision than the one recorded in `environment.git_sha`. See

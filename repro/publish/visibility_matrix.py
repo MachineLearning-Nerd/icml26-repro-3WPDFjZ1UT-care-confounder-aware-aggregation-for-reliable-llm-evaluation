@@ -27,9 +27,9 @@ from pathlib import Path
 CONTROL_IS_DISCRIMINATING = {
     "C1": True,   # CARE re-run on column-permuted ASSET judge scores
     "C2": True,   # same permutation control
-    "C3": False,  # arithmetic only: 0.705 must not reproduce 13.4%. See Limitations 18.
+    "C3": True,   # exact literal failure plus one-input repair control; either can fail.
     "C4": True,   # exact counterexamples; the appendix form is checked and survives
-    "C5": True,   # stage decomposition + oracle-sparse control, either could fail
+    "C5": True,   # sign/full-gap repair controls plus preserved stage controls
     "C6": True,   # NC1 over-sampling and NC2 frozen-n, both re-run the estimator
 }
 
@@ -44,7 +44,7 @@ CHECKER_KEYS = {
     "C2": ["c2_unit_invariance_exact", "agreement_with_claim_module"],
     "C3": ["table2_second_transcription", "table_percentages_exact_rational"],
     "C4": ["prop41_counterexample_mpmath", "first_order_formula_vs_finite_difference"],
-    "C5": ["davis_kahan_by_principal_angle", "c5_stage_slope_recheck"],
+    "C5": ["theorem_d5_counterexamples_independent", "davis_kahan_by_principal_angle", "c5_stage_slope_recheck"],
     "C6": ["c6_p_exponent_recheck", "c6_slope_recheck"],
 }
 
