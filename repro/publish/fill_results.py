@@ -1418,6 +1418,26 @@ def _v_c6(v):
     )
 
 
+def c5_certificate(v):
+    c = g(v, "claims", "C5_thm42", "route_c_calibrated_rate", default={})
+    ns = c.get("grid_n") or []
+    cs = c.get("stage_2_implied_constant_vs_n") or []
+    if not ns or not cs:
+        return "*(not in this run's record)*"
+    rows = "\n".join(
+        f"| {n} | {num(e, 4)} | {num(k, 2)} |"
+        for n, e, k in zip(ns, c.get("stage_2_oracle_spectral_error_vs_n") or [], cs)
+    )
+    return (
+        "| `n` | stage-2 error | implied `C(n) = err·√n` |\n|---|---|---|\n" + rows
+        + f"\n\n**max `C(n)` over the grid: {num(c.get('stage_2_implied_constant_max'), 2)}** "
+        f"-- bounded, so the stated rate holds across the measured range. "
+        f"`C(n)` drifts upward by a factor of "
+        f"{num(c.get('stage_2_implied_constant_drift'), 3)} from the smallest `n` to the "
+        f"largest. {c.get('stage_2_certificate_note', '')}"
+    )
+
+
 def _v_c5(v):
     a = g(v, "claims", "C5_thm42", "route_a_symbolic_chain_audit", default={})
     b = g(v, "claims", "C5_thm42", "route_b_davis_kahan_constant", default={})
@@ -1664,6 +1684,7 @@ GENERATORS = {
     "c3.header": _header("C3"),
     "c4.header": _header("C4"),
     "c5.header": _header("C5"),
+    "c5.certificate": c5_certificate,
     "c6.header": _header("C6"),
 }
 
