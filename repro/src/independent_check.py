@@ -91,20 +91,27 @@ def table2_second_transcription(verdict: dict | None = None) -> dict:
         "strongest_summarize_baseline_value": float(baselines[strongest]),
         "summarize_relative_improvement_pct": float(rel),
         "summarize_matches_13_4": abs(float(rel) - 13.4) < 0.1,
+        "generated_claim_quoted_pair_relative_pct": float(
+            (Fraction("0.814") - Fraction("0.705")) / Fraction("0.705") * 100
+        ),
+        "generated_claim_literal_holds": abs(
+            float((Fraction("0.814") - Fraction("0.705")) / Fraction("0.705") * 100)
+            - 13.4
+        ) <= 0.05,
+        "positive_control_replace_0p705_with_strongest_baseline_holds": abs(
+            float(rel) - 13.4
+        ) <= 0.05,
     }
-    if verdict:
-        # Cell-by-cell against the first transcription: this is the check that a wrong
-        # digit cannot survive, and it is stricter than agreeing on the argmax.
-        from paper_source import TABLE2_ACC
-        mismatch = [
-            f"{m}[{_T2_DATASETS[j]}]"
-            for m, row in _T2.items()
-            for j, x in enumerate(row)
-            if m in TABLE2_ACC and abs(float(Fraction(x)) - TABLE2_ACC[m][j]) > 1e-12
-        ]
-        out["cells_compared"] = sum(len(r) for r in _T2.values())
-        out["cell_mismatches_vs_first_transcription"] = mismatch
-        out["two_transcriptions_agree_cell_by_cell"] = not mismatch
+    from paper_source import TABLE2_ACC
+    mismatch = [
+        f"{m}[{_T2_DATASETS[j]}]"
+        for m, row in _T2.items()
+        for j, x in enumerate(row)
+        if m in TABLE2_ACC and abs(float(Fraction(x)) - TABLE2_ACC[m][j]) > 1e-12
+    ]
+    out["cells_compared"] = sum(len(r) for r in _T2.values())
+    out["cell_mismatches_vs_first_transcription"] = mismatch
+    out["two_transcriptions_agree_cell_by_cell"] = not mismatch
     return out
 
 
@@ -572,6 +579,99 @@ def davis_kahan_by_principal_angle(seed: int = 131, n_trials: int = 500) -> dict
     }
 
 
+def theorem_d5_counterexamples_independent() -> dict:
+    """Recompute the D.5 counterexamples without importing its claim module."""
+    rows = []
+    for aval in (1e-1, 1e-2, 1e-3, 1e-4):
+        tval = aval / 128.0
+        values, vectors = np.linalg.eigh(np.array([[aval, tval], [tval, 0.0]]))
+        estimated = vectors[:, np.argmax(values)]
+        truth = np.array([1.0, 0.0])
+        if float(estimated @ truth) < 0:
+            estimated = -estimated
+        error = float(np.linalg.norm(estimated - truth))
+        rows.append(
+            {
+                "a": aval,
+                "error": error,
+                "paper_normalized_ratio": error * (2.0 - aval) / tval,
+                "full_gap_normalized_ratio": error * aval / tval,
+            }
+        )
+    paper_ratios = [x["paper_normalized_ratio"] for x in rows]
+    corrected_ratios = [x["full_gap_normalized_ratio"] for x in rows]
+
+    mp.mp.dps = 80
+    sparse_diagonal = mp.mpf(4)
+    c = mp.mpf(2**16)
+    angle = 1 / c
+    eta = 3.0
+    rotation = mp.matrix(
+        [[mp.cos(angle), -mp.sin(angle)], [mp.sin(angle), mp.cos(angle)]]
+    )
+    gaussian_rows = []
+    separation = float(2 * mp.sin(angle / 2))
+    for value in ("0.1", "0.01", "0.001", "0.0001"):
+        aval = mp.mpf(value)
+        sample_size = (c / aval) ** 2
+        p0 = mp.matrix([[sparse_diagonal - aval, 0], [0, sparse_diagonal]])
+        p1 = rotation * p0 * rotation.T
+        transform = p1 * (p0**-1)
+        one_sample_kl = mp.mpf("0.5") * (
+            transform[0, 0]
+            + transform[1, 1]
+            - 2
+            - mp.log(mp.det(transform))
+        )
+        kl = float(sample_size * one_sample_kl)
+        probability_lower = (1.0 - math.sqrt(kl / 2.0)) / 2.0
+        threshold = separation / 2.0
+        paper_rate = math.sqrt(eta / float(sample_size)) / (2.0 - float(aval))
+        gaussian_rows.append(
+            {
+                "a": float(aval),
+                "n_sample_kl_from_matrix_formula": kl,
+                "le_cam_error_probability_lower_bound": probability_lower,
+                "eigenvector_error_threshold": threshold,
+                "threshold_over_paper_unit_rate": threshold / paper_rate,
+            }
+        )
+    lower_ratios = [x["threshold_over_paper_unit_rate"] for x in gaussian_rows]
+    gaussian_ok = bool(
+        max(x["n_sample_kl_from_matrix_formula"] for x in gaussian_rows) < 0.04
+        and min(x["le_cam_error_probability_lower_bound"] for x in gaussian_rows)
+        > 2.0 * math.exp(-eta)
+        and all(y / x > 9.0 for x, y in zip(lower_ratios, lower_ratios[1:]))
+    )
+    paper_diverges = all(
+        y / x > 9.0 for x, y in zip(paper_ratios, paper_ratios[1:])
+    )
+    corrected_bounded = max(corrected_ratios) - min(corrected_ratios) < 1e-8
+    return {
+        "ok": bool(paper_diverges and corrected_bounded and gaussian_ok),
+        "sign_counterexample_raw_distance": 2.0,
+        "sign_counterexample_rhs_at_zero_noise": 0.0,
+        "sign_aligned_control_distance": 0.0,
+        "paper_gap_ratio_diverges_decade_by_decade": paper_diverges,
+        "full_gap_control_stays_bounded": corrected_bounded,
+        "rows": rows,
+        "gaussian_two_point_lower_bound": {
+            "rows": gaussian_rows,
+            "kl_stays_bounded": max(
+                x["n_sample_kl_from_matrix_formula"] for x in gaussian_rows
+            ) < 0.04,
+            "lower_error_probability_exceeds_theorem_budget": min(
+                x["le_cam_error_probability_lower_bound"] for x in gaussian_rows
+            ) > 2.0 * math.exp(-eta),
+            "lower_bound_over_advertised_rate_diverges": all(
+                y / x > 9.0 for x, y in zip(lower_ratios, lower_ratios[1:])
+            ),
+            "ok": gaussian_ok,
+        },
+        "route": "independent 2x2 eigendecomposition and trace/log-determinant Gaussian KL",
+    }
+
+
 def recheck_c5_stage_slopes(verdict: dict) -> dict:
     """Refit the two theorem-governed C5 curves with Theil-Sen instead of least squares."""
     cal = verdict.get("claims", {}).get("C5_thm42", {}).get("route_c_calibrated_rate", {})
@@ -612,6 +712,7 @@ def run(verdict: dict | None = None) -> dict:
         "prop41_counterexample_mpmath": prop41_counterexample_mpmath(),
         "first_order_formula_vs_finite_difference": first_order_by_finite_difference(),
         "davis_kahan_by_principal_angle": davis_kahan_by_principal_angle(),
+        "theorem_d5_counterexamples_independent": theorem_d5_counterexamples_independent(),
     }
     if verdict is not None:
         out["c5_stage_slope_recheck"] = recheck_c5_stage_slopes(verdict)
@@ -625,6 +726,34 @@ def run(verdict: dict | None = None) -> dict:
             "pooled_vs_AVG": abs(pooled["vs_AVG"] - out["table_percentages_exact_rational"]["pooled_vs_AVG_pct"]) < 1e-6,
             "pooled_vs_MV": abs(pooled["vs_MV"] - out["table_percentages_exact_rational"]["pooled_vs_MV_pct"]) < 1e-6,
         }
+        c3_literal = verdict["claims"]["C1_C2_C3_tables"].get("claim3_literal_audit") or {}
+        if c3_literal:
+            out["agreement_with_claim_module"]["c3_literal_verdict"] = bool(
+                c3_literal.get("generated_claim_literal_holds")
+                == out["table2_second_transcription"]["generated_claim_literal_holds"]
+            )
+        c5_literal = verdict["claims"].get("C5_thm42", {}).get("route_0_literal_counterexamples") or {}
+        if c5_literal:
+            independent = out["theorem_d5_counterexamples_independent"]
+            out["agreement_with_claim_module"]["c5_sign_counterexample"] = bool(
+                c5_literal["sign_counterexample"][
+                    "raw_distance_for_equally_valid_negative_eigenvector"
+                ] > c5_literal["sign_counterexample"]["advertised_rhs_at_exact_recovery"]
+                and independent["sign_counterexample_raw_distance"]
+                > independent["sign_counterexample_rhs_at_zero_noise"]
+            )
+            out["agreement_with_claim_module"]["c5_missing_gap_counterexample"] = bool(
+                c5_literal["missing_zero_eigenspace_gap_counterexample"]["paper_ratio_diverges"]
+                == independent["paper_gap_ratio_diverges_decade_by_decade"]
+                and c5_literal["missing_zero_eigenspace_gap_counterexample"][
+                    "corrected_ratio_stays_bounded"
+                ] == independent["full_gap_control_stays_bounded"]
+            )
+            out["agreement_with_claim_module"]["c5_gaussian_lower_bound"] = bool(
+                c5_literal["gaussian_two_point_lower_bound"][
+                    "literal_statistical_theorem_falsified"
+                ] == independent["gaussian_two_point_lower_bound"]["ok"]
+            )
         # The C2 verdict is only as good as the two implementations agreeing on it.
         conv = verdict["claims"]["C1_C2_C3_tables"].get("aggregation_convention_audit")
         if conv is not None:
@@ -665,6 +794,11 @@ def run(verdict: dict | None = None) -> dict:
         and t["ultrafeedback_matches_26_8"]
         and t["summarize_13_4_from_0p814_over_0p718"]
         and t["claimstring_0p705_does_not_reproduce_13_4"]
+        and not out["table2_second_transcription"]["generated_claim_literal_holds"]
+        and out["table2_second_transcription"][
+            "positive_control_replace_0p705_with_strongest_baseline_holds"
+        ]
+        and out["theorem_d5_counterexamples_independent"]["ok"]
         and out["prop41_counterexample_mpmath"]["counterexample_holds"]
         and out["first_order_formula_vs_finite_difference"]["analytic_formula_confirmed"]
         and out["davis_kahan_by_principal_angle"]["two_routes_agree_on_eigvec_distance"]

@@ -51,6 +51,154 @@ from informativeness import ci95, informativeness, t_crit, tristate
 import sympy as sp
 
 
+def theorem_d5_literal_counterexamples() -> dict:
+    """Test the sign and full-spectrum-gap omissions in Theorem D.5."""
+    sign_raw_distance = 2.0
+    sign_rhs_at_exact_recovery = 0.0
+    sign_aligned_distance = 0.0
+
+    a, r = sp.symbols("a r", positive=True)
+    theta = sp.atan(2 / r) / 2
+    aligned_error = sp.sqrt(2 - 2 * sp.cos(theta))
+    perturbation = a / r
+    paper_gap = 2 - a
+    full_gap = a
+    paper_ratio = sp.simplify(aligned_error * paper_gap / perturbation)
+    full_gap_ratio = sp.simplify(aligned_error * full_gap / perturbation)
+    paper_ratio_diverges = bool(
+        sp.limit(paper_ratio.subs(r, 128), a, 0, dir="+") == sp.oo
+    )
+
+    basis = np.array(
+        [
+            [1, 1, 1, 1],
+            [1, 1, -1, -1],
+            [1, -1, 1, -1],
+            [1, -1, -1, 1],
+        ],
+        dtype=float,
+    ).T / 2.0
+    perturbation_rows = []
+    fixed_r = 128.0
+    for aval in (1e-1, 1e-2, 1e-3, 1e-4):
+        u1, weak, null = basis[:, 0], basis[:, 1], basis[:, 2]
+        latent = 2.0 * np.outer(u1, u1) + aval * np.outer(weak, weak)
+        tval = aval / fixed_r
+        error_matrix = tval * (np.outer(weak, null) + np.outer(null, weak))
+        values, vectors = np.linalg.eigh(latent + error_matrix)
+        estimated = vectors[:, np.argsort(values)[::-1][1]]
+        if float(estimated @ weak) < 0:
+            estimated = -estimated
+        error = float(np.linalg.norm(estimated - weak))
+        op_norm = float(np.linalg.norm(error_matrix, 2))
+        perturbation_rows.append(
+            {
+                "smallest_positive_eigenvalue_a": aval,
+                "perturbation_norm": op_norm,
+                "aligned_eigenvector_error": error,
+                "paper_gap": 2.0 - aval,
+                "correct_full_spectrum_gap": aval,
+                "error_over_perturbation_div_paper_gap": error * (2.0 - aval) / op_norm,
+                "error_over_perturbation_div_full_gap": error * aval / op_norm,
+            }
+        )
+    paper_ratios = [x["error_over_perturbation_div_paper_gap"] for x in perturbation_rows]
+    corrected_ratios = [
+        x["error_over_perturbation_div_full_gap"] for x in perturbation_rows
+    ]
+    numeric_divergence = all(
+        later / earlier > 9.0 for earlier, later in zip(paper_ratios, paper_ratios[1:])
+    )
+    corrected_bounded = max(corrected_ratios) - min(corrected_ratios) < 1e-8
+
+    # Two observed Gaussian precision matrices P_j=4I-L_j differ only by a
+    # rotation of the weak latent direction. Their n-sample KL has this exact
+    # closed form. Coupling n=(c/a)^2 keeps KL bounded while D.5's paper-gap
+    # rate vanishes as a->0. Le Cam then lower-bounds every estimator's error.
+    dimension = 4096
+    sparse_diagonal = 4.0
+    c = float(2**16)
+    rotation_angle = 1.0 / c
+    eta = 3.0
+    separation = 2.0 * math.sin(rotation_angle / 2.0)
+    unavoidable_error = separation / 2.0
+    gaussian_rows = []
+    for aval in (1e-1, 1e-2, 1e-3, 1e-4):
+        sample_size = (c / aval) ** 2
+        kl = (
+            sample_size
+            * aval**2
+            * math.sin(rotation_angle) ** 2
+            / (2.0 * sparse_diagonal * (sparse_diagonal - aval))
+        )
+        tv_upper = math.sqrt(kl / 2.0)
+        probability_lower = (1.0 - tv_upper) / 2.0
+        advertised_unit_rate = math.sqrt(eta / sample_size) / (2.0 - aval)
+        gaussian_rows.append(
+            {
+                "smallest_positive_eigenvalue_a": aval,
+                "sample_size_n": sample_size,
+                "n_sample_gaussian_kl": kl,
+                "le_cam_error_probability_lower_bound": probability_lower,
+                "eigenvector_error_threshold": unavoidable_error,
+                "paper_rate_without_constant_or_xi": advertised_unit_rate,
+                "threshold_over_paper_unit_rate": unavoidable_error / advertised_unit_rate,
+            }
+        )
+    lower_ratios = [x["threshold_over_paper_unit_rate"] for x in gaussian_rows]
+    gaussian_lower_bound_decides = bool(
+        max(x["n_sample_gaussian_kl"] for x in gaussian_rows) < 0.04
+        and min(x["le_cam_error_probability_lower_bound"] for x in gaussian_rows)
+        > 2.0 * math.exp(-eta)
+        and all(y / x > 9.0 for x, y in zip(lower_ratios, lower_ratios[1:]))
+    )
+
+    ok = bool(
+        sign_raw_distance > sign_rhs_at_exact_recovery
+        and sign_aligned_distance == 0.0
+        and paper_ratio_diverges
+        and numeric_divergence
+        and corrected_bounded
+        and gaussian_lower_bound_decides
+    )
+    return {
+        "ok": ok,
+        "literal_theorem_verdict": "FALSIFIED" if ok else "INCONCLUSIVE",
+        "sign_counterexample": {
+            "raw_distance_for_equally_valid_negative_eigenvector": sign_raw_distance,
+            "advertised_rhs_at_exact_recovery": sign_rhs_at_exact_recovery,
+            "control_sign_aligned_distance": sign_aligned_distance,
+        },
+        "missing_zero_eigenspace_gap_counterexample": {
+            "family": "L*=2*u1*u1^T+a*uh*uh^T; E=(a/r)*(uh*v^T+v*uh^T)",
+            "all_basis_vectors_dense": bool(np.all(np.abs(basis) > 0)),
+            "basis_orthonormal_residual": float(np.linalg.norm(basis.T @ basis - np.eye(4))),
+            "paper_gap": "2-a",
+            "correct_full_spectrum_gap": "a",
+            "paper_normalized_ratio": str(paper_ratio),
+            "paper_ratio_diverges": bool(paper_ratio_diverges and numeric_divergence),
+            "corrected_normalized_ratio": str(full_gap_ratio),
+            "corrected_ratio_stays_bounded": corrected_bounded,
+            "rows": perturbation_rows,
+        },
+        "gaussian_two_point_lower_bound": {
+            "model": "S=4I; rotate the weak rank-two direction into a null direction",
+            "dimension_p": dimension,
+            "minimum_signal_ratio_a_over_sqrt_p_over_n": c / math.sqrt(dimension),
+            "confidence_eta": eta,
+            "theorem_failure_probability_budget": 2.0 * math.exp(-eta),
+            "rows": gaussian_rows,
+            "literal_statistical_theorem_falsified": gaussian_lower_bound_decides,
+            "control_full_gap_rate": "sqrt(eta/n)/a=sqrt(eta)/c, matching the nonvanishing lower-bound order",
+        },
+        "source_anchors": {
+            "care_theorem_d4": "D.4 includes sign minimization and the gap to zero",
+            "care_theorem_d5": "D.5 omits sign minimization and defines delta only between positive eigenvalues",
+            "yu_corollary_3": "Corollary 3 uses adjacent population eigengaps, including lambda_h-lambda_(h+1)",
+        },
+    }
+
+
 # --------------------------------------------------------------------------
 # Route A - symbolic reconstruction
 # --------------------------------------------------------------------------
@@ -743,15 +891,17 @@ def _verdict_string(sym, dk, cal, eta) -> str:
 
 
 def run() -> dict:
+    literal = theorem_d5_literal_counterexamples()
     sym = symbolic_chain_audit()
     dk = davis_kahan_constant_check()
     cal = calibrated_rate()
     eta = eta_tail_measurement()
     nc = negative_controls()
-    ok = sym["ok"] and dk["ok"] and cal["ok"] and nc["ok"] and (
+    ok = literal["ok"] and sym["ok"] and dk["ok"] and cal["ok"] and nc["ok"] and (
         eta["ok"] if eta.get("available") else True)
     return {
         "claim": "C5 / Theorem 4.2 (Appendix Theorem D.5): finite-sample spectral rate",
+        "route_0_literal_counterexamples": literal,
         "route_a_symbolic_chain_audit": sym,
         "route_b_davis_kahan_constant": dk,
         "route_c_calibrated_rate": cal,
@@ -761,7 +911,13 @@ def run() -> dict:
         # A bare "VERIFIED" is stronger than what four routes of differing strength
         # establish, and a blind reviewer said so. The string is assembled from the
         # routes' own outcomes instead, factor by factor, so it cannot overstate them.
-        "verdict": _verdict_string(sym, dk, cal, eta) if ok else "INCONCLUSIVE",
+        "verdict": (
+            "FALSIFIED as literally stated: D.5 omits sign alignment and the last "
+            "positive eigenvalue's gap to the zero eigenspace. Exact perturbation and "
+            "Gaussian two-point families violate the advertised paper-gap rate; the "
+            "full-spectrum-gap control removes the contradiction"
+            if ok else "INCONCLUSIVE"
+        ),
         "limitations": [
             "The full Algorithm-1 pipeline (stage 3) uses a proximal-gradient solve of the "
             "sparse-plus-low-rank program at 3,000 iterations; its measured exponent is "

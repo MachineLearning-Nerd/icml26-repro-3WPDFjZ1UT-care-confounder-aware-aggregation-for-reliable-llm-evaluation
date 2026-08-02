@@ -16,6 +16,10 @@ from pathlib import Path
 # Each CSV collects every list-of-dicts found under these subtrees, tagged by the
 # path it came from, so a renamed inner key changes a tag rather than losing a row.
 TARGETS = {
+    "c3_literal_audit.csv": [
+        "claims.C1_C2_C3_tables.claim3_literal_audit",
+        "independent_check.table2_second_transcription",
+    ],
     "table1_asset.csv": ["claims.C1_C2_C3_tables.table1_asset"],
     "table2.csv": ["claims.C1_C2_C3_tables.table2_civilcomments_pku_better"],
     "c4_constant_search.csv": [
@@ -24,9 +28,11 @@ TARGETS = {
         "claims.C4_prop41.maintext_bound_scaling_counterexample",
     ],
     "c5_rate.csv": [
+        "claims.C5_thm42.route_0_literal_counterexamples",
         "claims.C5_thm42.route_c_calibrated_rate",
         "claims.C5_thm42.route_b_davis_kahan_constant",
         "independent_check.c5_stage_slope_recheck",
+        "independent_check.theorem_d5_counterexamples_independent",
     ],
     "c6_sigma_sweep.csv": [
         "claims.C6_thm43.route_b_calibrated_sample_complexity",

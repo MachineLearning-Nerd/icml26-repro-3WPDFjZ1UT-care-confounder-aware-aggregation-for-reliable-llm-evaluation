@@ -14,6 +14,7 @@ from __future__ import annotations
 import threads  # noqa: F401  - must precede numpy/scipy/torch
 
 import base64
+import hashlib
 import json
 import os
 import platform
@@ -45,9 +46,25 @@ def _git_sha() -> str:
         return os.environ.get("GIT_SHA", "unknown")
 
 
+def _run_input_sha256() -> str:
+    """Hash every code/cache byte used by the fixed entrypoint."""
+    root = Path(__file__).resolve().parents[2]
+    paths = list((root / "repro" / "src").rglob("*.py"))
+    paths += [p for p in (root / "repro" / "cache").rglob("*") if p.is_file()]
+    paths += [root / "pyproject.toml", root / "uv.lock"]
+    digest = hashlib.sha256()
+    for path in sorted((p for p in paths if p.exists()), key=lambda p: str(p.relative_to(root))):
+        digest.update(str(path.relative_to(root)).encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def environment() -> dict:
     return {
         "git_sha": _git_sha(),
+        "run_input_sha256": _run_input_sha256(),
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "machine": platform.machine(),

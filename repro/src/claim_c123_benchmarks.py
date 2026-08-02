@@ -31,6 +31,7 @@ actually used.
 
 from __future__ import annotations
 
+from fractions import Fraction
 import json
 import os
 import subprocess
@@ -123,7 +124,6 @@ def table_arithmetic() -> dict:
             "vs_MV": float(np.median(per_dataset_vs_mv)),
         },
     }
-
     target_avg = PROSE["avg_relative_improvement_over_AVG_pct"]
     target_mv = PROSE["avg_relative_improvement_over_MV_pct"]
     matches = {
@@ -223,6 +223,44 @@ def table_arithmetic() -> dict:
             "reproduces 13.4% exactly. The value 0.705 quoted in the circulated claim "
             "string is the WS / Dawid-Skene entry, not the strongest baseline; that pair "
             f"would give {summarize_claimstring_rel:.2f}%."
+        ),
+    }
+
+
+def claim3_literal_audit() -> dict:
+    """Decide the generated Claim 3, including its explicit numeric pair."""
+    care = Fraction("0.814")
+    quoted = Fraction("0.705")
+    strongest = Fraction("0.718")
+    target = Fraction("13.4")
+    tolerance = Fraction("0.05")
+
+    quoted_pct = (care - quoted) / quoted * 100
+    strongest_pct = (care - strongest) / strongest * 100
+    quoted_matches = abs(quoted_pct - target) <= tolerance
+    strongest_matches = abs(strongest_pct - target) <= tolerance
+
+    return {
+        "ok": bool((not quoted_matches) and strongest_matches),
+        "generated_claim_literal_verdict": "FALSIFIED",
+        "generated_claim_literal_holds": bool(quoted_matches),
+        "care_tensor_summarize": str(care),
+        "generated_claim_quoted_baseline": str(quoted),
+        "strongest_table2_baseline": str(strongest),
+        "claimed_relative_improvement_pct": str(target),
+        "quoted_pair_relative_improvement_exact": str(quoted_pct),
+        "quoted_pair_relative_improvement_pct": float(quoted_pct),
+        "quoted_pair_matches_13p4_at_printed_precision": bool(quoted_matches),
+        "nearby_paper_prose_relative_improvement_exact": str(strongest_pct),
+        "nearby_paper_prose_relative_improvement_pct": float(strongest_pct),
+        "nearby_paper_prose_matches_13p4_at_printed_precision": bool(strongest_matches),
+        "positive_control_replace_0p705_with_0p718_repairs_arithmetic": bool(strongest_matches),
+        "negative_control_keep_0p705_is_rejected": bool(not quoted_matches),
+        "why_full_claim_is_false": (
+            "The generated claim explicitly couples 13.4% to 0.814 versus 0.705. "
+            "That pair gives 15.4609929...%, not 13.4%. Replacing 0.705 with the "
+            "actual strongest Table 2 baseline, GLAD at 0.718, gives 13.3704735...% "
+            "and recovers the nearby paper prose."
         ),
     }
 
@@ -1036,6 +1074,7 @@ def run(outdir: Path | None = None) -> dict:
     labels = label_audit.audit(root)
     blocked = set(labels.get("blocked_datasets", []))
     arith = table_arithmetic()
+    c3_literal = claim3_literal_audit()
     conv = aggregation_convention_audit()
     single = single_configuration_audit()
     comparator = comparator_selection_audit()
@@ -1046,6 +1085,7 @@ def run(outdir: Path | None = None) -> dict:
         return {
             "claim": "C1/C2/C3 - Tables 1 and 2",
             "table_arithmetic": arith,
+            "claim3_literal_audit": c3_literal,
             "aggregation_convention_audit": conv,
             "single_configuration_audit": single,
             "comparator_selection_audit": comparator,
@@ -1066,6 +1106,7 @@ def run(outdir: Path | None = None) -> dict:
         "official_repo_sha": sha,
         "official_repo_sha_matches_pin": bool(sha_ok),
         "table_arithmetic": arith,
+        "claim3_literal_audit": c3_literal,
         "aggregation_convention_audit": conv,
         "single_configuration_audit": single,
         "comparator_selection_audit": comparator,
@@ -1076,7 +1117,7 @@ def run(outdir: Path | None = None) -> dict:
         "table1_asset": t1,
         "table2_civilcomments_pku_better": t2,
         "negative_controls": nc,
-        "ok": bool(sha_ok and arith["ok"] and conv["ok"] and comparator["ok"] and single["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
+        "ok": bool(sha_ok and arith["ok"] and c3_literal["ok"] and conv["ok"] and comparator["ok"] and single["ok"] and t1["ok"] and t2["ok"] and nc["ok"]),
     }
 
 
