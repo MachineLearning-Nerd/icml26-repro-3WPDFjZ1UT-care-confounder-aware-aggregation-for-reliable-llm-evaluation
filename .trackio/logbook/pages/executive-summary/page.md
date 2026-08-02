@@ -22,7 +22,17 @@ earned score; only the live judge can change that baseline.
 “Falsified as stated” adjudicates the literal generated claim or theorem wording;
 it is not a claim that every nearby corrected statement is false.
 
-## Scope and cost
+## Scope & cost
+
+|  | This reproduction | Full replication |
+| --- | --- | --- |
+| Scope | all six claims audited; exact table arithmetic; full five-seed ASSET and CivilComments aggregation; exact theory audits and controls | regenerate all missing judge matrices, then rerun every Table 1–2 benchmark and the full theory audit |
+| Hardware | 8 local CPU cores | 11–20 LLM judges; the paper reports A100 40 GB generation |
+| Compute time | 634.96-second clean run plus 615.22-second reproducibility repeat | up to about 27 A100-hours for the nine missing matrices, using the paper's ≈3 A100-hours per dataset |
+| Cost | $0 | not incurred; depends on the A100 provider rate |
+| Outcome | Claims 3 and 5 falsified literally; Claim 4 decided by scope; Claims 1–2 blocked; Claim 6's displayed derivation falsified | unknown until the missing matrices are generated |
+
+Detailed execution:
 
 | Route | Scale | Compute | Cost |
 | --- | --- | --- | --- |
