@@ -7,6 +7,58 @@
 The 2026-07-30 revision did not address this claim at all; the judge scored it
 **INCONCLUSIVE (0/2)**. It is addressed here in full.
 
+## Result
+
+**Every arithmetic assertion in this claim is decided exactly, one CARE-scored column is
+reproduced end-to-end at full scale, and one of the paper's released columns is shown to
+be unusable — with the stronger finding that its published number provably did not come
+from the file that was released.**
+
+| | Assertion | Verdict |
+|---|---|---|
+| 3a | CARE is best on 5 of Table 2's 6 columns | **VERIFIED** as arithmetic over all nine methods, with a scope qualification (below) |
+| 3b | CARE-Tensor leads on PKU-BETTER, SHP, Summarize | **VERIFIED** |
+| 3c | The Summarize improvement is 13.4 % | **VERIFIED** — 13.37 % against GLAD (0.718), the strongest Table 2 baseline; the claim string's own quoted 0.705 does **not** reproduce it |
+| 3d | Those accuracies are reproducible | **REPRODUCED at full scale on CivilComments**; **BLOCKED** on five columns |
+
+The arithmetic is not merely recomputed — Table 2's **entire nine-method, 54-cell grid was
+transcribed a second time, by hand and independently**, the two copies compared cell by
+cell, and the column winners recomputed from the second copy and checked against the cells
+the paper typesets in bold. A single wrong digit in 54 would fail the run.
+
+**Reproduced at full scale, not by proxy.** CivilComments runs end-to-end with the authors'
+code at `72f5b29` over five seeds and **all nine methods** — the four simple aggregators,
+the three weak-supervision baselines through the authors' own harness, and both CARE
+variants — with a negative control that row-permutes each judge column and collapses
+CARE's advantage as it must.
+
+**The strongest finding on this page is about the released data, and it is decided, not
+blocked.** PKU-BETTER's released judge files carry `gold_label_binary` constant at 0 across
+all 9 000 rows, `gold_label_num` constant at 1, and `was_swapped` constant `False` — so the
+A/B order was never randomised and no accuracy can be scored. That alone would only make
+the column unscoreable. But because the label is constant, the accuracy *is* still
+computable: it equals the rate at which a method picks the one admitted answer. For
+majority vote — the row the comparison is made against — the two conventions the file
+admits give **0.9964** (if the gold answer is B) and **0.0036** (if it is A). The paper
+reports **0.701** for that row, which is neither; the audit records
+`published_value_reachable: false` with a closest reachable gap of 0.2954. This upgrades the finding from *"we could not score this
+column"* to **"the published value provably did not come from this file"** — the authors'
+Table 2 figure must have been computed from a randomised version of the dataset that the
+repository does not ship. No conclusion about CARE is drawn from it in either direction.
+
+**The scope qualification on 3a, stated plainly and running in the paper's favour.** The
+count of 5 is a *family* count: it selects the better of CARE-SVD and CARE-Tensor per
+dataset. No single fixed configuration reaches 5 — the best is CARE-Tensor at 3. But
+CARE-Tensor held fixed across all six is never worse than 2nd of 9 methods, at a mean rank
+of **1.50**, while the strongest single baseline (MACE) wins **1** column. The substantive
+superiority claim survives the stricter reading; it is the specific integer 5 that depends
+on per-dataset variant selection, and the paper discloses that split in its own text.
+
+**BLOCKED, with the reason named per column:** four of the six (Chatbot-Arena, PKU-SAFER,
+SHP, Summarize) ship no judge outputs at all and would need ≈3 A100-hours each to
+regenerate (Appendix E.2); PKU-BETTER is blocked by the failed label precondition above.
+Neither is replaced by a synthetic stand-in.
+
 ## The exact claim
 
 > On classification/preference datasets, CARE attains the best accuracy on 5 of 6

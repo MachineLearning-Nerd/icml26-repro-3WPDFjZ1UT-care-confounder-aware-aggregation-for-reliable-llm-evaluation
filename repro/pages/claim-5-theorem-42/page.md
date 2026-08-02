@@ -13,6 +13,75 @@ The paper's verbatim statement, its assumptions (incoherence, curvature constant
 `ξ(T)`, eigengap `δ`, regularisation `λ_n ≍ 1/√n`) and the two results it composes are
 transcribed on [Source audit](#/source-audit).
 
+## Result
+
+**One exact symbolic check is VERIFIED. The headline rate exponent is NOT confirmed — it
+lands on the shallow side of the stated −1/2, and this page does not read that as
+support.**
+
+| What was checked | Verdict |
+|---|---|
+| Inverting the stated bound reproduces the paper's own stated sample complexity | **VERIFIED exactly** — `sympy` *solves* `stated = α` for `n` and returns `8C₁²η/(α²δ²ξ²)`, matching the expression the paper states separately in Appendix D.6 |
+| The cited Davis–Kahan constant `2√2 = 2^{3/2}` | **HOLDS over the search** — no violation found, worst error/bound 0.357; the search is random, not adversarial |
+| That the composed expression equals the stated one | **NOT EVIDENCE** — this flag cannot fail as written; see below |
+| The `n`-exponent on the spectral step | **NOT CONFIRMED** — −0.4724, CI [−0.4950, −0.4499], entirely shallower than −1/2 |
+| The `η` tail exponent | **HOLDS, conservatively** — 0.206 against a stated 1/2 |
+
+**The `n`-exponent points the other way, and saying so costs this page its cleanest
+sentence.** An error decaying as `n^{-0.4724}` decays *more slowly* than `n^{-1/2}`. For an
+`O(√(η/n))` upper bound that is the direction which eventually breaks the bound, not the
+one that satisfies it, and the entire 95 % interval lies on that side —
+`stage_2_exponent_statistically_consistent_with_minus_half` is **false**. Over this finite
+grid it is **not** a violation, because a constant absorbs a factor of `n^{0.028}`; but it
+is not confirmation either, and it must not be presented as agreement.
+
+**The contract row that marks this "yes" passes against a threshold of `slope <= -0.42`** —
+16 % of slack below the theoretical −0.5. The verifier's own source comment says the test
+"passes for −0.472 and equally for −0.9, so it never tested that the rate IS `n^{-1/2}`".
+That threshold is stated here because an earlier revision of this page printed only
+"Predicted −0.5 / Contract **yes**" for this row while printing explicit thresholds for the
+`n*(α)` and `n*(δ)` rows, which reads as a stronger result than it is.
+
+**Why the inversion is a real check and the composition is not.** Only the inversion has
+teeth. The composed expression is *built* by multiplying the cited Chandrasekaran step by
+the Davis–Kahan factor, and the "stated" expression is that same product written another
+way — so `sympy` is asked whether two spellings of one product agree, and it always will.
+The inversion instead **solves** the stated bound for `n` and compares the result against
+an expression transcribed separately from the paper's Appendix D.6, so a wrong constant or
+wrong power in the paper's own inversion would surface as a mismatch.
+
+*An earlier revision of this section claimed the proof of that non-vacuity was on the
+Claim 6 page — that "the same check applied to Theorem 4.3 fails by exactly σ³". **That
+citation was false** and is withdrawn: the Theorem 4.3 module performs no sample-complexity
+inversion at all (`sp.solve` does not appear in it). What fails there is the
+composition-family check — derived-from-cited-steps versus stated-in-the-theorem — which is
+structurally the family this page calls unable to fail. The accurate lesson is the opposite
+of the one claimed: that family has teeth **when the derivation is composed independently
+of the stated result**, as it is on Claim 6 and is not here. The defect is in this
+instance's implementation, not in the family.*
+
+**The Davis–Kahan constant, and exactly how independent the second route is.** The
+constant holds across the claim module's search (no violation, worst error/bound 0.357),
+and the independent checker re-runs the search on its **own** random draws under its own
+seed over 500 trials, finding it holds there too (worst error/bound 0.303). That second
+run is a genuine independent confirmation of the constant.
+
+The flag named `two_routes_agree_on_eigvec_distance` is **not** what makes it independent,
+and should not be read that way: inside one function it compares `‖û − u‖` against
+`2·sin(arccos|û·u|/2)`, which are two formulas for the same quantity on the same pair of
+vectors — a trigonometric identity that can only fail to floating-point tolerance. It is a
+numerical sanity check, not a second opinion.
+
+Neither search is adversarial; both sample perturbations at random. So the constant is
+corroborated over the region reached, not proved.
+
+**NOT MEASURED:** `n*(delta)` and `ξ(T)`, which has no closed form we can evaluate.
+**DECIDED False, not unmeasured:** the end-to-end pipeline exponent
+(`stage_3_full_pipeline_check: false`), which falls short of `n^{-1/2}` at our solver's
+iteration budget. This page attributes that shortfall to the solver, and that attribution
+is an argument from the stage decomposition below — not a separate executable test, and it
+is not counted as one.
+
 ## Why a log-log slope cannot decide this claim
 
 The 2026-07-30 revision reported "log-log slope −0.586 ≈ −1/2" on synthetic data. That

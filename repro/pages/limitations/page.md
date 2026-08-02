@@ -942,3 +942,66 @@ concentrated almost entirely in text written *during the previous round's repair
 the single structural cause was a rendering path that let prose assert what no gate
 checked. Fixing the path, rather than the sentences, is the only durable repair available
 here, and only three of the six verdict blocks have been moved onto it.
+
+## 31. A seventh blind review found two BLOCKERS in a lead paragraph written the same day, one of them a fabricated cross-page citation
+
+After item 30's restructuring, the same treatment was applied to Claims 3 and 5 — the two
+pages the judge had scored `toy`. A seventh blind reviewer was pointed at those two
+openings alone. It returned **16 defects: 2 blockers, 6 conclusion-level, 8 minor.** Both
+blockers were in text written that day, and neither would have been caught by any gate in
+this repository.
+
+**Blocker 1 — the headline exponent was presented as agreeing with the theorem when it
+sits on the other side of it.** The opening said the measured exponents were "consistent in
+the direction an `O(·)` upper bound asserts", citing the stage-2 value −0.4724. An error
+decaying as `n^{-0.4724}` decays *more slowly* than `n^{-1/2}`; for an upper bound that is
+the direction that eventually breaks it. The entire 95 % interval [−0.4950, −0.4499] lies
+on that side, and `stage_2_exponent_statistically_consistent_with_minus_half` is `false`.
+Over a finite grid it is not a violation — a constant absorbs `n^{0.028}` — but it is not
+support, and it had been written as support.
+
+Aggravating, and now fixed: the contract row that marks this "yes" tests `slope <= -0.42`,
+16 % of slack below the theoretical −0.5. The verifier's own source comment says the test
+"passes for −0.472 and equally for −0.9, so it never tested that the rate IS `n^{-1/2}`".
+The page printed explicit thresholds for the `n*(α)` and `n*(δ)` rows but only
+"Predicted −0.5 / Contract yes" for this one. The threshold is now stated on the page.
+
+**Blocker 2 — a cross-page citation that does not exist.** To argue that Claim 5's
+sample-complexity inversion is not a vacuous check, the opening claimed "the same check
+applied to Theorem 4.3 *fails*, by exactly σ_max³." **There is no such check on Theorem
+4.3.** `sp.solve` appears zero times in `claim_c6_thm43.py`; that module performs no
+inversion. What fails there by σ³ is the *composition-family* check —
+derived-from-cited-steps versus stated-in-the-theorem — which is structurally the same
+family the very same sentence declared "cannot fail".
+
+The correct reading is the reverse of the one published, and it is more interesting: that
+family has teeth **when the derivation is composed independently of the stated result**, as
+it is on Claim 6. Claim 5's instance is vacuous because of how *it* was written —
+`step_ii` is built by multiplying `step_i`, then compared against the same product spelled
+differently — not because the family is empty. The inversion is still a real check, since
+the paper states its sample complexity separately in Appendix D.6 and the module
+transcribes that independently; but the published *proof* of its non-vacuity was false and
+is withdrawn.
+
+**Also repaired:** `two_routes_agree_on_eigvec_distance` was described as an independent
+second opinion when it compares `‖û − u‖` against `2·sin(arccos|û·u|/2)` — two formulas for
+one quantity on one pair of vectors, a trigonometric identity that can only fail to
+floating-point tolerance. What *is* independent is the checker re-running the constant
+search on its own draws under its own seed, and the page now says that instead. The
+Davis–Kahan search was called "adversarial" when it samples uniformly at random. The
+stage-3 pipeline exponent was listed under NOT MEASURED when the record decides it `false`.
+Its attribution to the solver was called "an explicit test"; it is an argument from the
+stage decomposition, and is now labelled as one. On Claim 3, "the published value provably
+did not come from this file" was established for the majority-vote row specifically, and
+now says so, with the two reachable values (0.9964 / 0.0036) and the paper's 0.701 quoted
+from the record.
+
+**What this round says about the process.** Seven blind reviews have returned 19, 20, 13,
+20, 16, 16 and 16 defects. The rate is flat. Worse than flat, in one respect: this round
+produced the campaign's first *fabricated* citation — a specific, checkable, false claim
+about what another page contains, written while trying to make a real result look stronger.
+It survived my own re-reading and was caught only because a reviewer was told to verify
+cross-page claims against source. The generalisation in item 29 stands and sharpens: the
+defects concentrate in whatever was written most recently, and confidence in a passage is
+uncorrelated with its accuracy. Only the mechanical gates and an adversarial reader have
+ever caught anything.

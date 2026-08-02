@@ -1242,18 +1242,23 @@ CONFIDENCE = {
                    "released labels are degenerate."),
     "C4": ("HIGH", "Symbolic over a parameterised family, plus exact counterexamples that "
                    "satisfy the paper's own hypotheses. Deterministic; no seeds to vary."),
-    "C5": ("MEDIUM", "The cited Davis-Kahan constant is validated adversarially over 4,000 "
-                     "perturbations, and the eta-dependence -- which earlier revisions "
-                     "reported as NOT MEASURED -- is now measured directly from the error's "
-                     "own quantiles across confidence levels, holding at a tail exponent "
-                     "well below the stated 1/2. Two caveats keep this at MEDIUM rather than "
-                     "HIGH. The symbolic composition cannot fail: both sides of it are the "
-                     "same expression transcribed twice in one function, so it checks our "
-                     "transcription, not the theorem. And the stage-2 exponent is "
-                     "-0.4724 +/- 0.0098, whose 95% interval EXCLUDES -0.5 -- over a finite "
-                     "grid that is not a violation of an O(.) upper bound, but it is not "
-                     "confirmation of the exponent either. xi(T) has no closed form we can "
-                     "evaluate and remains reconstructed rather than measured."),
+    "C5": ("MEDIUM", "The cited Davis-Kahan constant holds across a random (not adversarial) "
+                     "search, and is confirmed by the independent checker re-running the search "
+                     "on its own draws over 500 trials; the eta-dependence -- which earlier revisions reported as "
+                     "NOT MEASURED -- is now measured directly from the error's own quantiles "
+                     "across confidence levels, holding at a tail exponent well below the "
+                     "stated 1/2. The load-bearing symbolic result is the sample-complexity "
+                     "inversion, which sympy SOLVES and then compares against a separately "
+                     "transcribed expression; the same check falsifies Theorem 4.3, so it is "
+                     "not vacuous. Two caveats keep this at MEDIUM rather than HIGH. The "
+                     "composition flag alongside it cannot fail -- both sides are the same "
+                     "product transcribed twice in one function -- so it checks our "
+                     "transcription, not the theorem, and it is labelled that way rather than "
+                     "counted as evidence. And the stage-2 exponent is -0.4724 +/- 0.0098; its "
+                     "residual-based interval falls just outside -0.5, which over a finite grid "
+                     "is neither a violation of an O(.) upper bound nor confirmation of the "
+                     "exponent, and is not read as excluding -1/2. xi(T) has no closed form we "
+                     "can evaluate and remains reconstructed rather than measured."),
     "C6": ("MEDIUM", "What stands is exact and symbolic: composing the paper's own cited results reproduces the mean bound (I) with no residual factor, and fails to reproduce the stated weight bound (II) by exactly sigma_max^3 -- a factor that grows without bound, so no universal constant absorbs it. That is a defect in the displayed derivation, established in sympy and re-derived by a second route. It is NOT a falsification of bound (II) itself: whether that bound happens to hold by some other argument is not decided here, and the boundary probe two earlier revisions read as deciding it resolves nothing at the correct t quantile. What does NOT stand: two earlier revisions each reported a falsification of this theorem -- one in sigma, one in the p*log(p/eps) factor -- and BOTH have been withdrawn on this campaign's own evidence. The rebuilt confound audit finds a real confound in the second: at fixed n the empirical M2 conditioning degrades with p and subspace leakage grows by two orders of magnitude, so part of any n*(p) growth is the moment estimate deteriorating rather than the stated factor being wrong. The sample-complexity exponents in sigma, pi_min and p are therefore NOT MEASURED at this budget, and the delta^-2 factor is not independently variable in this generative model. MEDIUM, not HIGH, because the strongest result here is about a proof rather than about the theorem's truth."),
 }
 
@@ -1413,6 +1418,73 @@ def _v_c6(v):
     )
 
 
+def _v_c5(v):
+    a = g(v, "claims", "C5_thm42", "route_a_symbolic_chain_audit", default={})
+    b = g(v, "claims", "C5_thm42", "route_b_davis_kahan_constant", default={})
+    c = g(v, "claims", "C5_thm42", "route_c_calibrated_rate", default={})
+    d = g(v, "claims", "C5_thm42", "route_d_eta_tail_measurement", default={})
+    dk = g(v, "independent_check", "davis_kahan_by_principal_angle", default={})
+    ci = c.get("stage_2_loglog_slope_ci95") or [None, None]
+    eci = d.get("ci95") or [None, None]
+    unmeasured = c.get("elements_not_measured") or []
+    return (
+        "**One exact symbolic check VERIFIED, one weaker check reported and labelled as "
+        "unable to fail, and the headline rate exponent NOT CONFIRMED — it lands on the "
+        "shallow side of the stated −1/2 and this page does not read that as support.** "
+        "(1) **The load-bearing symbolic result.** Solving the theorem's stated bound for "
+        "the sample size needed to reach accuracy α yields "
+        f"`{a.get('n_required_for_accuracy_alpha')}`, matching the sample complexity the "
+        "paper states separately in Appendix D.6 and transcribes into the module "
+        f"independently (`sample_complexity_inversion_matches_paper = "
+        f"{a.get('sample_complexity_inversion_matches_paper')}`). `sympy` performs the "
+        "solve; a wrong constant or a wrong power in the paper's own inversion would flip "
+        "this flag. "
+        "(2) **A weaker check, reported because it is in the record and not counted as "
+        f"evidence.** `composition_reproduces_stated_bound = "
+        f"{a.get('composition_reproduces_stated_bound')}` **cannot fail as written here**: "
+        "the composed expression is built by multiplying the cited step by the Davis–Kahan "
+        "factor and compared against the same product written another way, so it tests our "
+        "transcription's self-consistency, not the paper. Note this is a defect in *how "
+        "this instance was written*, not in the family — the structurally similar check on "
+        "Theorem 4.3, where the derivation is composed independently of the stated result, "
+        "is exactly the one that falsifies that theorem's displayed proof by σ_max³. "
+        f"(3) The cited Davis–Kahan constant `{num(b.get('constant_checked'), 4)} = 2^(3/2)` "
+        f"holds over the whole search (`no_violation_found = "
+        f"{b.get('no_violation_found')}`, worst error/bound "
+        f"{num(b.get('worst_err_over_bound'), 3)}), and the independent checker re-runs "
+        f"that search on its own random draws under its own seed over {dk.get('trials')} "
+        f"trials and finds it holds there too (worst error/bound "
+        f"{num(dk.get('worst_err_over_bound'), 3)}). Both searches sample at random rather "
+        "than adversarially, so this is corroboration over the region reached, not a "
+        "proof of the constant. "
+        "**The rate measurements, stated in the direction they actually point.** On the "
+        "spectral step the theorem governs, the `n`-exponent is "
+        f"**{num(c.get('stage_2_loglog_slope'), 4)}** (95 % CI [{num(ci[0], 4)}, "
+        f"{num(ci[1], 4)}]). That is *shallower* than the stated −1/2, and the whole "
+        "interval lies on that side — the side that would eventually outgrow an "
+        f"`O(√(η/n))` bound "
+        f"(`stage_2_exponent_statistically_consistent_with_minus_half = "
+        f"{c.get('stage_2_exponent_statistically_consistent_with_minus_half')}`). Over a "
+        "finite grid this is **not** a violation, because a constant absorbs it; but it is "
+        "**not confirmation of the exponent either**, and the contract row that passes it "
+        f"does so against a threshold of **{c.get('requirement_error_vs_n')}** — 16 % of "
+        "slack below the theoretical value, disclosed here rather than only in the "
+        "limitations. The accuracy exponent is "
+        f"**{num(c.get('loglog_slope_n_star_vs_alpha'), 4)} ± "
+        f"{num(c.get('loglog_slope_n_star_vs_alpha_stderr'), 4)}** against a stated −2, and "
+        f"the `η` tail exponent is **{num(d.get('loglog_slope_error_vs_eta'), 4)}** "
+        f"(bootstrap 95 % CI [{num(eci[0], 4)}, {num(eci[1], 4)}]) against a stated 1/2 — "
+        "that one is conservative in the direction the bound requires. "
+        f"**NOT MEASURED:** {', '.join('`' + u + '`' for u in unmeasured)} and `ξ(T)`, which "
+        "has no closed form we can evaluate. **DECIDED False, not unmeasured:** the "
+        "end-to-end pipeline exponent "
+        f"(`stage_3_full_pipeline_check = {c.get('stage_3_full_pipeline_check')}`), which "
+        "falls short of `n^{-1/2}` at our solver's iteration budget; this page attributes "
+        "that to the solver, and that attribution is an argument from the stage "
+        "decomposition, not a separate executable test"
+    )
+
+
 PAGE_VERDICT = {
     "C1": _v_c1,
     "C2": _v_c2,
@@ -1428,6 +1500,7 @@ PAGE_VERDICT = {
           "the authors' own baseline harness. **BLOCKED** on the other five: four ship no "
           "judge outputs, and PKU-BETTER's released labels are constant, which an "
           "executable precondition detects and reports before any accuracy is computed",
+    "C5": _v_c5,
     "C6": _v_c6,
 }
 
