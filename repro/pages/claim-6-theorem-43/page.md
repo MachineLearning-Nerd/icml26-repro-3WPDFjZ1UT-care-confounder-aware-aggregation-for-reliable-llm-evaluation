@@ -49,7 +49,7 @@ the cheap end because cost grows with `n`, raised the usable settings from 3 of 
 | Exponent | Measured (95 % CI) | Stated | Reading |
 |---|---|---|---|
 | `σ` | **[2.62, 5.41]** | 6 | **MEASURED**; excludes 6 |
-| `p` | **[2.79, 3.17]** | 1 | **MEASURED** but **NOT ATTRIBUTABLE** — see below |
+| `p` | **[2.78, 3.17]** | 1 | **MEASURED** but **NOT ATTRIBUTABLE** — see below |
 | `π_min` | [−0.32, 0.26] | −2 | **NOT MEASURED** — screen still blocks it |
 
 **What the `σ` result means, and what it does not.** The interval excludes the stated 6, but
@@ -58,7 +58,7 @@ than a sufficient condition demands is **entirely consistent with the theorem**.
 evidence that the `σ⁶` factor is **not tight** in this generative model, not that it is
 wrong, and it is recorded that way.
 
-**Why the `p` exponent is reported but not used.** Its interval [2.79, 3.17] sits far above
+**Why the `p` exponent is reported but not used.** Its interval [2.78, 3.17] sits far above
 the stated 1, which is the direction that *would* indicate the stated condition is
 insufficient — the most consequential result available on this page. It is **not claimed**,
 because the confound audit that runs alongside it finds a real confound: the empirical
