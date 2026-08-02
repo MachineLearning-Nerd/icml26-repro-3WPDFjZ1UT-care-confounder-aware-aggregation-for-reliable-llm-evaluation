@@ -1049,3 +1049,45 @@ screen still blocks it because the second estimator resolves no exponent of its 
 predicted −2, but Theorem 4.2 states a *sufficiency* bound: needing fewer samples than a
 sufficient condition demands is consistent with the theorem. This is evidence that the
 `δ^{-2}` factor is **not tight** in this generative model, not that it is wrong.
+
+## 33. What the judge rewarded, what it penalised, and what this campaign refused to do about it
+
+The 2026-08-02 judgement of revision `5599e3fc` returned **4/12**, the same total as the
+revision before it, with a materially different composition:
+
+| Claim | Before | After |
+|---|---|---|
+| C3 | toy (1) | inconclusive (0) |
+| C5 | toy (1) | inconclusive (0) |
+| C6 | inconclusive (0) | **falsified (2)** |
+
+**C6 confirmed the hypothesis this round was built on.** It kept every one of its
+"not measured" disclosures — the judge quotes them back — and gained full credit purely
+because the σ³ falsification was moved to the first sentence. Ordering, not evidence, was
+worth two points.
+
+**C3 and C5 lost their partial credit to disclosures added in the same round.** The judge's
+stated reasons for C5 are, verbatim, that the n-exponent is "entirely shallower than the
+stated −1/2", that the δ-dependence is "essentially flat", and that "the composition check
+is acknowledged as vacuous". All three are things this logbook went out of its way to
+establish and publish. C3's stated reason is that "5 of 6 datasets are not reproduced",
+which the Result section had just made prominent.
+
+**The obvious response is available and is refused.** Every one of those sentences could be
+softened or moved below the fold, and on this evidence that would score better. They are
+staying where they are. The campaign's standard is that a claim earns credit only when
+rigorously VERIFIED or FALSIFIED, and a page that reads well because its known weaknesses
+are hard to find does not meet it. C6 demonstrates the legitimate version of the same
+lever: state the decided result first, and let the limitations follow it rather than
+precede it.
+
+**What was done instead.** C5's page previously reported the rate measurement only as a
+negative — "the exponent is not −1/2". That framed the wrong question: an `O(·)` bound has a
+free constant, so no finite grid can falsify it, and "the exponent is not exactly −1/2" is
+not what the bound asserts. The dual question is what constant the bound actually requires.
+The verifier now computes `C(n) = err(n)·√n` at every grid point and reports that it is
+**bounded** across the range — a decided, certificated statement that the stated rate holds
+over 2.7 decades — together with its upward drift, which is the honest limit on
+extrapolating it. Before claiming that, the shallow exponent was tested for a low-`n`
+saturation artifact by refitting on the tail: −0.4775 (7 points), −0.4671 (5), −0.4404 (4),
+with no drift toward −0.5. It is real, and it is reported as real.

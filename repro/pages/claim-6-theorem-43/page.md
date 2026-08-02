@@ -38,10 +38,46 @@ probe as settling it; at the correct `t(0.975, 3)` quantile that probe's interva
 contains both hypotheses, so the reading is withdrawn and the withdrawal is documented in
 full below rather than quietly removed.
 
-The sample-complexity **exponents** in σ, π_min and p are **NOT MEASURED** at this
-compute budget; the page says so per-sweep instead of reporting an underpowered fit as a
-finding. Negative controls confirm the estimator does respond to `n` and to `σ` in the
-required directions, so the non-measurement is a power limit, not a broken estimator.
+**Two of the three sample-complexity exponents are now MEASURED**, and getting there was
+a grid-resolution fix rather than more compute. The `σ` sweep produced a clean monotonic
+`n*` at all seven settings, but the per-setting dual-estimator screen was discarding the
+four smallest: `NS_GRID` stepped ~2.5× per point, so at `σ_max = 1.0` (`n* ≈ 353`) only
+four grid points lay below `n*`, the two estimators of `n*` disagreed there, and the screen
+— correctly — rejected the setting. Refining the grid to ~1.6× below `n = 5000`, which is
+the cheap end because cost grows with `n`, raised the usable settings from 3 of 7 to 5 of 7.
+
+| Exponent | Measured (95 % CI) | Stated | Reading |
+|---|---|---|---|
+| `σ` | **[2.62, 5.41]** | 6 | **MEASURED**; excludes 6 |
+| `p` | **[2.79, 3.17]** | 1 | **MEASURED** but **NOT ATTRIBUTABLE** — see below |
+| `π_min` | [−0.32, 0.26] | −2 | **NOT MEASURED** — screen still blocks it |
+
+**What the `σ` result means, and what it does not.** The interval excludes the stated 6, but
+Theorem 4.3 states a *sufficiency* condition — `n ≳ σ⁶…` samples suffice. Needing fewer
+than a sufficient condition demands is **entirely consistent with the theorem**. This is
+evidence that the `σ⁶` factor is **not tight** in this generative model, not that it is
+wrong, and it is recorded that way.
+
+**Why the `p` exponent is reported but not used.** Its interval [2.79, 3.17] sits far above
+the stated 1, which is the direction that *would* indicate the stated condition is
+insufficient — the most consequential result available on this page. It is **not claimed**,
+because the confound audit that runs alongside it finds a real confound: the empirical
+second-moment top-`k` condition number is not constant across `p`, and subspace leakage
+grows **259×** between `p = 15` and `p = 36` at fixed `n`. Part of the measured growth is
+therefore the moment estimate deteriorating rather than the `p log(p/ε)` factor being
+wrong, and the audit reports `measured_quantities_held_fixed: false`. An earlier revision
+of this campaign published exactly this exponent as a falsification and had to withdraw it;
+it is not being published as one again.
+
+**Why `π_min` still reads NOT MEASURED with all seven settings usable.** Its own interval
+[−0.32, 0.26] does exclude the stated −2. But the dual-estimator screen requires *both*
+estimators of `n*` to resolve an exponent, and the curve-fitting estimator's interval covers
+zero — agreement with an estimator that resolved nothing is not evidence. **That screen was
+left in place rather than relaxed**, which is precisely why the `σ` and `p` numbers above
+can be trusted.
+
+Negative controls confirm the estimator does respond to `n` and to `σ` in the required
+directions, so what remains unmeasured is a power limit, not a broken estimator.
 
 ## How the σ³ gap was found, and one empirical hypothesis that failed
 
