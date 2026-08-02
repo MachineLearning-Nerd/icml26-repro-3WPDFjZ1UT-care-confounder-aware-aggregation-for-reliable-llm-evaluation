@@ -300,8 +300,13 @@ def check(work: Path) -> int:
 def upload(work: Path) -> int:
     token = get_token()
     api = HfApi(token=token)
-    who = api.whoami(token=token)
-    print("authenticated as", who.get("name"))
+    # /whoami-v2 is aggressively rate-limited and this call is cosmetic -- it only
+    # names the account. Never let it block a publish; the upload itself authenticates,
+    # and the post-upload byte-identity verification is what actually proves success.
+    try:
+        print("authenticated as", api.whoami(token=token).get("name"))
+    except Exception as exc:
+        print(f"whoami unavailable ({type(exc).__name__}); continuing to upload")
     present = [p for p in ALLOWLIST if (work / p).exists()]
     api.upload_folder(
         repo_id=REPO,
