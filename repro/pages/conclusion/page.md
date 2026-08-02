@@ -82,8 +82,13 @@ revision; each withdrawal is recorded with the reasoning that produced it.
   documented proof gap. Reporting the falsification would have been the more striking
   result and the wrong one. A later revision then reported a falsification of a
   *different* factor of the same theorem, by a different route; that one has since been
-  withdrawn as well, by this logbook's own verifier. **No falsification of Theorem 4.3
-  survives** — what survives is a documented gap in its displayed proof.
+  withdrawn as well, by this logbook's own verifier. **No falsification of Theorem 4.3's
+  *sample-complexity condition* survives.** What does survive, untouched by any of this,
+  is the symbolic result on its second displayed bound: composing the paper's own (8) and
+  (11) overshoots the stated weight bound by exactly `σ_max³`, so that bound's **displayed
+  proof is falsified** — exactly, with no tolerance and no seed, by two independent
+  routes. The withdrawals above are about the *empirical* probes of the theorem's
+  condition, not about that derivation.
 * **And the corroboration we replaced that falsification with was also wrong.** Having
   withdrawn the `σ` falsification on the strength of a boundary probe whose interval
   "excluded" the slope a missing `σ³` predicts, we then found the interval had been built

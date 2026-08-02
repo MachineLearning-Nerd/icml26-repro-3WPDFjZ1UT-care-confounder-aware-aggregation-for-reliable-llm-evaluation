@@ -12,7 +12,39 @@
 The paper's verbatim statement, including the separate displayed bounds for the mean
 error and the weight error, is on [Source audit](#/source-audit).
 
-## What was tested, and one hypothesis that failed
+## Result
+
+Theorem 4.3 has two displayed bounds. Both were audited symbolically, by two
+implementations that share no code, and both audits are exact — no sampling, no
+tolerance, no seed.
+
+| Displayed bound | Verdict |
+|---|---|
+| (I) mean error `C₁(σ³/δ)√(p log(p/ε)/n)` | **VERIFIED exactly** — the paper's own equations (8) and (10) compose to it with a **zero residual**; the derived-over-stated ratio is the constant `√3·C_dec·C/C₁`, free of σ, δ, p, ε and n |
+| (II) weight error `C₂√(p log(p/ε)/n)` | **FALSIFIED as a derivation** — composing the paper's own (8) with (11) yields a bound larger by **exactly `σ_max³`**, an unbounded factor no universal constant `C₂` can absorb |
+
+Both results are obtained twice by machinery with nothing in common: `sympy`
+simplification inside the claim module, and exact exponent-vector arithmetic over
+`Fraction`s inside [`independent_check.py`](repro/src/independent_check.py). The two
+routes are compared for agreement and the comparison is itself a published field, so a
+disagreement would fail the run rather than be reported as a result.
+
+**What this does and does not settle.** It falsifies the *written proof* of bound (II):
+the displayed chain does not establish the inequality it displays. It does **not** decide
+whether bound (II) as stated happens to hold by some other argument — that would require
+either a correct alternative derivation or an assumption-satisfying counterexample, and
+neither is produced here. Two earlier revisions of this page read an empirical boundary
+probe as settling it; at the correct `t(0.975, 3)` quantile that probe's interval
+contains both hypotheses, so the reading is withdrawn and the withdrawal is documented in
+full below rather than quietly removed.
+
+The sample-complexity **exponents** in σ, π_min and p are **NOT MEASURED** at this
+compute budget; the page says so per-sweep instead of reporting an underpowered fit as a
+finding. Negative controls confirm the estimator does respond to `n` and to `σ` in the
+required directions, so the non-measurement is a power limit, not a broken estimator.
+
+## How the σ³ gap was found, and one empirical hypothesis that failed
+
 
 Theorem 4.3 has two parts: a **sample-complexity condition** and, under it, error
 bounds on the recovered means `μ_qc` and weights `π_qc`. Both were examined.

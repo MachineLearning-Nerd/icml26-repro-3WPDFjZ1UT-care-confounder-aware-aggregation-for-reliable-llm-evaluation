@@ -13,6 +13,41 @@ The paper states two such figures in the same sentence — **17.37%** against AV
 **12.75%** against MV — over Table 1's six continuous-scoring datasets (ASSET,
 FeedbackQA, Review-5K, Summarize, UltraFeedback, Yelp).
 
+## Result
+
+**Both published figures are reproduced exactly, and the definition behind them is
+identified uniquely.** 17.37 % over AVG and 12.75 % over MV both fall out of Table 1's
+own entries under one, and only one, of the three natural readings of "average
+improvement" — the improvement of the *pooled mean* MAE. Requiring a candidate
+definition to hit both targets simultaneously is what pins it down; any single target
+admits several readings by coincidence. All of it is decided in exact rational
+arithmetic and re-derived by an independent checker from a second transcription.
+
+**CARE improves on AVG on all six continuous-scoring benchmarks.** The direction of the
+paper's claim is not in dispute anywhere in this page.
+
+**Reproduced at full scale on ASSET** — the authors' code at `72f5b29`, five seeds,
+their own γ search — with a column-permutation negative control.
+
+**One scope qualification, quantified rather than asserted.** The identified definition
+is algebraically an MAE-weighted mean of the per-dataset improvements, and those weights
+are set by unit selection: ASSET's 0–100 scale gives it **84.4 %** of the total weight,
+so the published "average across scoring datasets" is very nearly ASSET's number alone.
+The unit-invariant average across the six benchmarks is **15.19 %** over AVG and
+17.59 % over MV, and rescaling ASSET reverses the paper's ordering of the two baselines.
+Every number the paper prints is correct under the definition it used; what does not
+survive is the reading of that number as an average *across benchmarks*. This is a scope
+qualification, **not** a falsification — an earlier revision of this page wrongly called
+it one.
+
+**A second, independent defect in the source row.** Appendix E.8's Table 7 republishes
+the CARE-SVD row this statistic is computed from, and disagrees with Table 1 on
+FeedbackQA far outside the paper's own reported seed noise, which moves the headline
+again.
+
+**BLOCKED:** the five non-ASSET Table 1 columns ship no judge outputs, so their MAEs are
+not re-measured here; the arithmetic above is over the paper's published values.
+
 ## The substantive question: what does "average improvement" mean?
 
 The paper does not define it, and the choice matters: the candidate definitions
