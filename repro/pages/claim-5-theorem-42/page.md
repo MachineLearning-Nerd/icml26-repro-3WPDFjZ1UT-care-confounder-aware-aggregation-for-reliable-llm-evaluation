@@ -75,7 +75,49 @@ numerical sanity check, not a second opinion.
 Neither search is adversarial; both sample perturbations at random. So the constant is
 corroborated over the region reached, not proved.
 
-**NOT MEASURED:** `n*(delta)` and `ξ(T)`, which has no closed form we can evaluate.
+**The `δ` sweep is now MEASURED, and getting there found a defect in our own design
+rather than a shortage of compute.** Three earlier revisions reported `n*(δ)` as NOT
+MEASURED on a fit of `0.6023 ± 0.5641` — a 95 % interval of [−1.82, 3.03] that decided
+nothing. The cause was not noise. The sweep set the spectrum to
+`[4.0, 2.0, 0.5] if d >= 2.0 else [2.0+d, 2.0, 2.0-d]`, under a source comment claiming
+the overall scale was held fixed. It was not: `d = 2.0` was special-cased onto a different
+spectrum family, and for `d < 2` the smallest eigenvalue `2−d` moved with `d` as well, so
+changing the eigengap also changed the conditioning of `L*`. The measured `n*(δ)` came out
+**non-monotonic** — 25694, 5649, 3060, 7839 for `δ` = 2, 1, 0.5, 0.25 — which is the wrong
+sign at the top of the range and was the real signal that the design, not the estimator,
+was at fault.
+
+Rebuilt so that **both ends of the spectrum are pinned** (`λ₁ = 4.0`, `λ₃ = 1.0` at every
+setting) and only the middle eigenvalue moves, over 7 settings instead of 4, the sweep
+resolves cleanly:
+
+| `δ` | 0.25 | 0.5 | 0.75 | 1.0 | 1.5 | 2.0 | 2.5 |
+|---|---|---|---|---|---|---|---|
+| `n*` | 5536 | 5518 | 5506 | 5500 | 5517 | 5660 | 6750 |
+
+The fitted exponent is **0.0530 ± 0.0341**, a 95 % interval of **[−0.035, 0.141]** — a
+width of 0.18 where the confounded design gave 4.85. `n*` is essentially **flat in `δ`
+across a tenfold change**.
+
+**What that does and does not mean.** The interval **excludes the predicted −2** decisively.
+For a *sufficiency* bound that is **not a violation**: Theorem 4.2 says a sample size of
+order `δ^{-2}` suffices, and needing *fewer* samples than a sufficient condition demands is
+entirely consistent with it. What it does show is that the `δ^{-2}` factor is **not tight**
+over `δ ∈ [0.25, 2.5]` in this generative model — the theorem's stated `δ`-dependence is not
+visible in the sample size actually required. This is reported as a measured property of
+the bound's tightness, not as a falsification, and the verifier records exactly that
+distinction in `what_was_measured`.
+
+*This also required changing our own informativeness gate, and that change is disclosed
+rather than buried. The gate's predicate was "the 95 % interval excludes zero" — it could
+not distinguish "too noisy to say anything" from "precisely measured, and the exponent is
+zero", and the second is a real finding when the theorem predicts −2. A sweep now counts as
+informative when its interval excludes zero **or** excludes the predicted exponent, and is
+uninformative only when it covers both. That is not a threshold tuned to pass: Claim 6's
+`σ` sweep has interval [−0.71, 12.81], covers both 0 and its predicted 6, and remains NOT
+INFORMATIVE under the same rule.*
+
+**NOT MEASURED:** `ξ(T)`, which has no closed form we can evaluate.
 **DECIDED False, not unmeasured:** the end-to-end pipeline exponent
 (`stage_3_full_pipeline_check: false`), which falls short of `n^{-1/2}` at our solver's
 iteration budget. This page attributes that shortfall to the solver, and that attribution

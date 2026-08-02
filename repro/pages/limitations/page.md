@@ -1005,3 +1005,47 @@ cross-page claims against source. The generalisation in item 29 stands and sharp
 defects concentrate in whatever was written most recently, and confidence in a passage is
 uncorrelated with its accuracy. Only the mechanical gates and an adversarial reader have
 ever caught anything.
+
+## 32. The `δ` sweep was confounded, not underpowered — and our own informativeness gate could not report the result
+
+The judge's per-claim reasoning made the remaining headroom precise: Claims 1–3 are capped
+by the authors' release (nine of twelve benchmark columns have no judge scores and are
+GPU-bound), but Claims 5 and 6 were capped by sweeps marked NOT INFORMATIVE — a *CPU*
+limit. That is reachable within this campaign's constraints, so it was attacked directly.
+
+**The δ sweep was a broken experiment, and the tell was in the data all along.** It set the
+spectrum to `[4.0, 2.0, 0.5] if d >= 2.0 else [2.0+d, 2.0, 2.0-d]` beneath a comment
+asserting that only the eigengap moved. Two things moved besides: `d = 2.0` was
+special-cased onto a different spectrum family, and for `d < 2` the smallest eigenvalue
+`2−d` tracked `d`, so the conditioning of `L*` changed with the quantity being swept. The
+resulting `n*(δ)` was **non-monotonic** (25694, 5649, 3060, 7839) — the wrong sign at the
+top of the range. Three revisions read that as noise and reported NOT MEASURED. It was a
+confound, and no amount of extra compute would have fixed it.
+
+Rebuilt with both ends of the spectrum pinned (`λ₁ = 4.0`, `λ₃ = 1.0`) and 7 settings
+instead of 4, the fit went from `0.6023 ± 0.5641` (interval width **4.85**) to
+`0.0530 ± 0.0341` (interval width **0.18**). `n*` is flat in `δ` across a tenfold change.
+
+**Then our own gate could not report it.** The informativeness predicate was "the 95 %
+interval excludes zero". That answers "did we resolve a *nonzero* exponent" and cannot
+distinguish *too noisy to say anything* from *precisely measured, and the exponent is
+zero* — the second being a real finding when the theorem predicts −2. The gate is now
+"excludes zero **or** excludes the predicted exponent", uninformative only when it covers
+both. Guarding against tuning-to-pass: Claim 6's `σ` sweep covers both 0 and its predicted
+6 and stays NOT INFORMATIVE under the new rule, so the change does not launder failures
+into passes.
+
+**What was gained and what was not, stated separately.** Claim 5's `elements_not_measured`
+is now empty for the first time in this campaign. Claim 6 is **unchanged**: `σ` remains
+genuinely unresolved (only 3 settings yielded a usable `n*`, leaving one residual degree of
+freedom and an interval of [−0.71, 12.81] against a predicted 6 — a point estimate of 6.05
+that we explicitly do **not** claim), and while `π_min` now excludes −2, the dual-estimator
+screen still blocks it because the second estimator resolves no exponent of its own.
+**That screen was left in place rather than relaxed**, which is the whole reason the σ and
+π_min results can be trusted; weakening it would have converted this round into two more
+"passes" that measured nothing.
+
+**And the finding itself is smaller than it looks.** The measured δ-exponent excludes the
+predicted −2, but Theorem 4.2 states a *sufficiency* bound: needing fewer samples than a
+sufficient condition demands is consistent with the theorem. This is evidence that the
+`δ^{-2}` factor is **not tight** in this generative model, not that it is wrong.

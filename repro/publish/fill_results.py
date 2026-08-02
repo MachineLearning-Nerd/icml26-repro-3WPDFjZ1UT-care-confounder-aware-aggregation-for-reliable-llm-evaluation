@@ -1475,13 +1475,22 @@ def _v_c5(v):
         f"the `η` tail exponent is **{num(d.get('loglog_slope_error_vs_eta'), 4)}** "
         f"(bootstrap 95 % CI [{num(eci[0], 4)}, {num(eci[1], 4)}]) against a stated 1/2 — "
         "that one is conservative in the direction the bound requires. "
-        f"**NOT MEASURED:** {', '.join('`' + u + '`' for u in unmeasured)} and `ξ(T)`, which "
-        "has no closed form we can evaluate. **DECIDED False, not unmeasured:** the "
+        + (
+            "**Every contract element in this claim's calibrated sweep is now MEASURED** — "
+            "the `δ` sweep, which three earlier revisions reported as NOT MEASURED, was "
+            "found to be *confounded* rather than merely underpowered and has been "
+            "rebuilt; see below. The one quantity still outside measurement is `ξ(T)`, "
+            "which has no closed form we can evaluate. "
+            if not unmeasured else
+            f"**NOT MEASURED:** {', '.join('`' + u + '`' for u in unmeasured)} and `ξ(T)`, "
+            "which has no closed form we can evaluate. "
+        )
+        + ("**DECIDED False, not unmeasured:** the "
         "end-to-end pipeline exponent "
         f"(`stage_3_full_pipeline_check = {c.get('stage_3_full_pipeline_check')}`), which "
         "falls short of `n^{-1/2}` at our solver's iteration budget; this page attributes "
         "that to the solver, and that attribution is an argument from the stage "
-        "decomposition, not a separate executable test"
+        "decomposition, not a separate executable test")
     )
 
 
