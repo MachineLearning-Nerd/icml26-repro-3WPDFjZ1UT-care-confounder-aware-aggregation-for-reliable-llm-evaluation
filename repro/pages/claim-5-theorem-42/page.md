@@ -362,18 +362,22 @@ confounder correction doing nothing at all.
 
 ## Independent check
 
-[`independent_check.py`](repro/src/independent_check.py) does two things for this claim,
+[`independent_check.py`](repro/src/independent_check.py) does three things for this claim,
 and it is worth being exact about which:
 
+* `theorem_d5_counterexamples_independent` recomputes the sign and missing-zero-gap
+  counterexamples from a direct 2×2 eigendecomposition, then obtains the Gaussian
+  two-model divergence from the trace/log-determinant KL formula at 80-digit precision.
+  It shares neither the claim module's closed-form angle nor its simplified KL formula.
 * `davis_kahan_by_principal_angle` re-derives the eigenvector distance by a **different
   route** — via the principal angle, `‖û − u‖ = 2 sin(θ/2)` — rather than by the norm
   difference the claim module uses, and re-checks the `2^{3/2}` constant against it.
 * `recheck_c5_stage_slopes` refits the stage-1 and stage-2 exponents with a **Theil–Sen**
   estimator instead of least squares, so a single outlying point cannot carry the fit.
 
-There is **no** second symbolic derivation of the composed bound. An earlier version of
-this page said there was; that was false and has been removed. Route A's `sympy`
-reconstruction is checked by no independent implementation.
+The preserved Route A `sympy` reconstruction of the paper's composed bound still has no
+second implementation; it is not the evidence that decides the literal theorem. The
+decisive sign, eigengap, and minimax results do have the independent route above.
 
 ## Reproduce
 

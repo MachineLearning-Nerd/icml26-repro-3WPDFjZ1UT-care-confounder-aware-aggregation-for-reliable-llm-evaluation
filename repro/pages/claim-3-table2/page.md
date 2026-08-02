@@ -149,10 +149,10 @@ Both readings are computed and reported:
 | Against the strongest Table 2 baseline (GLAD, 0.718) | `(0.814 − 0.718) / 0.718` | **13.37% ≈ 13.4%** ✓ matches the paper |
 | Against the claim string's own pair (0.705) | `(0.814 − 0.705) / 0.705` | 15.46% ✗ does not match |
 
-So **the paper's stated 13.4% is correct** and the *claim string's* quoted baseline
-value is wrong — it names a weaker baseline than the one the percentage was computed
-against. The claim is adjudicated against the paper, and the discrepancy is reported
-rather than resolved silently in either direction.
+So **the paper's nearby 13.4% prose is correct**, but the official generated claim's
+quoted baseline is wrong — it names a weaker baseline than the one the percentage was
+computed against. The official generated claim is canonical for adjudication and is
+therefore falsified; the paper's nearby wording is retained as a positive repair control.
 
 <!-- FILL:c3.summarize -->
 *(pending release run)*
@@ -275,8 +275,8 @@ aggregators.
 
 [`independent_check.py`](repro/src/independent_check.py) recomputes
 both Summarize percentages in exact `Fraction` arithmetic, from literals typed
-independently of the claim module, and asserts that the paper's 13.4 % follows from
-GLAD's 0.718 and **not** from the 0.705 quoted in the circulated claim string.
+independently of the claim module, and asserts that the paper's nearby 13.4 % follows
+from GLAD's 0.718 and **not** from the 0.705 quoted in the official generated claim.
 
 It also transcribes Table 2's **full nine-method grid a second time**, by hand, and
 compares it against the claim module's copy **cell by cell** — all 54 — before
