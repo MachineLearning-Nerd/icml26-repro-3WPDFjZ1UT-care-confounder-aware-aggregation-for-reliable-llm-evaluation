@@ -224,8 +224,45 @@ def verify_claim_code_matches_verdict(work: Path) -> int:
     return 0
 
 
+def _check_pages_are_synced(work: Path) -> list[str]:
+    """Every staged page must still match the repository page it came from.
+
+    `fill_results.py` edits the staging tree in place, so running it without a preceding
+    `sync` leaves staging with fresh FILL blocks wrapped around stale prose -- a publish
+    that looks successful and silently ships none of the page edits. That happened, so it
+    is now a gate. Comparison ignores FILL block bodies, which sync never carries.
+    """
+    repo = Path(__file__).resolve().parents[2]
+    block = re.compile(r"(<!-- FILL:[^>]*-->).*?(<!-- /FILL -->)", re.S)
+    # visibility_matrix.py rewrites this page into staging *after* sync, so staging is
+    # meant to differ from the repository copy. It is the only such page; everything
+    # else must match or the publish is shipping stale prose.
+    GENERATED = {"visibility-matrix"}
+    stale = []
+    for page in sorted((repo / "repro" / "pages").glob("*/page.md")):
+        if page.parent.name in GENERATED:
+            continue
+        staged = work / "pages" / page.parent.name / "page.md"
+        if not staged.exists():
+            stale.append(f"{page.parent.name} (missing from staging)")
+            continue
+        a = block.sub(r"\1\2", page.read_text())
+        b = block.sub(r"\1\2", staged.read_text())
+        if a != b:
+            stale.append(page.parent.name)
+    return stale
+
+
 def check(work: Path) -> int:
     token = get_token()
+    stale = _check_pages_are_synced(work)
+    if stale:
+        print("SYNC CHECK FAILED -- staged pages differ from the repository:")
+        for s in stale:
+            print("   ", s)
+        print("Run `publish_space.py sync` then re-run make_raw/fill_results.")
+        return 1
+    print("sync check: staged pages match the repository")
     judged = work.parent / "judged_ref"
     if not judged.exists():
         snapshot_download(
