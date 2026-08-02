@@ -29,6 +29,31 @@ the authors released no judge scores, and regenerating them needs GPU inference
 over 11–20 LLM judges — the paper reports up to 3 hours per dataset on an A100
 (Appendix E.2). Those are recorded BLOCKED with that named missing capability.
 
+**That coverage limit is the authors' own, stated in their own words — it is not an
+inference we drew from failing to find files.** The release ships a manifest,
+`judge_outputs/README.md`, which enumerates the judge outputs in full:
+
+> Judge outputs are stored by experiment setting:
+> - `judge_outputs/fully_gaussian/asset/`
+> - `judge_outputs/gaussian_mixture/civilcomments/`
+> - `judge_outputs/gaussian_mixture/pku_better/`
+
+Three directories, for three of the twelve benchmark columns in Tables 1–2. They hold
+**11** judge CSVs for ASSET, **24** for CivilComments and **7** for PKU-BETTER — counts
+recorded in `raw/verdict.json` under `label_integrity_audit`, not read off by eye. Two of
+those three fall outside the 11–20 judges per benchmark the paper describes in Appendix
+E.2; this reproduction notes the mismatch and does not resolve it, since the paper does not
+say which judges enter which table. **No file in the repository at `72f5b29` contains
+judge scores for UltraFeedback, Yelp, Review-5K, Summarize, FeedbackQA, SHP,
+Chatbot-Arena or PKU-SAFER**, and none of those nine columns can be reproduced by anyone
+— including the authors' own scripts — without first regenerating judge scores on GPUs.
+
+This matters for how the unreproduced columns should be read. They are not gaps in this
+reproduction's effort or budget; they are a property of what was released. Every column
+whose data exists has been reproduced or explicitly blocked by a published integrity
+precondition, and this campaign is CPU-only by constraint, so the nine GPU-bound columns
+are outside what any amount of further work here could reach.
+
 **The theorem claims are addressed by reconstructing the proofs**, not by fitting a
 slope to synthetic data. Theorem D.3's exact-recovery argument is re-derived
 symbolically over a parameterised family; Theorem D.4's constant is *derived* (we
