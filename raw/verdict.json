@@ -1,0 +1,4055 @@
+{
+  "paper": "3WPDFjZ1UT",
+  "arxiv": "2603.00039",
+  "environment": {
+    "git_sha": "53a0efbe401e287d32b3031130d0c7ab0bf2f245",
+    "run_input_sha256": "b5a8611c93f914a213156cc1372054a7b89c7c4b1b37ffb4f966e148f7054c2c",
+    "python": "3.11.13",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "os_cpu_count": 8,
+    "cgroup_cpu_quota": 8,
+    "threads_pinned_to": 8,
+    "numpy": "2.1.3",
+    "hf_flavor": "unset",
+    "run_command": "uv run python repro/src/run_all.py",
+    "paper_source": {
+      "arxiv_id": "2603.00039",
+      "openreview": "3WPDFjZ1UT",
+      "url": "https://ar5iv.labs.arxiv.org/html/2603.00039",
+      "retrieved_utc": "2026-08-01T04:20:00Z",
+      "sha256": "2e733a1609e1dd907dd839b9eed8d9fb7d88549f45d40fafbca7af94ee5e77ea",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+      "official_code": "https://github.com/SprocketLab/CARE",
+      "official_code_sha": "72f5b29a822d9934d31777c10a5c38369884c9dc"
+    }
+  },
+  "claims": {
+    "C1_C2_C3_tables": {
+      "claim": "C1/C2/C3 - Tables 1 and 2 (real benchmarks, authors' released judge outputs)",
+      "official_repo_sha": "72f5b29a822d9934d31777c10a5c38369884c9dc",
+      "official_repo_sha_matches_pin": true,
+      "table_arithmetic": {
+        "ok": true,
+        "per_dataset_relative_improvement_vs_AVG_pct": {
+          "ASSET": 17.924724474942806,
+          "FeedbackQA": 12.048192771084336,
+          "Review-5K": 13.940193491644676,
+          "Summarize": 4.9497847919655635,
+          "UltraFeedback": 9.183673469387763,
+          "Yelp": 33.076181292189005
+        },
+        "per_dataset_relative_improvement_vs_MV_pct": {
+          "ASSET": 11.311912175392411,
+          "FeedbackQA": 11.192214111922139,
+          "Review-5K": 24.961656441717793,
+          "Summarize": 6.492589978828517,
+          "UltraFeedback": 26.79200940070505,
+          "Yelp": 24.810400866738906
+        },
+        "candidate_definitions": {
+          "mean_of_per_dataset_relative_improvement": {
+            "vs_AVG": 15.187125048535691,
+            "vs_MV": 17.59346382921747
+          },
+          "pooled_mean_MAE_ratio": {
+            "vs_AVG": 17.365359542673723,
+            "vs_MV": 12.74951024514214
+          },
+          "median_of_per_dataset_relative_improvement": {
+            "vs_AVG": 12.994193131364506,
+            "vs_MV": 18.06115652106566
+          }
+        },
+        "definition_matching_paper": [
+          "pooled_mean_MAE_ratio"
+        ],
+        "paper_targets": {
+          "vs_AVG_pct": 17.37,
+          "vs_MV_pct": 12.75
+        },
+        "note_on_definition": "Only the pooled mean-MAE ratio reproduces both 17.37% and 12.75%. The arithmetic average of per-dataset relative improvements gives 15.19% (vs AVG) and 17.59% (vs MV). The pooled figure is dominated by ASSET, whose MAE is on a 0-100 scale while the other five datasets are on 0-10 or smaller scales.",
+        "claim1_ultrafeedback_reduction_vs_MV_pct": 26.79200940070505,
+        "claim1_paper_value_pct": 26.8,
+        "claim3_best_method_per_dataset": {
+          "Chatbot-Arena": {
+            "winner": "CARE-SVD",
+            "accuracy": 0.58
+          },
+          "CivilComments": {
+            "winner": "CARE-SVD",
+            "accuracy": 0.778
+          },
+          "PKU-BETTER": {
+            "winner": "CARE-Tensor",
+            "accuracy": 0.779
+          },
+          "PKU-SAFER": {
+            "winner": "MACE",
+            "accuracy": 0.735
+          },
+          "SHP": {
+            "winner": "CARE-Tensor",
+            "accuracy": 0.695
+          },
+          "Summarize": {
+            "winner": "CARE-Tensor",
+            "accuracy": 0.814
+          }
+        },
+        "claim3_bold_cells_agree_with_recomputed_winners": true,
+        "claim3_care_best_on_n_of_6": 5,
+        "claim3_five_of_six_holds": true,
+        "claim3_care_tensor_leads_on": [
+          "PKU-BETTER",
+          "SHP",
+          "Summarize"
+        ],
+        "claim3_care_tensor_leads_matches_paper": true,
+        "claim3_dataset_where_care_loses": [
+          "PKU-SAFER"
+        ],
+        "claim3_summarize_strongest_baseline": {
+          "method": "GLAD",
+          "accuracy": 0.718
+        },
+        "claim3_summarize_care_tensor": 0.814,
+        "claim3_summarize_relative_improvement_pct": 13.370473537604454,
+        "claim3_paper_value_pct": 13.4,
+        "claim3_claimstring_pair_relative_pct": 15.460992907801419,
+        "claim3_note": "The paper's own wording is 'a 13.4% relative improvement in accuracy on Summarize over the strongest baseline'. The strongest Summarize baseline in Table 2 is GLAD at 0.718, and (0.814 - 0.718)/0.718 = 13.37%, which reproduces 13.4% exactly. The value 0.705 quoted in the circulated claim string is the WS / Dawid-Skene entry, not the strongest baseline; that pair would give 15.46%."
+      },
+      "claim3_literal_audit": {
+        "ok": true,
+        "generated_claim_literal_verdict": "FALSIFIED",
+        "generated_claim_literal_holds": false,
+        "care_tensor_summarize": "407/500",
+        "generated_claim_quoted_baseline": "141/200",
+        "strongest_table2_baseline": "359/500",
+        "claimed_relative_improvement_pct": "67/5",
+        "quoted_pair_relative_improvement_exact": "2180/141",
+        "quoted_pair_relative_improvement_pct": 15.460992907801419,
+        "quoted_pair_matches_13p4_at_printed_precision": false,
+        "nearby_paper_prose_relative_improvement_exact": "4800/359",
+        "nearby_paper_prose_relative_improvement_pct": 13.370473537604457,
+        "nearby_paper_prose_matches_13p4_at_printed_precision": true,
+        "positive_control_replace_0p705_with_0p718_repairs_arithmetic": true,
+        "negative_control_keep_0p705_is_rejected": true,
+        "why_full_claim_is_false": "The generated claim explicitly couples 13.4% to 0.814 versus 0.705. That pair gives 15.4609929...%, not 13.4%. Replacing 0.705 with the actual strongest Table 2 baseline, GLAD at 0.718, gives 13.3704735...% and recovers the nearby paper prose."
+      },
+      "aggregation_convention_audit": {
+        "pooled_equals_MAE_weighted_mean_identity_residual_pct": 2.4868995751603507e-14,
+        "pooled_equals_MAE_weighted_mean_identity_residual_vs_MV_pct": 1.4210854715202004e-14,
+        "identity_holds": true,
+        "implied_weights_vs_AVG": {
+          "ASSET": 0.84402,
+          "FeedbackQA": 0.02081,
+          "Review-5K": 0.05702,
+          "Summarize": 0.03495,
+          "UltraFeedback": 0.0172,
+          "Yelp": 0.026
+        },
+        "largest_weight_dataset": "ASSET",
+        "largest_weight_share": 0.8440226657306189,
+        "unit_change_sweep_on_ASSET": [
+          {
+            "asset_scale_factor": 0.01,
+            "pooled_vs_AVG_pct": 14.5226,
+            "pooled_vs_MV_pct": 19.1451,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": false
+          },
+          {
+            "asset_scale_factor": 0.1,
+            "pooled_vs_AVG_pct": 15.5977,
+            "pooled_vs_MV_pct": 16.8894,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": false
+          },
+          {
+            "asset_scale_factor": 0.25,
+            "pooled_vs_AVG_pct": 16.4005,
+            "pooled_vs_MV_pct": 15.0806,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": true
+          },
+          {
+            "asset_scale_factor": 0.5,
+            "pooled_vs_AVG_pct": 16.9569,
+            "pooled_vs_MV_pct": 13.7583,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": true
+          },
+          {
+            "asset_scale_factor": 1.0,
+            "pooled_vs_AVG_pct": 17.3654,
+            "pooled_vs_MV_pct": 12.7495,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": true
+          },
+          {
+            "asset_scale_factor": 2.0,
+            "pooled_vs_AVG_pct": 17.6214,
+            "pooled_vs_MV_pct": 12.0998,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": true
+          },
+          {
+            "asset_scale_factor": 10.0,
+            "pooled_vs_AVG_pct": 17.8597,
+            "pooled_vs_MV_pct": 11.4826,
+            "unweighted_vs_AVG_pct": 15.1871,
+            "unweighted_vs_MV_pct": 17.5935,
+            "pooled_says_AVG_gap_exceeds_MV_gap": true
+          }
+        ],
+        "pooled_spread_across_unit_changes_pct": 3.3371,
+        "unweighted_spread_across_unit_changes_pct": 0.0,
+        "pooled_is_unit_dependent": true,
+        "unweighted_is_unit_invariant": true,
+        "ordering_of_the_two_headline_gaps_flips_under_unit_change": true,
+        "unweighted_across_benchmark_average_vs_AVG_pct": 15.187125048535691,
+        "paper_headline_pct": 17.37,
+        "discrepancy_pp": 2.1829,
+        "scope_qualification_established": true,
+        "ok": true
+      },
+      "single_configuration_audit": {
+        "ok": true,
+        "methods_compared": [
+          "MV",
+          "AVG",
+          "WS",
+          "UWS",
+          "Dawid-Skene",
+          "GLAD",
+          "MACE",
+          "CARE-SVD",
+          "CARE-Tensor"
+        ],
+        "per_care_configuration": {
+          "CARE-SVD": {
+            "datasets_won": 2,
+            "of": 6,
+            "rank_per_dataset": {
+              "Chatbot-Arena": 1,
+              "CivilComments": 1,
+              "PKU-BETTER": 7,
+              "PKU-SAFER": 6,
+              "SHP": 9,
+              "Summarize": 7
+            },
+            "mean_rank": 5.1667,
+            "worst_rank": 9,
+            "worst_rank_dataset": "SHP"
+          },
+          "CARE-Tensor": {
+            "datasets_won": 3,
+            "of": 6,
+            "rank_per_dataset": {
+              "Chatbot-Arena": 2,
+              "CivilComments": 2,
+              "PKU-BETTER": 1,
+              "PKU-SAFER": 2,
+              "SHP": 1,
+              "Summarize": 1
+            },
+            "mean_rank": 1.5,
+            "worst_rank": 2,
+            "worst_rank_dataset": "Chatbot-Arena"
+          }
+        },
+        "family_count_taking_best_variant_per_dataset": 5,
+        "best_single_configuration": "CARE-Tensor",
+        "best_single_configuration_wins": 3,
+        "paper_claimed_wins": 5,
+        "no_single_configuration_reaches_the_claimed_count": true,
+        "gap_between_family_and_best_single": 2,
+        "best_single_baseline": "MACE",
+        "best_single_baseline_wins": 1,
+        "note": "The '5 of 6' count is attained by the CARE family only when the better of CARE-SVD and CARE-Tensor is selected separately for each dataset. Held to a single configuration, the strongest is CARE-Tensor at 3 of 6, against the claimed 5. The paper does disclose the split ('with CARE-Tensor leading on three'), so this is a scope qualification on the headline count rather than an undisclosed one."
+      },
+      "comparator_selection_audit": {
+        "relative_reduction_grid_pct": {
+          "MV": {
+            "ASSET": 11.3119,
+            "FeedbackQA": 11.1922,
+            "Review-5K": 24.9617,
+            "Summarize": 6.4926,
+            "UltraFeedback": 26.792,
+            "Yelp": 24.8104
+          },
+          "AVG": {
+            "ASSET": 17.9247,
+            "FeedbackQA": 12.0482,
+            "Review-5K": 13.9402,
+            "Summarize": 4.9498,
+            "UltraFeedback": 9.1837,
+            "Yelp": 33.0762
+          },
+          "WS": {
+            "ASSET": 4.9668,
+            "FeedbackQA": 7.9445,
+            "Review-5K": 24.5276,
+            "Summarize": 2.8592,
+            "UltraFeedback": 24.8492,
+            "Yelp": 28.9662
+          },
+          "UWS": {
+            "ASSET": 18.5658,
+            "FeedbackQA": 16.5714,
+            "Review-5K": 24.7886,
+            "Summarize": 2.7166,
+            "UltraFeedback": 8.3824,
+            "Yelp": 29.6859
+          }
+        },
+        "n_cells": 24,
+        "claimed_headline_pct": 26.8,
+        "claimed_baseline": "MV",
+        "claimed_dataset": "UltraFeedback",
+        "headline_is_max_within_the_named_baseline": true,
+        "best_cell_for_named_baseline": {
+          "dataset": "UltraFeedback",
+          "pct": 26.792
+        },
+        "global_best_cell": {
+          "baseline": "AVG",
+          "dataset": "Yelp",
+          "pct": 33.0762
+        },
+        "headline_is_the_global_argmax": false,
+        "headroom_left_on_the_table_pp": 6.2842,
+        "note": "The paper's 26.8% is the largest reduction against MV, the baseline it names, so 'up to' is used correctly. It is NOT the largest cell in the grid: AVG on Yelp would have supported 33.08%. The headline therefore leaves 6.28 pp unclaimed and shows no evidence of comparator cherry-picking.",
+        "ok": true
+      },
+      "appendix_consistency_audit": {
+        "what_is_compared": "Table 1's CARE-SVD row against Appendix E.8 Table 7's '1st Factor' row. The appendix states the setup is the same as Table 1 and that the first factor is the CARE-SVD default heuristic, so these are two reports of one quantity.",
+        "consistency_threshold_z": 2.0,
+        "rows": [
+          {
+            "dataset": "ASSET",
+            "table1_care_svd": 27.629,
+            "table1_std": 0.156,
+            "table7_first_factor": 27.148,
+            "table7_std": 0.133,
+            "gap": 0.481,
+            "combined_std": 0.205,
+            "z": 2.346,
+            "z_if_each_table_averaged_k_seeds": {
+              "1": 2.346,
+              "3": 4.064,
+              "5": 5.247,
+              "10": 7.42
+            },
+            "smallest_k_at_which_this_column_disagrees": 1,
+            "consistent": false
+          },
+          {
+            "dataset": "FeedbackQA",
+            "table1_care_svd": 0.73,
+            "table1_std": 0.002,
+            "table7_first_factor": 0.753,
+            "table7_std": 0.003,
+            "gap": -0.023,
+            "combined_std": 0.0036,
+            "z": 6.379,
+            "z_if_each_table_averaged_k_seeds": {
+              "1": 6.379,
+              "3": 11.049,
+              "5": 14.264,
+              "10": 20.172
+            },
+            "smallest_k_at_which_this_column_disagrees": 1,
+            "consistent": false
+          },
+          {
+            "dataset": "Review-5K",
+            "table1_care_svd": 1.957,
+            "table1_std": 0.018,
+            "table7_first_factor": 1.95,
+            "table7_std": 0.006,
+            "gap": 0.007,
+            "combined_std": 0.019,
+            "z": 0.369,
+            "z_if_each_table_averaged_k_seeds": {
+              "1": 0.369,
+              "3": 0.639,
+              "5": 0.825,
+              "10": 1.167
+            },
+            "smallest_k_at_which_this_column_disagrees": null,
+            "consistent": true
+          },
+          {
+            "dataset": "Summarize",
+            "table1_care_svd": 1.325,
+            "table1_std": 0.004,
+            "table7_first_factor": 1.325,
+            "table7_std": 0.003,
+            "gap": 0.0,
+            "combined_std": 0.005,
+            "z": 0.0,
+            "z_if_each_table_averaged_k_seeds": {
+              "1": 0.0,
+              "3": 0.0,
+              "5": 0.0,
+              "10": 0.0
+            },
+            "smallest_k_at_which_this_column_disagrees": null,
+            "consistent": true
+          },
+          {
+            "dataset": "UltraFeedback",
+            "table1_care_svd": 0.623,
+            "table1_std": 0.006,
+            "table7_first_factor": 0.622,
+            "table7_std": 0.006,
+            "gap": 0.001,
+            "combined_std": 0.0085,
+            "z": 0.118,
+            "z_if_each_table_averaged_k_seeds": {
+              "1": 0.118,
+              "3": 0.204,
+              "5": 0.264,
+              "10": 0.373
+            },
+            "smallest_k_at_which_this_column_disagrees": null,
+            "consistent": true
+          },
+          {
+            "dataset": "Yelp",
+            "table1_care_svd": 0.694,
+            "table1_std": 0.004,
+            "table7_first_factor": 0.694,
+            "table7_std": 0.005,
+            "gap": 0.0,
+            "combined_std": 0.0064,
+            "z": 0.0,
+            "z_if_each_table_averaged_k_seeds": {
+              "1": 0.0,
+              "3": 0.0,
+              "5": 0.0,
+              "10": 0.0
+            },
+            "smallest_k_at_which_this_column_disagrees": null,
+            "consistent": true
+          }
+        ],
+        "n_consistent": 4,
+        "n_datasets": 6,
+        "inconsistent_datasets": [
+          "ASSET",
+          "FeedbackQA"
+        ],
+        "seed_count_behind_the_published_std_is_not_stated": true,
+        "z_denominator_used": "sqrt(s1^2 + s7^2), i.e. k = 1 -- the most conservative",
+        "n_consistent_if_each_table_averaged_k_seeds": {
+          "1": 4,
+          "3": 4,
+          "5": 4,
+          "10": 4
+        },
+        "seed_count_sensitivity_note": "Tables 1 and 7 report 'mean +/- std' without saying over how many seeds. The quantity compared is a MEAN, so the correct denominator is sqrt(s1^2/k1 + s7^2/k7); k = 1 is used because k is not published, and it is the reading most favourable to the paper -- every larger k multiplies every z by sqrt(k) and can only turn agreement into disagreement, never the reverse. The count of agreeing columns is therefore an UPPER bound. At the five seeds our own reproduction uses, the agreeing count is given above.",
+        "tables_agree_everywhere": false,
+        "leading_factor_is_best_per_dataset": {
+          "ASSET": true,
+          "FeedbackQA": true,
+          "Review-5K": true,
+          "Summarize": true,
+          "UltraFeedback": true,
+          "Yelp": true
+        },
+        "leading_factor_column_is_informative": {
+          "ASSET": true,
+          "FeedbackQA": false,
+          "Review-5K": true,
+          "Summarize": false,
+          "UltraFeedback": true,
+          "Yelp": true
+        },
+        "leading_factor_n_informative_columns": 4,
+        "leading_factor_claim_holds_where_testable": true,
+        "leading_factor_untestable_columns": [
+          "FeedbackQA",
+          "Summarize"
+        ],
+        "headline_using_table1": {
+          "claim1_ultrafeedback_reduction_vs_MV_pct": 26.792,
+          "claim2_pooled_vs_AVG_pct": 17.365,
+          "claim2_pooled_vs_MV_pct": 12.75
+        },
+        "headline_using_table7": {
+          "claim1_ultrafeedback_reduction_vs_MV_pct": 26.91,
+          "claim2_pooled_vs_AVG_pct": 18.534,
+          "claim2_pooled_vs_MV_pct": 13.983
+        },
+        "headline_shift_pp": {
+          "claim1_ultrafeedback_reduction_vs_MV_pct": 0.118,
+          "claim2_pooled_vs_AVG_pct": 1.169,
+          "claim2_pooled_vs_MV_pct": 1.233
+        },
+        "claim1_number_is_internally_consistent": true,
+        "claim1_headline_rounds_the_same_under_both": false,
+        "why": "the test is two-sided and four of six columns pass it, so it can and does discriminate; what it finds is confined to the columns it names",
+        "ok": true,
+        "asset_adjudication": {
+          "available": true,
+          "n_seeds": 5,
+          "n_distinct_seed_values": 4,
+          "seeds_are_all_distinct": false,
+          "duplicate_seed_note": "only 4 of 5 seed results are distinct, so the standard deviation is computed over a sample with a repeated element and the effective number of independent draws is smaller than the seed count",
+          "reproduced_mean": 27.4117,
+          "reproduced_std": 0.2641,
+          "reproduced_sem": 0.1181,
+          "reproduced_min": 27.14,
+          "reproduced_max": 27.735,
+          "comparison_uses": "standard error of our mean (std/sqrt(n)), not the per-seed std",
+          "sem_from_table1": 1.84,
+          "sem_from_table7": 2.232,
+          "sd_from_table1_per_seed_understated": 0.823,
+          "sd_from_table7_per_seed_understated": 0.998,
+          "excludes_table1": false,
+          "excludes_table7": true,
+          "adjudicates": true,
+          "sem_at_distinct_values_only": 0.1321,
+          "excludes_table7_at_distinct_values_only": false,
+          "excludes_table1_at_distinct_values_only": false,
+          "adjudication_survives_the_duplicate_seed": false,
+          "our_spread_exceeds_both_reported_stds": true,
+          "why": "measured against the standard error of our own mean, which is the right dispersion for comparing a mean to a published value. Whether this excludes either published value is reported above rather than asserted here; an earlier revision used the per-seed std, understating our precision by sqrt(n) and reporting a weaker result than the data support. What the column shows either way is that the seed-to-seed spread of a faithful reproduction is wider than either reported std"
+        }
+      },
+      "coverage_audit": {
+        "ok": true,
+        "official_repo": "https://github.com/SprocketLab/CARE",
+        "official_repo_sha_pinned": "72f5b29a822d9934d31777c10a5c38369884c9dc",
+        "table1_reachable": [
+          "ASSET"
+        ],
+        "table1_blocked": [
+          "FeedbackQA",
+          "Review-5K",
+          "Summarize",
+          "UltraFeedback",
+          "Yelp"
+        ],
+        "table2_reachable": [
+          "CivilComments",
+          "PKU-BETTER"
+        ],
+        "table2_blocked": [
+          "Chatbot-Arena",
+          "PKU-SAFER",
+          "SHP",
+          "Summarize"
+        ],
+        "two_distinct_blocking_reasons": {
+          "no_released_judge_outputs": "the capability gap below",
+          "released_but_unusable_labels": "PKU-BETTER ships judge outputs, but every released label source is constant, so no accuracy can be computed from it. This is a defect in the released artifact, not a compute limitation; see label_integrity_audit."
+        },
+        "blocking_capability": "The authors did not release judge-score matrices for these datasets. Regenerating them requires running 11-20 LLM judges (0.6B-14B) over 5,000 examples per dataset; Appendix E.2 of the paper reports doing this on an NVIDIA A100 at up to 3 hours per dataset. This campaign is authorised for CPU only, so those columns cannot be produced here."
+      },
+      "label_integrity_audit": {
+        "datasets": {
+          "CivilComments": {
+            "column": "label",
+            "rows": 5000,
+            "distinct_values": 2,
+            "value_counts": {
+              "0": 2500,
+              "1": 2500
+            },
+            "minority_fraction": 0.5,
+            "supports_a_metric": true,
+            "why": "usable",
+            "n_judge_files": 24
+          },
+          "PKU-BETTER": {
+            "n_judge_files": 7,
+            "candidate_label_sources": {
+              "gold_label_binary": {
+                "column": "gold_label_binary",
+                "rows": 9000,
+                "distinct_values": 1,
+                "value_counts": {
+                  "0": 9000
+                },
+                "minority_fraction": 0.0,
+                "supports_a_metric": false,
+                "why": "only 1 distinct label value(s); an accuracy computed against a constant label is meaningless"
+              },
+              "gold_label_num": {
+                "column": "gold_label_num",
+                "rows": 9000,
+                "distinct_values": 1,
+                "value_counts": {
+                  "1": 9000
+                },
+                "minority_fraction": 0.0,
+                "supports_a_metric": false,
+                "why": "only 1 distinct label value(s); an accuracy computed against a constant label is meaningless"
+              },
+              "was_swapped": {
+                "column": "was_swapped",
+                "rows": 9000,
+                "distinct_values": 1,
+                "value_counts": {
+                  "False": 9000
+                },
+                "minority_fraction": 0.0,
+                "supports_a_metric": false,
+                "why": "only 1 distinct label value(s); an accuracy computed against a constant label is meaningless"
+              },
+              "standalone_file_gold_label_num": {
+                "column": "gold_label_num",
+                "rows": 9000,
+                "distinct_values": 1,
+                "value_counts": {
+                  "1": 9000
+                },
+                "minority_fraction": 0.0,
+                "supports_a_metric": false,
+                "why": "only 1 distinct label value(s); an accuracy computed against a constant label is meaningless"
+              }
+            },
+            "distinct_gold_label_binary_per_judge_file": {
+              "Mistral-7B-Instruct-v0.3.csv": 1,
+              "Phi-4-mini-instruct.csv": 1,
+              "Qwen2.5-1.5B-Instruct.csv": 1,
+              "Qwen2.5-14B-Instruct.csv": 1,
+              "Qwen2.5-3B-Instruct.csv": 1,
+              "Qwen2.5-7B-Instruct.csv": 1,
+              "Qwen3-0.6B.csv": 1
+            },
+            "reachable_accuracy_under_each_convention": {
+              "available": true,
+              "n_rows": 9000,
+              "n_judges": 7,
+              "fraction_predicting_B_per_judge": {
+                "Mistral-7B-Instruct-v0.3.csv": 0.5132,
+                "Phi-4-mini-instruct.csv": 0.877,
+                "Qwen2.5-1.5B-Instruct.csv": 0.9672,
+                "Qwen2.5-14B-Instruct.csv": 0.8847,
+                "Qwen2.5-3B-Instruct.csv": 0.9997,
+                "Qwen2.5-7B-Instruct.csv": 0.9321,
+                "Qwen3-0.6B.csv": 0.9978
+              },
+              "majority_vote_accuracy_if_gold_is_B": 0.9964,
+              "majority_vote_accuracy_if_gold_is_A": 0.0036,
+              "paper_reported_mv_accuracy": 0.701,
+              "closest_reachable_gap": 0.2954,
+              "published_value_reachable": false,
+              "why": "was_swapped is False on every row, so the A/B randomisation was not applied to this slice; response_B is always the preferred answer and every judge votes B on a large majority of rows. The published 0.701 is therefore not reachable from the released file under either label convention, which is a stronger statement than 'the labels are constant': the column is not merely unscoreable, the published number provably did not come from this file."
+            },
+            "supports_a_metric": false,
+            "why": "no released label source has more than one distinct value, and was_swapped is constant, so the correct answer cannot vary by row; the official script therefore falls back to pref_A_or_B, which is a judge's own prediction rather than ground truth"
+          },
+          "ASSET": {
+            "column": "human_rating",
+            "rows": 4500,
+            "distinct_values": 40,
+            "value_counts": {
+              "100.0": 882,
+              "0.0": 726,
+              "1.0": 99,
+              "4.0": 84,
+              "10.0": 77,
+              "20.0": 65,
+              "90.0": 65,
+              "5.0": 62
+            },
+            "minority_fraction": 0.0034211426616489907,
+            "supports_a_metric": true,
+            "why": "usable"
+          }
+        },
+        "blocked_datasets": [
+          "PKU-BETTER"
+        ],
+        "usable_datasets": [
+          "CivilComments",
+          "ASSET"
+        ],
+        "ok": true
+      },
+      "shard_provenance": {
+        "n_shards": 15,
+        "max_shard_runtime_s": 1853.3,
+        "all_within_one_hour": true,
+        "shards": {
+          "t1:asset:2024": {
+            "runtime_s": 42.2,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0b26b79c09949c1e37a",
+            "threads_pinned_to": 8
+          },
+          "t1:asset:2025": {
+            "runtime_s": 30.1,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0b3a00abefd4b28b22d",
+            "threads_pinned_to": 8
+          },
+          "t1:asset:2026": {
+            "runtime_s": 82.4,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0b46b79c09949c1e37c",
+            "threads_pinned_to": 8
+          },
+          "t1:asset:2027": {
+            "runtime_s": 30.9,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0b5a00abefd4b28b22f",
+            "threads_pinned_to": 8
+          },
+          "t1:asset:2028": {
+            "runtime_s": 83.1,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0b6a00abefd4b28b231",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2024:baselines": {
+            "runtime_s": 1280.2,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db00f6b79c09949c1e357",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2024:main": {
+            "runtime_s": 1853.3,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db00c6b79c09949c1e354",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2025:baselines": {
+            "runtime_s": 1221.8,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db014a00abefd4b28b20a",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2025:main": {
+            "runtime_s": 1537.1,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0126b79c09949c1e359",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2026:baselines": {
+            "runtime_s": 1376.8,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db019a00abefd4b28b20c",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2026:main": {
+            "runtime_s": 1744.5,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0176b79c09949c1e35d",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2027:baselines": {
+            "runtime_s": 1179.5,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db01fa00abefd4b28b20f",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2027:main": {
+            "runtime_s": 1716.1,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db01c6b79c09949c1e360",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2028:baselines": {
+            "runtime_s": 1334.8,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0246b79c09949c1e365",
+            "threads_pinned_to": 8
+          },
+          "t2:civilcomments:2028:main": {
+            "runtime_s": 1649.4,
+            "git_sha": "f996a40cab02f902427f44a29b17d691fc778299",
+            "hf_job_id": "6a6db0216b79c09949c1e363",
+            "threads_pinned_to": 8
+          }
+        }
+      },
+      "table1_asset": {
+        "ok": true,
+        "dataset": "ASSET",
+        "seeds": [
+          2024,
+          2025,
+          2026,
+          2027,
+          2028
+        ],
+        "per_seed": {
+          "2024": {
+            "mv": 31.15333333333333,
+            "avg": 33.66284848484848,
+            "ws": 29.230444444444444,
+            "uws": 33.92838699882012,
+            "care_svd": 27.73499283660756
+          },
+          "2025": {
+            "mv": 31.15333333333333,
+            "avg": 33.66284848484848,
+            "ws": 29.230444444444444,
+            "uws": 33.92838699882012,
+            "care_svd": 27.140022124262163
+          },
+          "2026": {
+            "mv": 31.15333333333333,
+            "avg": 33.66284848484848,
+            "ws": 29.230444444444444,
+            "uws": 33.92838699882012,
+            "care_svd": 27.140022124262163
+          },
+          "2027": {
+            "mv": 31.15333333333333,
+            "avg": 33.66284848484848,
+            "ws": 29.230444444444444,
+            "uws": 33.92838699882012,
+            "care_svd": 27.558783569969243
+          },
+          "2028": {
+            "mv": 31.15333333333333,
+            "avg": 33.66284848484848,
+            "ws": 29.230444444444444,
+            "uws": 33.92838699882012,
+            "care_svd": 27.484546409516675
+          }
+        },
+        "table": [
+          {
+            "method": "MV",
+            "paper_mae": 31.153,
+            "reproduced_mae_mean": 31.15333333333333,
+            "reproduced_mae_std": 0.0,
+            "n_seeds": 5,
+            "abs_diff": 0.000333333333330188,
+            "rel_diff_pct": 0.0010699879091265305
+          },
+          {
+            "method": "AVG",
+            "paper_mae": 33.663,
+            "reproduced_mae_mean": 33.66284848484848,
+            "reproduced_mae_std": 0.0,
+            "n_seeds": 5,
+            "abs_diff": 0.0001515151515150137,
+            "rel_diff_pct": 0.00045009402464133834
+          },
+          {
+            "method": "WS",
+            "paper_mae": 29.073,
+            "reproduced_mae_mean": 29.230444444444448,
+            "reproduced_mae_std": 3.972054645195637e-15,
+            "n_seeds": 5,
+            "abs_diff": 0.15744444444444738,
+            "rel_diff_pct": 0.5415486686769422
+          },
+          {
+            "method": "UWS",
+            "paper_mae": 33.928,
+            "reproduced_mae_mean": 33.92838699882012,
+            "reproduced_mae_std": 0.0,
+            "n_seeds": 5,
+            "abs_diff": 0.0003869988201259389,
+            "rel_diff_pct": 0.0011406473123259223
+          },
+          {
+            "method": "CARE-SVD",
+            "paper_mae": 27.629,
+            "reproduced_mae_mean": 27.411673412923555,
+            "reproduced_mae_std": 0.2641383003904464,
+            "n_seeds": 5,
+            "abs_diff": 0.21732658707644603,
+            "rel_diff_pct": 0.7865886824584531
+          }
+        ],
+        "care_svd_is_best": true,
+        "reduction_vs_MV_pct": 12.01046411430486,
+        "improvement_vs_AVG_pct": 18.56995279154275
+      },
+      "table2_civilcomments_pku_better": {
+        "ok": true,
+        "blocked_datasets": [
+          "PKU-BETTER"
+        ],
+        "seeds": [
+          2024,
+          2025,
+          2026,
+          2027,
+          2028
+        ],
+        "per_seed": {
+          "2024": {
+            "civilcomments": {
+              "mv": 0.6913687881429816,
+              "avg": 0.6881720430107527,
+              "ws": 0.7372856727695437,
+              "uws": 0.7117117117117117,
+              "care_svd": 0.7779715199070038,
+              "care_tensor": 0.7547224643998838,
+              "dawid_skene": 0.735490244504816,
+              "glad": 0.696715238330452,
+              "mace": 0.732279575203754,
+              "ged_pref": 0.7011607804396147
+            }
+          },
+          "2025": {
+            "civilcomments": {
+              "mv": 0.6925312409183377,
+              "avg": 0.6910781749491427,
+              "ws": 0.7401918047079338,
+              "uws": 0.7149084568439407,
+              "care_svd": 0.7826213310084278,
+              "care_tensor": 0.7477477477477478,
+              "dawid_skene": 0.735490244504816,
+              "glad": 0.7046184243022968,
+              "mace": 0.732279575203754,
+              "ged_pref": 0.7011607804396147
+            }
+          },
+          "2026": {
+            "civilcomments": {
+              "mv": 0.6873002034292357,
+              "avg": 0.6875908166230746,
+              "ws": 0.7346701540249927,
+              "uws": 0.7085149665794828,
+              "care_svd": 0.7753560011624527,
+              "care_tensor": 0.7512351060738157,
+              "dawid_skene": 0.735490244504816,
+              "glad": 0.7046184243022968,
+              "mace": 0.732279575203754,
+              "ged_pref": 0.7011607804396147
+            }
+          },
+          "2027": {
+            "civilcomments": {
+              "mv": 0.6971810520197617,
+              "avg": 0.6948561464690497,
+              "ws": 0.7416448706771287,
+              "uws": 0.7172333623946527,
+              "care_svd": 0.7817494914269107,
+              "care_tensor": 0.7526881720430108,
+              "dawid_skene": 0.735490244504816,
+              "glad": 0.7046184243022968,
+              "mace": 0.732279575203754,
+              "ged_pref": 0.7011607804396147
+            }
+          },
+          "2028": {
+            "civilcomments": {
+              "mv": 0.6925312409183377,
+              "avg": 0.6916594013368207,
+              "ws": 0.7401918047079338,
+              "uws": 0.7140366172624237,
+              "care_svd": 0.7811682650392328,
+              "care_tensor": 0.7678000581226387,
+              "dawid_skene": 0.735490244504816,
+              "glad": 0.7046184243022968,
+              "mace": 0.732279575203754,
+              "ged_pref": 0.7011607804396147
+            }
+          }
+        },
+        "datasets": [
+          {
+            "dataset": "CivilComments",
+            "methods": [
+              {
+                "method": "MV",
+                "reproduced_acc_mean": 0.6921825050857308,
+                "reproduced_acc_std": 0.0035258938420466247,
+                "n_seeds": 5,
+                "paper_acc": 0.691,
+                "abs_diff": 0.0011825050857308117
+              },
+              {
+                "method": "AVG",
+                "reproduced_acc_mean": 0.690671316477768,
+                "reproduced_acc_std": 0.0029321704750082983,
+                "n_seeds": 5,
+                "paper_acc": 0.69,
+                "abs_diff": 0.0006713164777680802
+              },
+              {
+                "method": "WS",
+                "reproduced_acc_mean": 0.7387968613775066,
+                "reproduced_acc_std": 0.0027980482189854067,
+                "n_seeds": 5,
+                "paper_acc": 0.739,
+                "abs_diff": 0.00020313862249343728
+              },
+              {
+                "method": "UWS",
+                "reproduced_acc_mean": 0.7132810229584423,
+                "reproduced_acc_std": 0.003317321284539603,
+                "n_seeds": 5,
+                "paper_acc": 0.713,
+                "abs_diff": 0.00028102295844234515
+              },
+              {
+                "method": "Dawid-Skene",
+                "reproduced_acc_mean": 0.735490244504816,
+                "reproduced_acc_std": 0.0,
+                "n_seeds": 5,
+                "paper_acc": 0.735,
+                "abs_diff": 0.0004902445048160509
+              },
+              {
+                "method": "GLAD",
+                "reproduced_acc_mean": 0.7030377871079279,
+                "reproduced_acc_std": 0.003534412214373545,
+                "n_seeds": 5,
+                "paper_acc": 0.695,
+                "abs_diff": 0.008037787107927907
+              },
+              {
+                "method": "MACE",
+                "reproduced_acc_mean": 0.732279575203754,
+                "reproduced_acc_std": 0.0,
+                "n_seeds": 5,
+                "paper_acc": 0.732,
+                "abs_diff": 0.00027957520375399003
+              },
+              {
+                "method": "CARE-SVD",
+                "reproduced_acc_mean": 0.7797733217088056,
+                "reproduced_acc_std": 0.0030299125879635963,
+                "n_seeds": 5,
+                "paper_acc": 0.778,
+                "abs_diff": 0.0017733217088056197
+              },
+              {
+                "method": "CARE-Tensor",
+                "reproduced_acc_mean": 0.7548387096774194,
+                "reproduced_acc_std": 0.007679560186298186,
+                "n_seeds": 5,
+                "paper_acc": 0.749,
+                "abs_diff": 0.005838709677419396
+              }
+            ],
+            "best_method": "CARE-SVD",
+            "care_wins": true
+          },
+          {
+            "dataset": "PKU-BETTER",
+            "methods": [],
+            "status": "BLOCKED",
+            "reason": "released labels cannot support an accuracy; see label_audit"
+          }
+        ],
+        "n_datasets_reproduced": 1,
+        "n_datasets_in_table2": 6
+      },
+      "negative_controls": {
+        "ok": true,
+        "care_mae_real_judge_scores": 27.719538282165356,
+        "care_mae_row_permuted_judge_scores": 40.13572729780028,
+        "majority_vote_mae": 31.153333333333332,
+        "control_behaves_as_intended": true,
+        "why": "Row-permuting each judge column preserves every marginal but destroys the shared latent structure CARE exploits; if CARE still won, the advantage would not be coming from confounder-aware aggregation."
+      },
+      "ok": true,
+      "runtime_s": 4.43
+    },
+    "C4_prop41": {
+      "claim": "C4 / Proposition 4.1 (Section 4) and its appendix form (Assumptions D.1-D.2, Theorems D.3-D.4)",
+      "thm_d3_symbolic_exact_recovery": {
+        "ok": true,
+        "shapes": [
+          {
+            "p": 3,
+            "h": 2,
+            "columns_orthonormal_symbolically": true,
+            "L_ki_equals_lambda_i_ki": true,
+            "each_lambda_i_simple": true
+          },
+          {
+            "p": 4,
+            "h": 2,
+            "columns_orthonormal_symbolically": true,
+            "L_ki_equals_lambda_i_ki": true,
+            "each_lambda_i_simple": true
+          },
+          {
+            "p": 4,
+            "h": 3,
+            "columns_orthonormal_symbolically": true,
+            "L_ki_equals_lambda_i_ki": true,
+            "each_lambda_i_simple": true
+          },
+          {
+            "p": 5,
+            "h": 3,
+            "columns_orthonormal_symbolically": true,
+            "L_ki_equals_lambda_i_ki": true,
+            "each_lambda_i_simple": true
+          },
+          {
+            "p": 6,
+            "h": 4,
+            "columns_orthonormal_symbolically": true,
+            "L_ki_equals_lambda_i_ki": true,
+            "each_lambda_i_simple": true
+          }
+        ]
+      },
+      "thm_d4_constant_derivation": {
+        "ok": true,
+        "max_of_relaxed_objective": "4",
+        "derived_first_order_constant": "2",
+        "paper_constant": 4,
+        "paper_constant_is_valid": true,
+        "paper_constant_is_tight": false
+      },
+      "thm_d4_exact_supremum": {
+        "ok": true,
+        "claimed_constant": 4.0,
+        "derived_upper_bound": 2.0,
+        "attained_sup_ratio": 1.9999000699510352,
+        "sup_respects_derived_upper_bound": true,
+        "paper_constant_holds_with_slack_factor": 2.0000999350422215,
+        "n_configurations": 41,
+        "per_config": [
+          {
+            "p": 6,
+            "h": 2,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.1180339887498951,
+            "sup_over_spectral_ball": 1.5000000000000007
+          },
+          {
+            "p": 6,
+            "h": 2,
+            "i": 1,
+            "sup_over_frobenius_ball": 1.1180339887498951,
+            "sup_over_spectral_ball": 1.5000000000000007
+          },
+          {
+            "p": 6,
+            "h": 3,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.0551513846100207,
+            "sup_over_spectral_ball": 1.3366666666666664
+          },
+          {
+            "p": 6,
+            "h": 3,
+            "i": 1,
+            "sup_over_frobenius_ball": 0.47376740659901373,
+            "sup_over_spectral_ball": 0.6700000000000003
+          },
+          {
+            "p": 6,
+            "h": 3,
+            "i": 2,
+            "sup_over_frobenius_ball": 0.47376740659901384,
+            "sup_over_spectral_ball": 0.6700000000000004
+          },
+          {
+            "p": 8,
+            "h": 3,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.0049875621120892,
+            "sup_over_spectral_ball": 1.1000000000000003
+          },
+          {
+            "p": 8,
+            "h": 3,
+            "i": 1,
+            "sup_over_frobenius_ball": 0.11180339887498947,
+            "sup_over_spectral_ball": 0.15000000000000013
+          },
+          {
+            "p": 8,
+            "h": 3,
+            "i": 2,
+            "sup_over_frobenius_ball": 0.11180339887498947,
+            "sup_over_spectral_ball": 0.1500000000000001
+          },
+          {
+            "p": 10,
+            "h": 4,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.2500000000000002,
+            "sup_over_spectral_ball": 1.7500000000000007
+          },
+          {
+            "p": 10,
+            "h": 4,
+            "i": 1,
+            "sup_over_frobenius_ball": 1.2500000000000002,
+            "sup_over_spectral_ball": 1.7500000000000009
+          },
+          {
+            "p": 10,
+            "h": 4,
+            "i": 2,
+            "sup_over_frobenius_ball": 0.9013878188659975,
+            "sup_over_spectral_ball": 1.2500000000000009
+          },
+          {
+            "p": 10,
+            "h": 4,
+            "i": 3,
+            "sup_over_frobenius_ball": 0.5590169943749473,
+            "sup_over_spectral_ball": 0.7500000000000004
+          },
+          {
+            "p": 12,
+            "h": 5,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.4135094482086898,
+            "sup_over_spectral_ball": 1.9990039840637452
+          },
+          {
+            "p": 12,
+            "h": 5,
+            "i": 1,
+            "sup_over_frobenius_ball": 1.4135094482083759,
+            "sup_over_spectral_ball": 1.9990039840633016
+          },
+          {
+            "p": 12,
+            "h": 5,
+            "i": 2,
+            "sup_over_frobenius_ball": 1.4121008691383186,
+            "sup_over_spectral_ball": 1.9970119521912362
+          },
+          {
+            "p": 12,
+            "h": 5,
+            "i": 3,
+            "sup_over_frobenius_ball": 1.4106922900679837,
+            "sup_over_spectral_ball": 1.9950199203182823
+          },
+          {
+            "p": 12,
+            "h": 5,
+            "i": 4,
+            "sup_over_frobenius_ball": 1.4092837109986271,
+            "sup_over_spectral_ball": 1.993027888446216
+          },
+          {
+            "p": 16,
+            "h": 6,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.3017082793177757,
+            "sup_over_spectral_ball": 1.8333333333333333
+          },
+          {
+            "p": 16,
+            "h": 6,
+            "i": 1,
+            "sup_over_frobenius_ball": 1.3017082793177757,
+            "sup_over_spectral_ball": 1.8333333333333333
+          },
+          {
+            "p": 16,
+            "h": 6,
+            "i": 2,
+            "sup_over_frobenius_ball": 1.0671873729054742,
+            "sup_over_spectral_ball": 1.500000000000001
+          },
+          {
+            "p": 16,
+            "h": 6,
+            "i": 3,
+            "sup_over_frobenius_ball": 0.8333333333333336,
+            "sup_over_spectral_ball": 1.1666666666666672
+          },
+          {
+            "p": 16,
+            "h": 6,
+            "i": 4,
+            "sup_over_frobenius_ball": 0.6009252125773317,
+            "sup_over_spectral_ball": 0.8333333333333339
+          },
+          {
+            "p": 16,
+            "h": 6,
+            "i": 5,
+            "sup_over_frobenius_ball": 0.372677996249965,
+            "sup_over_spectral_ball": 0.5000000000000002
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.41414290292321,
+            "sup_over_spectral_ball": 1.9999000699510348
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 1,
+            "sup_over_frobenius_ball": 1.41414290292321,
+            "sup_over_spectral_ball": 1.9999000699510352
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 2,
+            "sup_over_frobenius_ball": 1.4140015804928503,
+            "sup_over_spectral_ball": 1.999700209853104
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 3,
+            "sup_over_frobenius_ball": 1.4138602580624902,
+            "sup_over_spectral_ball": 1.9995003497551727
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 4,
+            "sup_over_frobenius_ball": 1.413718935632132,
+            "sup_over_spectral_ball": 1.9993004896572408
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 5,
+            "sup_over_frobenius_ball": 1.4135776132017726,
+            "sup_over_spectral_ball": 1.9991006295593094
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 6,
+            "sup_over_frobenius_ball": 1.4134362907714135,
+            "sup_over_spectral_ball": 1.998900769461378
+          },
+          {
+            "p": 24,
+            "h": 8,
+            "i": 7,
+            "sup_over_frobenius_ball": 1.4132949683410534,
+            "sup_over_spectral_ball": 1.9987009093634467
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 0,
+            "sup_over_frobenius_ball": 1.3754909336822163,
+            "sup_over_spectral_ball": 1.9444444444444444
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 1,
+            "sup_over_frobenius_ball": 1.3754909336822163,
+            "sup_over_spectral_ball": 1.9444444444444453
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 2,
+            "sup_over_frobenius_ball": 1.2969575033254144,
+            "sup_over_spectral_ball": 1.8333333333333304
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 3,
+            "sup_over_frobenius_ball": 1.218428455525628,
+            "sup_over_spectral_ball": 1.7222222222222237
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 4,
+            "sup_over_frobenius_ball": 1.1399046960379555,
+            "sup_over_spectral_ball": 1.6111111111111118
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 5,
+            "sup_over_frobenius_ball": 1.0613873985857092,
+            "sup_over_spectral_ball": 1.4999999999999978
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 6,
+            "sup_over_frobenius_ball": 0.9828781118307853,
+            "sup_over_spectral_ball": 1.3888888888888897
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 7,
+            "sup_over_frobenius_ball": 0.904378922005539,
+            "sup_over_spectral_ball": 1.277777777777779
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 8,
+            "sup_over_frobenius_ball": 0.8258927081843616,
+            "sup_over_spectral_ball": 1.1666666666666672
+          },
+          {
+            "p": 40,
+            "h": 10,
+            "i": 9,
+            "sup_over_frobenius_ball": 0.7474235581707618,
+            "sup_over_spectral_ball": 1.055555555555556
+          }
+        ],
+        "method": "the first-order eigenvector perturbation is linear in E, so sup_E of the ratio is an operator norm over the spectral-norm ball; computed exactly on the Frobenius ball (a feasible lower bound) and refined by projected gradient ascent with singular-value clipping."
+      },
+      "thm_d4_finite_perturbation": {
+        "ok": true,
+        "n_eigenpairs_checked": 1349,
+        "worst_err_over_bound": 0.2976429886310494,
+        "bound_never_violated": true
+      },
+      "maintext_identifiability_counterexample": {
+        "ok": true,
+        "hypotheses_satisfied": {
+          "K_JH_columns_orthogonal": true,
+          "K_prime_columns_orthogonal": true,
+          "d1_gt_d2_gt_0": true
+        },
+        "same_low_rank_component": true,
+        "L": "Matrix([\n[1, 0],\n[0, 1]])",
+        "K_JH": [
+          "Matrix([\n[sqrt(2)],\n[      0]])",
+          "Matrix([\n[0],\n[1]])"
+        ],
+        "K_prime_JH": [
+          "Matrix([\n[1],\n[1]])",
+          "Matrix([\n[ sqrt(2)/2],\n[-sqrt(2)/2]])"
+        ],
+        "columns_related_by_sign_permutation": false,
+        "verdict": "main-text Proposition 4.1 identifiability claim is FALSE as stated"
+      },
+      "maintext_bound_scaling_counterexample": {
+        "ok": true,
+        "rows": [
+          {
+            "c_scale_of_K_JH": 1,
+            "K_JH_columns_are_orthonormal": true,
+            "worst_err_over_maintext_bound": 0.08261182971812393,
+            "worst_err_over_appendix_bound": 0.08261182971812393,
+            "khh_inverse_spectral_norm": 3.0,
+            "the_two_bounds_are_the_same_expression": true
+          },
+          {
+            "c_scale_of_K_JH": 10,
+            "K_JH_columns_are_orthonormal": false,
+            "worst_err_over_maintext_bound": 0.826118809325833,
+            "worst_err_over_appendix_bound": 0.826118809325833,
+            "khh_inverse_spectral_norm": 3.0,
+            "the_two_bounds_are_the_same_expression": true
+          },
+          {
+            "c_scale_of_K_JH": 100,
+            "K_JH_columns_are_orthonormal": false,
+            "worst_err_over_maintext_bound": 8.26118854483652,
+            "worst_err_over_appendix_bound": 8.26118854483652,
+            "khh_inverse_spectral_norm": 3.0,
+            "the_two_bounds_are_the_same_expression": true
+          },
+          {
+            "c_scale_of_K_JH": 1000,
+            "K_JH_columns_are_orthonormal": false,
+            "worst_err_over_maintext_bound": 82.61188896672957,
+            "worst_err_over_appendix_bound": 82.61188896672957,
+            "khh_inverse_spectral_norm": 3.0,
+            "the_two_bounds_are_the_same_expression": true
+          },
+          {
+            "c_scale_of_K_JH": 10000,
+            "K_JH_columns_are_orthonormal": false,
+            "worst_err_over_maintext_bound": 826.1171033355777,
+            "worst_err_over_appendix_bound": 826.1171033355777,
+            "khh_inverse_spectral_norm": 3.0,
+            "the_two_bounds_are_the_same_expression": true
+          }
+        ],
+        "appendix_bound_applicable_only_at_c_equals_1": true,
+        "appendix_bound_holds_where_applicable": true,
+        "appendix_ratio_at_c_equals_1": 0.08261182971812393,
+        "ratio_grows_without_bound": true,
+        "bound_violated": true,
+        "max_violation_factor": 826.1171033355777,
+        "verdict": "main-text Proposition 4.1 stability bound is FALSE as stated (omits the ||K_JH||_2 factor present in the appendix proof)"
+      },
+      "negative_controls": {
+        "nc1_too_small_constant_1p0_is_violated": true,
+        "nc1_attained_ratio": 1.9970119521912362,
+        "nc2_detector_accepts_a_true_signed_permutation": true,
+        "nc3_non_orthonormal_K_is_not_an_eigenvector": true,
+        "ok": true
+      },
+      "appendix_form_verified": true,
+      "maintext_form_falsified": true,
+      "ok": true,
+      "verdict": "VERIFIED (appendix form, with a strictly tighter constant 2 in place of 4) and FALSIFIED (main-text restatement, two exact counterexamples)",
+      "runtime_s": 19.49
+    },
+    "C5_thm42": {
+      "claim": "C5 / Theorem 4.2 (Appendix Theorem D.5): finite-sample spectral rate",
+      "route_0_literal_counterexamples": {
+        "ok": true,
+        "literal_theorem_verdict": "FALSIFIED",
+        "sign_counterexample": {
+          "raw_distance_for_equally_valid_negative_eigenvector": 2.0,
+          "advertised_rhs_at_exact_recovery": 0.0,
+          "control_sign_aligned_distance": 0.0
+        },
+        "missing_zero_eigenspace_gap_counterexample": {
+          "family": "L*=2*u1*u1^T+a*uh*uh^T; E=(a/r)*(uh*v^T+v*uh^T)",
+          "all_basis_vectors_dense": true,
+          "basis_orthonormal_residual": 0.0,
+          "paper_gap": "2-a",
+          "correct_full_spectrum_gap": "a",
+          "paper_normalized_ratio": "r*(2 - a)*sqrt(2 - 2*cos(atan(2/r)/2))/a",
+          "paper_ratio_diverges": true,
+          "corrected_normalized_ratio": "r*sqrt(2 - 2*cos(atan(2/r)/2))",
+          "corrected_ratio_stays_bounded": true,
+          "rows": [
+            {
+              "smallest_positive_eigenvalue_a": 0.1,
+              "perturbation_norm": 0.0007812499999999999,
+              "aligned_eigenvector_error": 0.007811844446884284,
+              "paper_gap": 1.9,
+              "correct_full_spectrum_gap": 0.1,
+              "error_over_perturbation_div_paper_gap": 18.99840569482258,
+              "error_over_perturbation_div_full_gap": 0.9999160892011885
+            },
+            {
+              "smallest_positive_eigenvalue_a": 0.01,
+              "perturbation_norm": 7.812499999999999e-05,
+              "aligned_eigenvector_error": 0.007811844446899579,
+              "paper_gap": 1.99,
+              "correct_full_spectrum_gap": 0.01,
+              "error_over_perturbation_div_paper_gap": 198.9833017514261,
+              "error_over_perturbation_div_full_gap": 0.9999160892031462
+            },
+            {
+              "smallest_positive_eigenvalue_a": 0.001,
+              "perturbation_norm": 7.8125e-06,
+              "aligned_eigenvector_error": 0.007811844446851034,
+              "paper_gap": 1.999,
+              "correct_full_spectrum_gap": 0.001,
+              "error_over_perturbation_div_paper_gap": 1998.8322623046677,
+              "error_over_perturbation_div_full_gap": 0.9999160891969324
+            },
+            {
+              "smallest_positive_eigenvalue_a": 0.0001,
+              "perturbation_norm": 7.812500000000001e-07,
+              "aligned_eigenvector_error": 0.007811844446108028,
+              "paper_gap": 1.9999,
+              "correct_full_spectrum_gap": 0.0001,
+              "error_over_perturbation_div_paper_gap": 19997.321865947448,
+              "error_over_perturbation_div_full_gap": 0.9999160891018275
+            }
+          ]
+        },
+        "gaussian_two_point_lower_bound": {
+          "model": "S=4I; rotate the weak rank-two direction into a null direction",
+          "dimension_p": 4096,
+          "minimum_signal_ratio_a_over_sqrt_p_over_n": 1024.0,
+          "confidence_eta": 3.0,
+          "theorem_failure_probability_budget": 0.09957413673572789,
+          "rows": [
+            {
+              "smallest_positive_eigenvalue_a": 0.1,
+              "sample_size_n": 429496729600.0,
+              "n_sample_gaussian_kl": 0.03205128204879455,
+              "le_cam_error_probability_lower_bound": 0.43670378955972705,
+              "eigenvector_error_threshold": 7.629394531175985e-06,
+              "paper_rate_without_constant_or_xi": 1.390999890432962e-06,
+              "threshold_over_paper_unit_rate": 5.484827557248234
+            },
+            {
+              "smallest_positive_eigenvalue_a": 0.01,
+              "sample_size_n": 42949672960000.0,
+              "n_sample_gaussian_kl": 0.031328320799573615,
+              "le_cam_error_probability_lower_bound": 0.4374217282122085,
+              "eigenvector_error_threshold": 7.629394531175985e-06,
+              "paper_rate_without_constant_or_xi": 1.3280903476495617e-07,
+              "threshold_over_paper_unit_rate": 57.446351783810464
+            },
+            {
+              "smallest_positive_eigenvalue_a": 0.001,
+              "sample_size_n": 4294967296000000.0,
+              "n_sample_gaussian_kl": 0.03125781445118748,
+              "le_cam_error_probability_lower_bound": 0.43749218603727663,
+              "eigenvector_error_threshold": 7.629394531175985e-06,
+              "paper_rate_without_constant_or_xi": 1.3221109513870073e-08,
+              "threshold_over_paper_unit_rate": 577.0615940494328
+            },
+            {
+              "smallest_positive_eigenvalue_a": 0.0001,
+              "sample_size_n": 4.294967296e+17,
+              "n_sample_gaussian_kl": 0.03125078126710636,
+              "le_cam_error_probability_lower_bound": 0.4374992187377766,
+              "eigenvector_error_threshold": 7.629394531175985e-06,
+              "paper_rate_without_constant_or_xi": 1.3215159717098994e-09,
+              "threshold_over_paper_unit_rate": 5773.214016705655
+            }
+          ],
+          "literal_statistical_theorem_falsified": true,
+          "control_full_gap_rate": "sqrt(eta/n)/a=sqrt(eta)/c, matching the nonvanishing lower-bound order"
+        },
+        "source_anchors": {
+          "care_theorem_d4": "D.4 includes sign minimization and the gap to zero",
+          "care_theorem_d5": "D.5 omits sign minimization and defines delta only between positive eigenvalues",
+          "yu_corollary_3": "Corollary 3 uses adjacent population eigengaps, including lambda_h-lambda_(h+1)"
+        }
+      },
+      "route_a_symbolic_chain_audit": {
+        "ok": true,
+        "composition_reproduces_stated_bound": true,
+        "sample_complexity_inversion_matches_paper": true,
+        "composed_bound": "2*sqrt(2)*C_1*sqrt(eta)/(delta*sqrt(n)*xi)",
+        "n_required_for_accuracy_alpha": "8*C_1**2*eta/(alpha**2*delta**2*xi**2)",
+        "paper_n_required": "8*C_1**2*eta/(alpha**2*delta**2*xi**2)",
+        "implied_exponent_of_n": "(-log(n) + 3*log(2))/(2*log(n))",
+        "predicted_exponent_error_vs_n": -0.5,
+        "predicted_exponent_n_star_vs_alpha": -2.0,
+        "predicted_exponent_n_star_vs_delta": -2.0
+      },
+      "route_b_davis_kahan_constant": {
+        "ok": true,
+        "n_trials": 4000,
+        "constant_checked": 2.8284271247461903,
+        "worst_err_over_bound": 0.3573395852044496,
+        "no_violation_found": true
+      },
+      "route_c_calibrated_rate": {
+        "ok": true,
+        "elements_not_measured": [],
+        "all_elements_measured": true,
+        "contract": "one-sided, because Theorem 4.2 is an O(.) upper bound",
+        "grid_n": [
+          800,
+          1600,
+          3200,
+          6400,
+          12800,
+          25600,
+          51200,
+          102400,
+          204800,
+          409600
+        ],
+        "stage_1_precision_error_vs_n": [
+          1.9767154424353917,
+          1.297386897198525,
+          0.9583403013995067,
+          0.5853062496882664,
+          0.3840903667026891,
+          0.320561594556667,
+          0.2417350675955302,
+          0.1588563650120337,
+          0.10694763460451864,
+          0.07956042331058806
+        ],
+        "stage_1_loglog_slope": -0.5089141494472996,
+        "stage_1_loglog_slope_stderr": 0.01251016291506489,
+        "stage_1_check": true,
+        "stage_2_oracle_spectral_error_vs_n": [
+          0.6343387944898805,
+          0.5357607265435,
+          0.39515722245053003,
+          0.28240062352033024,
+          0.18184251466757861,
+          0.14059250418616806,
+          0.09445722348405762,
+          0.06906879995789637,
+          0.05210020193825272,
+          0.03750948058051996
+        ],
+        "stage_2_implied_constant_vs_n": [
+          17.941810526139772,
+          21.43042906174,
+          22.353468130368867,
+          22.59204988162642,
+          20.573132036713453,
+          22.49480066978689,
+          21.373229842441713,
+          22.10201598652684,
+          23.577859898705285,
+          24.006067571532775
+        ],
+        "stage_2_implied_constant_max": 24.006067571532775,
+        "stage_2_implied_constant_drift": 1.3379958246999581,
+        "stage_2_bound_holds_over_measured_range_with_constant": true,
+        "stage_2_certificate_note": "err(n)*sqrt(n) is bounded over the whole grid, so the stated O(sqrt(eta/n)) rate HOLDS across the measured range with that constant. It drifts upward by the factor reported, consistent with the fitted exponent being slightly shallower than -1/2, so the certificate is NOT extrapolated beyond the grid.",
+        "stage_2_exponent_at_least_as_fast_as_stated": true,
+        "stage_2_exponent_statistically_consistent_with_minus_half": false,
+        "stage_2_loglog_slope_ci95": [
+          -0.49495641216526354,
+          -0.4498646466154834
+        ],
+        "stage_2_loglog_slope": -0.4724105293903735,
+        "stage_2_loglog_slope_stderr": 0.009777034841654316,
+        "stage_2_check": true,
+        "stage_note": "Stage 1 is the input concentration ||Theta^ - Theta*||_2 that Chandrasekaran et al.'s Theorem 4.1 bounds; stage 2 hands the estimator the true sparse component and measures only the spectral step that Theorem 4.2's Davis-Kahan half is about. Stage 3 is the full Algorithm-1 pipeline including our proximal-gradient S+L solve, whose finite-iteration accuracy is an implementation property, not a property of the theorem.",
+        "stage_3_full_pipeline_check": false,
+        "median_error_vs_n": [
+          0.9299590019924039,
+          0.7315043280801576,
+          0.6040023070537807,
+          0.5362416484072006,
+          0.3360376078146758,
+          0.2884681581865645,
+          0.24182128064998434,
+          0.18777860623840462,
+          0.1335106416956906,
+          0.11206932402028061
+        ],
+        "unsaturated_points_used": [
+          [
+            1600,
+            0.7315043280801576
+          ],
+          [
+            3200,
+            0.6040023070537807
+          ],
+          [
+            6400,
+            0.5362416484072006
+          ],
+          [
+            12800,
+            0.3360376078146758
+          ],
+          [
+            25600,
+            0.2884681581865645
+          ],
+          [
+            51200,
+            0.24182128064998434
+          ],
+          [
+            102400,
+            0.18777860623840462
+          ],
+          [
+            204800,
+            0.1335106416956906
+          ],
+          [
+            409600,
+            0.11206932402028061
+          ]
+        ],
+        "loglog_slope_error_vs_n": -0.34768467437921524,
+        "loglog_slope_error_vs_n_stderr": 0.013385289425441548,
+        "predicted_slope_error_vs_n": -0.5,
+        "requirement_error_vs_n": "slope <= -0.42 (decays at least as fast as n^-1/2)",
+        "n_star_vs_alpha_stage2": [
+          [
+            0.5,
+            1872.5519628711306
+          ],
+          [
+            0.4,
+            3112.4627173711124
+          ],
+          [
+            0.3,
+            5649.491492508403
+          ],
+          [
+            0.22,
+            9482.914950211372
+          ],
+          [
+            0.16,
+            18069.263912840514
+          ]
+        ],
+        "n_star_vs_alpha_stage3_pipeline": [
+          [
+            0.5,
+            7099.902199322222
+          ],
+          [
+            0.4,
+            9885.080321959833
+          ],
+          [
+            0.3,
+            21425.699359176902
+          ],
+          [
+            0.22,
+            66347.3762550241
+          ],
+          [
+            0.16,
+            141772.120800107
+          ]
+        ],
+        "loglog_slope_n_star_vs_alpha": -1.9583728829305809,
+        "loglog_slope_n_star_vs_alpha_stderr": 0.053738178686676685,
+        "predicted_slope_n_star_vs_alpha": -2.0,
+        "requirement_n_star_vs_alpha": "slope >= -2.6 (grows no faster than alpha^-2)",
+        "delta_sweep": [
+          {
+            "delta": 0.25,
+            "lambda": [
+              4.0,
+              3.75,
+              1.0
+            ],
+            "n_star_alpha_0.30": 5535.860908019186,
+            "errors": [
+              0.6263584393536357,
+              0.5653642932565964,
+              0.3966738231936855,
+              0.2786227498053056,
+              0.1811494546843778,
+              0.13923792425295378,
+              0.09540964581092784,
+              0.06689007071754778,
+              0.05172156383217454,
+              0.03622121213221674
+            ]
+          },
+          {
+            "delta": 0.5,
+            "lambda": [
+              4.0,
+              3.5,
+              1.0
+            ],
+            "n_star_alpha_0.30": 5518.344778057866,
+            "errors": [
+              0.6275273271302784,
+              0.5616202165880265,
+              0.39651967070203553,
+              0.27808032406122135,
+              0.18118164394465697,
+              0.1396008736373853,
+              0.0953163192677788,
+              0.0664332162990111,
+              0.051681406074873926,
+              0.0363036729510905
+            ]
+          },
+          {
+            "delta": 0.75,
+            "lambda": [
+              4.0,
+              3.25,
+              1.0
+            ],
+            "n_star_alpha_0.30": 5505.928578992368,
+            "errors": [
+              0.6285984554512113,
+              0.5579540849705769,
+              0.39635501452910443,
+              0.2777030596734776,
+              0.1812037952815295,
+              0.13993343659810448,
+              0.09522351390466503,
+              0.06604652757727313,
+              0.05164180680196621,
+              0.036400574728871676
+            ]
+          },
+          {
+            "delta": 1.0,
+            "lambda": [
+              4.0,
+              3.0,
+              1.0
+            ],
+            "n_star_alpha_0.30": 5499.528903200538,
+            "errors": [
+              0.6295887247590818,
+              0.5543115746150477,
+              0.39618930829551335,
+              0.2775234540147741,
+              0.18122635911393303,
+              0.140240189546474,
+              0.09513231663710589,
+              0.06573004730572453,
+              0.051603978045035435,
+              0.03651802690323337
+            ]
+          },
+          {
+            "delta": 1.5,
+            "lambda": [
+              4.0,
+              2.5,
+              1.0
+            ],
+            "n_star_alpha_0.30": 5516.814265865491,
+            "errors": [
+              0.6313781650889893,
+              0.5467515226753689,
+              0.39587310129560643,
+              0.27815381331563394,
+              0.18132784687801198,
+              0.14079415253200023,
+              0.09495912987837087,
+              0.06536209496884143,
+              0.05153884432883385,
+              0.03687202616822055
+            ]
+          },
+          {
+            "delta": 2.0,
+            "lambda": [
+              4.0,
+              2.0,
+              1.0
+            ],
+            "n_star_alpha_0.30": 5659.508773944049,
+            "errors": [
+              0.6373092369944873,
+              0.537629731290867,
+              0.3955885740164784,
+              0.28262904764352914,
+              0.18176319417635253,
+              0.14131604269930545,
+              0.09481515878233515,
+              0.0660770645173383,
+              0.051506605881341525,
+              0.03769806021730283
+            ]
+          },
+          {
+            "delta": 2.5,
+            "lambda": [
+              4.0,
+              1.5,
+              1.0
+            ],
+            "n_star_alpha_0.30": 6749.833486719206,
+            "errors": [
+              0.8689795684942943,
+              0.5265982214838751,
+              0.3953369038551495,
+              0.31206367946535385,
+              0.18674236457835156,
+              0.14850089295564725,
+              0.09486647033657035,
+              0.07582319287656762,
+              0.05359147763738174,
+              0.03810503417671454
+            ]
+          }
+        ],
+        "delta_sweep_status": "MEASURED",
+        "delta_sweep_informativeness": {
+          "informative": true,
+          "estimator_agreement": null,
+          "status": "MEASURED",
+          "not_informative_because": [],
+          "n_usable_points": 7,
+          "n_distinct_n_star": 7,
+          "ci95": [
+            -0.034640048351584574,
+            0.14066665088461044
+          ],
+          "covers_zero": true,
+          "predicted_exponent": -2.0,
+          "excludes_predicted_exponent": true,
+          "what_was_measured": "the exponent is resolved and its 95% interval EXCLUDES the value the theorem predicts. For a sufficiency (upper) bound that is NOT a violation -- needing fewer samples than a bound requires is consistent with it -- but it does show the predicted factor is not tight over the range swept."
+        },
+        "alpha_sweep_status": "MEASURED",
+        "alpha_sweep_informativeness": {
+          "informative": true,
+          "estimator_agreement": null,
+          "status": "MEASURED",
+          "not_informative_because": [],
+          "n_usable_points": 5,
+          "n_distinct_n_star": 5,
+          "ci95": [
+            -2.1293917511447007,
+            -1.787354014716461
+          ],
+          "covers_zero": false,
+          "predicted_exponent": -2.0,
+          "excludes_predicted_exponent": false
+        },
+        "loglog_slope_n_star_vs_delta": 0.053013301266512936,
+        "loglog_slope_n_star_vs_delta_stderr": 0.034098641950607286,
+        "predicted_slope_n_star_vs_delta": -2.0,
+        "requirement_n_star_vs_delta": "slope >= -2.4 (grows no faster than delta^-2)",
+        "checks": {
+          "stage1_precision_exponent": true,
+          "stage2_oracle_spectral_exponent": true,
+          "stage3_full_pipeline_exponent": false,
+          "alpha_exponent": true,
+          "delta_exponent": true
+        },
+        "checks_are_tristate": "A sweep that resolved no exponent is published as the string 'NOT MEASURED', never as true. Only True/False here mean a contract was tested."
+      },
+      "route_d_eta_tail_measurement": {
+        "available": true,
+        "ci95_method": "nonparametric bootstrap over the 240 independent replicates, 400 resamples; the quantiles are recomputed inside each resample",
+        "n_bootstrap": 400,
+        "ci95_ols_treating_quantiles_as_independent": [
+          0.18720441116141068,
+          0.2246001253105191
+        ],
+        "ols_interval_is_too_narrow_because": "the seven fitted points are order statistics of one sample and are strongly dependent, so residual-based standard errors understate the uncertainty; the bootstrap interval below is the one every verdict on this page uses",
+        "n": 12800,
+        "n_replicates": 240,
+        "quantiles": [
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          0.95,
+          0.975
+        ],
+        "eta_of_quantile": [
+          1.3862943611198906,
+          1.6094379124341003,
+          1.897119984885881,
+          2.302585092994046,
+          2.9957322735539913,
+          3.6888794541139354,
+          4.38202663467388
+        ],
+        "error_quantile": [
+          0.30872587626837467,
+          0.3211259495318461,
+          0.32919469355957515,
+          0.343068948602009,
+          0.35908006275244325,
+          0.3757427246770194,
+          0.39604891280731924
+        ],
+        "loglog_slope_error_vs_eta": 0.20590226823596489,
+        "stderr_ols_understated": 0.007273784018599746,
+        "ci95": [
+          0.16316468933364495,
+          0.24334322369337308
+        ],
+        "predicted_slope": 0.5,
+        "bound_holds_tail_no_faster_than_sqrt_eta": true,
+        "bound_holds_at_the_point_estimate": true,
+        "contract_tests_the_upper_endpoint": true,
+        "measurement_resolves_a_nonzero_exponent": true,
+        "stated_exponent_is_tight": false,
+        "excludes_one": true,
+        "ok": true,
+        "why": "quantile(q) is the tightest bound holding with probability q, so reading the error's quantiles against eta(q) = -log((1-q)/2) measures the tail exponent the theorem states, at fixed n and with no constant fitted",
+        "interpretation": "The measured tail exponent is well below the stated 1/2, so Theorem 4.2's eta-dependence HOLDS and is CONSERVATIVE: the error's upper tail grows more slowly with the confidence parameter than sqrt(eta) requires. This is a statement about tightness, not a violation. It is scoped corroboration -- one model, one n, one estimator -- not a proof about all instances."
+      },
+      "negative_controls": {
+        "ok": true,
+        "nc1_raw_precision_without_S_plus_L_stays_biased": true,
+        "nc1_errors": {
+          "1600": 0.6696914005381727,
+          "12800": 0.5350167273672801,
+          "102400": 0.5318840046914287
+        },
+        "nc2_column_scrambled_data_never_recovers": true,
+        "nc2_errors": {
+          "1600": 1.3696102073080407,
+          "12800": 1.3424156996216816,
+          "102400": 1.3889941029378965
+        }
+      },
+      "ok": true,
+      "verdict": "FALSIFIED as literally stated: D.5 omits sign alignment and the last positive eigenvalue's gap to the zero eigenspace. Exact perturbation and Gaussian two-point families violate the advertised paper-gap rate; the full-spectrum-gap control removes the contradiction",
+      "limitations": [
+        "The full Algorithm-1 pipeline (stage 3) uses a proximal-gradient solve of the sparse-plus-low-rank program at 3,000 iterations; its measured exponent is reported separately and is not treated as evidence about the theorem, since Theorem 4.2 presumes the estimator attains Chandrasekaran et al.'s conditions.",
+        "xi(T) is Chandrasekaran et al.'s curvature constant and has no closed form we can evaluate; it is held fixed across each sweep, so the xi(T)^-1 factor is reconstructed from the derivation but not measured.",
+        "The eta-dependence IS measured, by route D: quantile(q) is the tightest bound holding with probability q, so reading the error's quantiles against eta(q) = -log((1-q)/2) gives the tail exponent at fixed n with no constant fitted. Its residual limit is scope, not absence: one model, one n, one estimator, so it is corroboration rather than a statement about all instances. Earlier revisions recorded this as unmeasurable."
+      ],
+      "runtime_s": 79.59
+    },
+    "C6_thm43": {
+      "claim": "C6 / Theorem 4.3 (Appendix Theorem D.9): sample complexity for (mu_qc, pi_qc)",
+      "route_a_symbolic_chain_audit": {
+        "ok": true,
+        "mean_bound_reproduced_exactly": true,
+        "mean_bound_ratio_is_free_of_sigma_only": true,
+        "mean_bound_ratio_is_constant_in_every_variable": true,
+        "mean_bound_ratio": "sqrt(3)*C*C_dec/C_1",
+        "what_reproduced_exactly_means": "the derived-over-stated ratio is free of sigma, delta, p, eps AND n, so the two bounds differ by at most a universal constant. An earlier revision tested sigma-freeness alone and published it under this name.",
+        "mean_derived": "sqrt(3)*C*C_dec*sqrt(p)*sigma**3*sqrt(log(p/epsilon))/(delta*sqrt(n))",
+        "mean_stated": "C_1*sqrt(p)*sigma**3*sqrt(log(p/epsilon))/(delta*sqrt(n))",
+        "weight_derived_from_paper_proof": "C*C_pi*sqrt(p)*sigma**3*sqrt(log(p/epsilon))/sqrt(n)",
+        "weight_stated_in_theorem": "C_2*sqrt(p)*sqrt(log(p/epsilon))/sqrt(n)",
+        "factor_missing_from_stated_weight_bound": "sigma**3",
+        "stated_weight_bound_on_sample_complexity_boundary": "C_2*delta*pi_min/(sqrt(C_1)*sigma**3)",
+        "derived_weight_bound_on_sample_complexity_boundary": "C*C_pi*delta*pi_min/sqrt(C_1)",
+        "derived_over_stated_on_boundary": "C*C_pi*sigma**3/C_2",
+        "grows_without_bound_in_sigma": true
+      },
+      "route_b_calibrated_sample_complexity": {
+        "sigma": {
+          "rows": [
+            {
+              "sigma_max": 1.0,
+              "errors": [
+                0.07518717557512783,
+                0.07974446599587706,
+                0.08924331181755417,
+                0.10021873256640287,
+                0.08685956858501237,
+                0.07344014304387639,
+                0.06244152491253252,
+                0.04556153834286564,
+                0.05692456401961721,
+                0.050776070815170965,
+                0.04679553834053929,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 1536.721088658842,
+              "n_star_crossing": 438.3311666919929,
+              "n_star_fit": {
+                "n_star": 1536.721088658842,
+                "decay_slope": -0.14686926486055119,
+                "r2": 0.6704483027327934,
+                "why": "fitted"
+              }
+            },
+            {
+              "sigma_max": 1.15,
+              "errors": [
+                0.0741987928843704,
+                0.09547935843147881,
+                0.09091274634463745,
+                0.09349104307595818,
+                0.10159360162969394,
+                0.07189765550544394,
+                0.07955468293626183,
+                0.04768840217712017,
+                0.07322490680685875,
+                0.053136920063609205,
+                0.06876097363899952,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 13214.038321007558,
+              "n_star_crossing": 479.7805855065677,
+              "n_star_fit": {
+                "n_star": 13214.038321007558,
+                "decay_slope": -0.09795613880494082,
+                "r2": 0.38994254849569987,
+                "why": "fitted"
+              }
+            },
+            {
+              "sigma_max": 1.35,
+              "errors": [
+                0.084954864868206,
+                0.12164213817518726,
+                0.09641570292621782,
+                0.11080124721559581,
+                0.15711287918649644,
+                0.08149866128038885,
+                0.06594833266558917,
+                0.05722591428471327,
+                0.06083036152904775,
+                0.07662213152153015,
+                0.0790892983379114,
+                0.0464344927641252,
+                0.042335255229584035,
+                0.022073001360834066,
+                0.008685655905471018,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 1192.5138553001655,
+              "n_star_crossing": 2997.735905023622,
+              "n_star_fit": {
+                "n_star": 1192.5138553001655,
+                "decay_slope": -0.27488963776351216,
+                "r2": 0.7101861408848524,
+                "why": "fitted"
+              }
+            },
+            {
+              "sigma_max": 1.55,
+              "errors": [
+                0.104068458672265,
+                0.20786464602506494,
+                0.2,
+                0.1525234565257384,
+                0.11008991204980295,
+                0.12628438462453917,
+                0.10088940162482551,
+                0.06148862359485224,
+                0.12571396702092874,
+                0.06310877358115606,
+                0.05979179247408031,
+                0.04933044298595776,
+                0.05586388924993915,
+                0.027126422606594258,
+                0.011729005597637954,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 2304.0383883539257,
+              "n_star_crossing": 3096.2905835074143,
+              "n_star_fit": {
+                "n_star": 2304.0383883539257,
+                "decay_slope": -0.30971345514814824,
+                "r2": 0.8000543012824418,
+                "why": "fitted"
+              }
+            },
+            {
+              "sigma_max": 1.8,
+              "errors": [
+                0.1414890530212325,
+                0.11950235066676185,
+                0.21979750479658455,
+                0.13969695745651245,
+                0.15635641987145044,
+                0.17661811536708893,
+                0.11342488339743173,
+                0.07515215215683936,
+                0.09730357285067454,
+                0.07694103431598977,
+                0.07462261743595786,
+                0.06060456621743654,
+                0.05948832634617551,
+                0.04137753134274058,
+                0.015366128470082174,
+                0.013794605238927837,
+                0.00954800430058561,
+                null,
+                null
+              ],
+              "n_star": 2954.393882387082,
+              "n_star_crossing": 7752.285127756688,
+              "n_star_fit": {
+                "n_star": 2954.393882387082,
+                "decay_slope": -0.3155042411324832,
+                "r2": 0.8799260991182212,
+                "why": "fitted"
+              }
+            },
+            {
+              "sigma_max": 2.0,
+              "errors": [
+                0.24525064505418037,
+                0.1568296689074216,
+                0.13561735251870954,
+                0.2,
+                0.22730529652333786,
+                0.1422262421372824,
+                0.12276180074098653,
+                0.10391160191225712,
+                0.0996827124832018,
+                0.07821618132153965,
+                0.08151600913218734,
+                0.06428501149067656,
+                0.06884074236379853,
+                0.04902564343522553,
+                0.020952631294761104,
+                0.01748198334386264,
+                0.013391592729287305,
+                null,
+                null
+              ],
+              "n_star": 5105.591786360847,
+              "n_star_crossing": 11853.312043589116,
+              "n_star_fit": {
+                "n_star": 5105.591786360847,
+                "decay_slope": -0.3049031971900119,
+                "r2": 0.9232295769473042,
+                "why": "fitted"
+              }
+            },
+            {
+              "sigma_max": 2.2,
+              "errors": [
+                0.37670831894352674,
+                0.13052898439216143,
+                0.11560637439394494,
+                0.26339660661998654,
+                0.20174340532901214,
+                0.21751193193241236,
+                0.13383177948847685,
+                0.13332617766283372,
+                0.13055673232245624,
+                0.0843296272470282,
+                0.08533158542768271,
+                0.06617980959225417,
+                0.08622484938538877,
+                0.050030810430293685,
+                0.027457014117938272,
+                0.023271901912997522,
+                0.01882067229417153,
+                0.0172021432779573,
+                null
+              ],
+              "n_star": 9876.735444342099,
+              "n_star_crossing": 12511.764616233142,
+              "n_star_fit": {
+                "n_star": 9876.735444342099,
+                "decay_slope": -0.2835627234576411,
+                "r2": 0.8911073677174084,
+                "why": "fitted"
+              }
+            }
+          ],
+          "per_setting_screen": {
+            "n_settings": 7,
+            "n_usable": 5,
+            "usable": [
+              {
+                "sigma_max": 1.35,
+                "usable": true,
+                "n_star_fit": 1192.5138553001655,
+                "n_star_crossing": 2997.735905023622,
+                "ratio": 2.5137954512646457,
+                "r2": 0.7101861408848524,
+                "decay_slope": -0.27488963776351216,
+                "why": ""
+              },
+              {
+                "sigma_max": 1.55,
+                "usable": true,
+                "n_star_fit": 2304.0383883539257,
+                "n_star_crossing": 3096.2905835074143,
+                "ratio": 1.34385373054461,
+                "r2": 0.8000543012824418,
+                "decay_slope": -0.30971345514814824,
+                "why": ""
+              },
+              {
+                "sigma_max": 1.8,
+                "usable": true,
+                "n_star_fit": 2954.393882387082,
+                "n_star_crossing": 7752.285127756688,
+                "ratio": 2.6239849648933813,
+                "r2": 0.8799260991182212,
+                "decay_slope": -0.3155042411324832,
+                "why": ""
+              },
+              {
+                "sigma_max": 2.0,
+                "usable": true,
+                "n_star_fit": 5105.591786360847,
+                "n_star_crossing": 11853.312043589116,
+                "ratio": 2.321633326670226,
+                "r2": 0.9232295769473042,
+                "decay_slope": -0.3049031971900119,
+                "why": ""
+              },
+              {
+                "sigma_max": 2.2,
+                "usable": true,
+                "n_star_fit": 9876.735444342099,
+                "n_star_crossing": 12511.764616233142,
+                "ratio": 1.2667915108934626,
+                "r2": 0.8911073677174084,
+                "decay_slope": -0.2835627234576411,
+                "why": ""
+              }
+            ],
+            "dropped": [
+              {
+                "sigma_max": 1.0,
+                "usable": false,
+                "n_star_fit": 1536.721088658842,
+                "n_star_crossing": 438.3311666919929,
+                "ratio": 3.505844907758218,
+                "r2": 0.6704483027327934,
+                "decay_slope": -0.14686926486055119,
+                "why": "the two n* estimators disagree by 3.5x (limit 3.0x); the decay is too shallow to extrapolate (slope=-0.147, |slope| < 0.15); n* amplifies noise by ~7x"
+              },
+              {
+                "sigma_max": 1.15,
+                "usable": false,
+                "n_star_fit": 13214.038321007558,
+                "n_star_crossing": 479.7805855065677,
+                "ratio": 27.541836248033572,
+                "r2": 0.38994254849569987,
+                "decay_slope": -0.09795613880494082,
+                "why": "the two n* estimators disagree by 27.5x (limit 3.0x); the decay fit explains little of the curve (r2=0.39 < 0.5); the decay is too shallow to extrapolate (slope=-0.098, |slope| < 0.15); n* amplifies noise by ~10x"
+              }
+            ],
+            "enough_usable_settings": true
+          },
+          "exponent": 4.009755379818226,
+          "stderr": 0.48599480623244273,
+          "stated_exponent": 6.0,
+          "requirement": "exponent <= 6 + 2*stderr",
+          "n_settings_used": 5,
+          "n_settings_censored": 2,
+          "censored_why": [],
+          "exponent_from_crossing_estimator": 3.4372149509567183,
+          "stderr_from_crossing_estimator": 0.5907450886217336,
+          "informativeness": {
+            "informative": true,
+            "estimator_agreement": {
+              "agree": true,
+              "fitted_ci95": [
+                2.463103004336447,
+                5.556407755300005
+              ],
+              "crossing_ci95": [
+                1.5572004263076578,
+                5.317229475605779
+              ],
+              "why": ""
+            },
+            "status": "MEASURED",
+            "not_informative_because": [],
+            "n_usable_points": 5,
+            "n_distinct_n_star": 5,
+            "ci95": [
+              2.463103004336447,
+              5.556407755300005
+            ],
+            "covers_zero": false,
+            "predicted_exponent": 6.0,
+            "excludes_predicted_exponent": true,
+            "what_was_measured": "the exponent is resolved and its 95% interval EXCLUDES the value the theorem predicts. For a sufficiency (upper) bound that is NOT a violation -- needing fewer samples than a bound requires is consistent with it -- but it does show the predicted factor is not tight over the range swept.",
+            "per_setting_screen": {
+              "n_settings": 7,
+              "n_usable": 5,
+              "dropped": [
+                {
+                  "sigma_max": 1.0,
+                  "usable": false,
+                  "n_star_fit": 1536.721088658842,
+                  "n_star_crossing": 438.3311666919929,
+                  "ratio": 3.505844907758218,
+                  "r2": 0.6704483027327934,
+                  "decay_slope": -0.14686926486055119,
+                  "why": "the two n* estimators disagree by 3.5x (limit 3.0x); the decay is too shallow to extrapolate (slope=-0.147, |slope| < 0.15); n* amplifies noise by ~7x"
+                },
+                {
+                  "sigma_max": 1.15,
+                  "usable": false,
+                  "n_star_fit": 13214.038321007558,
+                  "n_star_crossing": 479.7805855065677,
+                  "ratio": 27.541836248033572,
+                  "r2": 0.38994254849569987,
+                  "decay_slope": -0.09795613880494082,
+                  "why": "the two n* estimators disagree by 27.5x (limit 3.0x); the decay fit explains little of the curve (r2=0.39 < 0.5); the decay is too shallow to extrapolate (slope=-0.098, |slope| < 0.15); n* amplifies noise by ~10x"
+                }
+              ]
+            }
+          },
+          "status": "MEASURED",
+          "contract_outcome": true,
+          "ok": true
+        },
+        "pi_min": {
+          "rows": [
+            {
+              "pi_min": 0.25,
+              "errors": [
+                0.2356529541090811,
+                0.1941930899304991,
+                0.1703020100376222,
+                0.18896890673033478,
+                0.19580166481604622,
+                0.14336112967361075,
+                0.11892203914089139,
+                0.054132267871589035,
+                0.05190282497314597,
+                0.051677142604843906,
+                0.04881464555482923,
+                0.020935306239944718,
+                0.022534760826325134,
+                0.0117219609933647,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 981.5296570903186,
+              "n_star_crossing": 1640.9253300446012,
+              "n_star_fit": {
+                "n_star": 981.5296570903186,
+                "decay_slope": -0.473860215771527,
+                "r2": 0.9270593735487559,
+                "why": "fitted"
+              }
+            },
+            {
+              "pi_min": 0.215,
+              "errors": [
+                0.19840041494266347,
+                0.19021079814879516,
+                0.11138953953349362,
+                0.19008146079987698,
+                0.1129938270949649,
+                0.08783018417773336,
+                0.056895300400134435,
+                0.04653321256477844,
+                0.05392124561870715,
+                0.04552033388498686,
+                0.028829909274415755,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 698.3684359750891,
+              "n_star_crossing": 426.28114320122586,
+              "n_star_fit": {
+                "n_star": 698.3684359750891,
+                "decay_slope": -0.4157021158864716,
+                "r2": 0.9023574261023609,
+                "why": "fitted"
+              }
+            },
+            {
+              "pi_min": 0.185,
+              "errors": [
+                0.16959896279755055,
+                0.1713309830259383,
+                0.11109214399368211,
+                0.12824648023346447,
+                0.1282738462397766,
+                0.12407004107323844,
+                0.06107665206321938,
+                0.04579597885118891,
+                0.047298431421227444,
+                0.044125063099774264,
+                0.039760535022735743,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 865.7609734233122,
+              "n_star_crossing": 436.3652519137556,
+              "n_star_fit": {
+                "n_star": 865.7609734233122,
+                "decay_slope": -0.35654180191722784,
+                "r2": 0.8800719526744275,
+                "why": "fitted"
+              }
+            },
+            {
+              "pi_min": 0.155,
+              "errors": [
+                0.16387720240180328,
+                0.1749571764391214,
+                0.11840854953136037,
+                0.12339411595639327,
+                0.14131501778131422,
+                0.10669156801536059,
+                0.0803950702741148,
+                0.051187490595703905,
+                0.04301826532154396,
+                0.04488010163877998,
+                0.053236202780194475,
+                0.020994698696963632,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 857.7085859212245,
+              "n_star_crossing": 532.752892524612,
+              "n_star_fit": {
+                "n_star": 857.7085859212245,
+                "decay_slope": -0.36988907976728963,
+                "r2": 0.874555007754663,
+                "why": "fitted"
+              }
+            },
+            {
+              "pi_min": 0.125,
+              "errors": [
+                0.1314466663774986,
+                0.13201050132041492,
+                0.1371878468715514,
+                0.14964904570400683,
+                0.14261431883051018,
+                0.10596094748143503,
+                0.07965612081423892,
+                0.05113986313788088,
+                0.047062103595344074,
+                0.0530551574201448,
+                0.051605501193335096,
+                0.022052266266892717,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 1006.6745039009966,
+              "n_star_crossing": 567.990522657063,
+              "n_star_fit": {
+                "n_star": 1006.6745039009966,
+                "decay_slope": -0.3334553139838246,
+                "r2": 0.8233948362003967,
+                "why": "fitted"
+              }
+            },
+            {
+              "pi_min": 0.09,
+              "errors": [
+                0.13005718687157788,
+                0.16947441410965558,
+                0.16197986158140576,
+                0.12195101302076033,
+                0.19159662797592442,
+                0.13840173998842578,
+                0.07440853782948653,
+                0.06392641162483392,
+                0.055411267908571316,
+                0.05493144351540025,
+                0.06452687526843237,
+                0.020090635859651818,
+                0.027568501074954566,
+                0.009036489392888591,
+                0.006804479750442072,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 800.7230665182686,
+              "n_star_crossing": 2216.4039250739124,
+              "n_star_fit": {
+                "n_star": 800.7230665182686,
+                "decay_slope": -0.4419294535519718,
+                "r2": 0.8697547497357613,
+                "why": "fitted"
+              }
+            },
+            {
+              "pi_min": 0.06,
+              "errors": [
+                0.17575981919011333,
+                0.14373862490354308,
+                0.1748751563828082,
+                0.14146872331157154,
+                0.16041818867688973,
+                0.1377495742767015,
+                0.08534839262987004,
+                0.06506829634877626,
+                0.08022089907285412,
+                0.0606790134688055,
+                0.06554114180160742,
+                0.020709450795901474,
+                0.02389338900874767,
+                0.012214097062559548,
+                0.0062043863877354055,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 915.2683603249159,
+              "n_star_crossing": 2233.484925460547,
+              "n_star_fit": {
+                "n_star": 915.2683603249159,
+                "decay_slope": -0.4457416541767221,
+                "r2": 0.8900768430407486,
+                "why": "fitted"
+              }
+            }
+          ],
+          "per_setting_screen": {
+            "n_settings": 7,
+            "n_usable": 7,
+            "usable": [
+              {
+                "pi_min": 0.25,
+                "usable": true,
+                "n_star_fit": 981.5296570903186,
+                "n_star_crossing": 1640.9253300446012,
+                "ratio": 1.6718041255207903,
+                "r2": 0.9270593735487559,
+                "decay_slope": -0.473860215771527,
+                "why": ""
+              },
+              {
+                "pi_min": 0.215,
+                "usable": true,
+                "n_star_fit": 698.3684359750891,
+                "n_star_crossing": 426.28114320122586,
+                "ratio": 1.6382813246923864,
+                "r2": 0.9023574261023609,
+                "decay_slope": -0.4157021158864716,
+                "why": ""
+              },
+              {
+                "pi_min": 0.185,
+                "usable": true,
+                "n_star_fit": 865.7609734233122,
+                "n_star_crossing": 436.3652519137556,
+                "ratio": 1.984028218622741,
+                "r2": 0.8800719526744275,
+                "decay_slope": -0.35654180191722784,
+                "why": ""
+              },
+              {
+                "pi_min": 0.155,
+                "usable": true,
+                "n_star_fit": 857.7085859212245,
+                "n_star_crossing": 532.752892524612,
+                "ratio": 1.6099557561418596,
+                "r2": 0.874555007754663,
+                "decay_slope": -0.36988907976728963,
+                "why": ""
+              },
+              {
+                "pi_min": 0.125,
+                "usable": true,
+                "n_star_fit": 1006.6745039009966,
+                "n_star_crossing": 567.990522657063,
+                "ratio": 1.7723438398087477,
+                "r2": 0.8233948362003967,
+                "decay_slope": -0.3334553139838246,
+                "why": ""
+              },
+              {
+                "pi_min": 0.09,
+                "usable": true,
+                "n_star_fit": 800.7230665182686,
+                "n_star_crossing": 2216.4039250739124,
+                "ratio": 2.7680030933932698,
+                "r2": 0.8697547497357613,
+                "decay_slope": -0.4419294535519718,
+                "why": ""
+              },
+              {
+                "pi_min": 0.06,
+                "usable": true,
+                "n_star_fit": 915.2683603249159,
+                "n_star_crossing": 2233.484925460547,
+                "ratio": 2.440251430375754,
+                "r2": 0.8900768430407486,
+                "decay_slope": -0.4457416541767221,
+                "why": ""
+              }
+            ],
+            "dropped": [],
+            "enough_usable_settings": true
+          },
+          "exponent": -0.03259226149286013,
+          "stderr": 0.10962026215850917,
+          "stated_exponent": -2.0,
+          "requirement": "exponent >= -2 - 2*stderr",
+          "n_settings_used": 7,
+          "n_settings_censored": 0,
+          "censored_why": [],
+          "exponent_from_crossing_estimator": -0.8758339854851427,
+          "stderr_from_crossing_estimator": 0.5583235160769247,
+          "informativeness": {
+            "informative": false,
+            "estimator_agreement": {
+              "agree": false,
+              "fitted_ci95": [
+                -0.31438011621521467,
+                0.2491955932294944
+              ],
+              "crossing_ci95": [
+                -2.311050274321085,
+                0.5593823033507994
+              ],
+              "why": "the curve-fitting estimator's own 95% interval covers zero, so it resolved no exponent; agreement with an unresolved estimator is not evidence"
+            },
+            "status": "NOT INFORMATIVE",
+            "not_informative_because": [
+              "the curve-fitting estimator's own 95% interval covers zero, so it resolved no exponent; agreement with an unresolved estimator is not evidence"
+            ],
+            "n_usable_points": 7,
+            "n_distinct_n_star": 7,
+            "ci95": [
+              -0.31438011621521467,
+              0.2491955932294944
+            ],
+            "covers_zero": true,
+            "predicted_exponent": -2.0,
+            "excludes_predicted_exponent": true,
+            "per_setting_screen": {
+              "n_settings": 7,
+              "n_usable": 7,
+              "dropped": []
+            }
+          },
+          "status": "NOT INFORMATIVE",
+          "contract_outcome": "NOT MEASURED",
+          "ok": true
+        },
+        "p": {
+          "rows": [
+            {
+              "p_total": 12,
+              "errors": [
+                0.08586744004145574,
+                0.08700246870787931,
+                0.06242742226367204,
+                0.05672799556514341,
+                0.054797705170772315,
+                0.0384970116685735,
+                0.03519254410363598,
+                0.028347081245696626,
+                0.020259309425748356,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 107.87515899319283,
+              "n_star_crossing": 141.2152508894963,
+              "n_star_fit": {
+                "n_star": 107.87515899319283,
+                "decay_slope": -0.3863640625636667,
+                "r2": 0.9645882118105151,
+                "why": "fitted"
+              }
+            },
+            {
+              "p_total": 15,
+              "errors": [
+                0.08500921998203458,
+                0.09859892349365146,
+                0.07726151031853884,
+                0.058600021207281965,
+                0.06408819087635034,
+                0.0673427975693714,
+                0.06484529509714743,
+                0.0368094597373228,
+                0.032550803261692296,
+                0.038231916001185584,
+                0.021306942076208535,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 255.1731091168997,
+              "n_star_crossing": 392.7699935628537,
+              "n_star_fit": {
+                "n_star": 255.1731091168997,
+                "decay_slope": -0.2809159063243661,
+                "r2": 0.8347285226918267,
+                "why": "fitted"
+              }
+            },
+            {
+              "p_total": 18,
+              "errors": [
+                0.07518717557512783,
+                0.07974446599587706,
+                0.08924331181755417,
+                0.10021873256640287,
+                0.08685956858501237,
+                0.07344014304387639,
+                0.06244152491253252,
+                0.04556153834286564,
+                0.05692456401961721,
+                0.050776070815170965,
+                0.04679553834053929,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 1536.721088658842,
+              "n_star_crossing": 438.3311666919929,
+              "n_star_fit": {
+                "n_star": 1536.721088658842,
+                "decay_slope": -0.14686926486055119,
+                "r2": 0.6704483027327934,
+                "why": "fitted"
+              }
+            },
+            {
+              "p_total": 24,
+              "errors": [
+                0.08091917819317171,
+                0.14485948566641615,
+                0.08227861209089063,
+                0.0775126163355393,
+                0.07787635517532338,
+                0.09660316388445103,
+                0.06338868664074171,
+                0.06688177989688965,
+                0.06621095547470818,
+                0.0724661602613238,
+                0.06317401830823163,
+                0.04289413807225867,
+                0.037361161535823695,
+                0.04134953002131686,
+                0.015057373405152563,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 1570.8672728931454,
+              "n_star_crossing": 2656.6390323158585,
+              "n_star_fit": {
+                "n_star": 1570.8672728931454,
+                "decay_slope": -0.20094946378003803,
+                "r2": 0.7358688856117073,
+                "why": "fitted"
+              }
+            },
+            {
+              "p_total": 30,
+              "errors": [
+                0.12716828609685538,
+                0.14988353291140155,
+                0.09119892383645911,
+                0.2220129790304235,
+                0.10029604171713724,
+                0.08934362533381923,
+                0.10562081696516479,
+                0.07094356980355127,
+                0.08631111453303952,
+                0.07241637059089878,
+                0.047933181215532694,
+                0.06129046452159198,
+                0.058894911106275594,
+                0.04204766632077278,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "n_star": 6955.631967987126,
+              "n_star_crossing": 1906.104766455991,
+              "n_star_fit": {
+                "n_star": 6955.631967987126,
+                "decay_slope": -0.19124654268523295,
+                "r2": 0.7161677626426692,
+                "why": "fitted"
+              }
+            },
+            {
+              "p_total": 36,
+              "errors": [
+                0.10068140214923049,
+                0.0961189462199108,
+                0.12918490858616324,
+                0.1260124981157501,
+                0.10956813987747427,
+                0.1375371539197917,
+                0.09463599085732943,
+                0.07326093130759248,
+                0.14928543470634964,
+                0.0937641762655741,
+                0.0711505553303422,
+                0.05846374076330901,
+                0.0424996937159145,
+                0.048006578034823666,
+                0.023760810643105368,
+                0.018630024869399228,
+                null,
+                null,
+                null
+              ],
+              "n_star": 4827.508471734126,
+              "n_star_crossing": 3982.845375910339,
+              "n_star_fit": {
+                "n_star": 4827.508471734126,
+                "decay_slope": -0.21281831364443138,
+                "r2": 0.7345610371121839,
+                "why": "fitted"
+              }
+            }
+          ],
+          "per_setting_screen": {
+            "n_settings": 6,
+            "n_usable": 4,
+            "usable": [
+              {
+                "p_total": 12,
+                "usable": true,
+                "n_star_fit": 107.87515899319283,
+                "n_star_crossing": 141.2152508894963,
+                "ratio": 1.3090618100354996,
+                "r2": 0.9645882118105151,
+                "decay_slope": -0.3863640625636667,
+                "why": ""
+              },
+              {
+                "p_total": 15,
+                "usable": true,
+                "n_star_fit": 255.1731091168997,
+                "n_star_crossing": 392.7699935628537,
+                "ratio": 1.5392295642834302,
+                "r2": 0.8347285226918267,
+                "decay_slope": -0.2809159063243661,
+                "why": ""
+              },
+              {
+                "p_total": 24,
+                "usable": true,
+                "n_star_fit": 1570.8672728931454,
+                "n_star_crossing": 2656.6390323158585,
+                "ratio": 1.6911925521390438,
+                "r2": 0.7358688856117073,
+                "decay_slope": -0.20094946378003803,
+                "why": ""
+              },
+              {
+                "p_total": 36,
+                "usable": true,
+                "n_star_fit": 4827.508471734126,
+                "n_star_crossing": 3982.845375910339,
+                "ratio": 1.2120752919339046,
+                "r2": 0.7345610371121839,
+                "decay_slope": -0.21281831364443138,
+                "why": ""
+              }
+            ],
+            "dropped": [
+              {
+                "p_total": 18,
+                "usable": false,
+                "n_star_fit": 1536.721088658842,
+                "n_star_crossing": 438.3311666919929,
+                "ratio": 3.505844907758218,
+                "r2": 0.6704483027327934,
+                "decay_slope": -0.14686926486055119,
+                "why": "the two n* estimators disagree by 3.5x (limit 3.0x); the decay is too shallow to extrapolate (slope=-0.147, |slope| < 0.15); n* amplifies noise by ~7x"
+              },
+              {
+                "p_total": 30,
+                "usable": false,
+                "n_star_fit": 6955.631967987126,
+                "n_star_crossing": 1906.104766455991,
+                "ratio": 3.6491341349089064,
+                "r2": 0.7161677626426692,
+                "decay_slope": -0.19124654268523295,
+                "why": "the two n* estimators disagree by 3.6x (limit 3.0x)"
+              }
+            ],
+            "enough_usable_settings": true
+          },
+          "exponent_vs_p_log_p": 2.9461902466232845,
+          "stderr": 0.15033769847716186,
+          "stated_exponent": 1.0,
+          "requirement": "exponent <= 1 + 2*stderr",
+          "n_settings_used": 4,
+          "n_settings_censored": 2,
+          "censored_why": [],
+          "exponent_from_crossing_estimator": 2.6315368097435954,
+          "stderr_from_crossing_estimator": 0.46488660123026804,
+          "informativeness": {
+            "informative": true,
+            "estimator_agreement": {
+              "agree": true,
+              "fitted_ci95": [
+                2.2993393378942883,
+                3.5930411553522807
+              ],
+              "crossing_ci95": [
+                0.6312912059610207,
+                4.63178241352617
+              ],
+              "why": ""
+            },
+            "status": "MEASURED",
+            "not_informative_because": [],
+            "n_usable_points": 4,
+            "n_distinct_n_star": 4,
+            "ci95": [
+              2.2993393378942883,
+              3.5930411553522807
+            ],
+            "covers_zero": false,
+            "predicted_exponent": 1.0,
+            "excludes_predicted_exponent": true,
+            "what_was_measured": "the exponent is resolved and its 95% interval EXCLUDES the value the theorem predicts. For a sufficiency (upper) bound that is NOT a violation -- needing fewer samples than a bound requires is consistent with it -- but it does show the predicted factor is not tight over the range swept.",
+            "per_setting_screen": {
+              "n_settings": 6,
+              "n_usable": 4,
+              "dropped": [
+                {
+                  "p_total": 18,
+                  "usable": false,
+                  "n_star_fit": 1536.721088658842,
+                  "n_star_crossing": 438.3311666919929,
+                  "ratio": 3.505844907758218,
+                  "r2": 0.6704483027327934,
+                  "decay_slope": -0.14686926486055119,
+                  "why": "the two n* estimators disagree by 3.5x (limit 3.0x); the decay is too shallow to extrapolate (slope=-0.147, |slope| < 0.15); n* amplifies noise by ~7x"
+                },
+                {
+                  "p_total": 30,
+                  "usable": false,
+                  "n_star_fit": 6955.631967987126,
+                  "n_star_crossing": 1906.104766455991,
+                  "ratio": 3.6491341349089064,
+                  "r2": 0.7161677626426692,
+                  "decay_slope": -0.19124654268523295,
+                  "why": "the two n* estimators disagree by 3.6x (limit 3.0x)"
+                }
+              ]
+            }
+          },
+          "status": "MEASURED",
+          "contract_outcome": false,
+          "ok": false
+        },
+        "ok": false,
+        "contract_outcome": {
+          "sigma": true,
+          "pi_min": "NOT MEASURED",
+          "p": false
+        },
+        "informative_sweeps": [
+          "sigma",
+          "p"
+        ],
+        "exponents_measured": true,
+        "uninformative_sweeps": [
+          "pi_min"
+        ],
+        "target_accuracy": 0.05,
+        "grid_n": [
+          20,
+          32,
+          50,
+          80,
+          125,
+          200,
+          320,
+          500,
+          800,
+          1250,
+          2000,
+          3200,
+          5000,
+          12500,
+          31250,
+          78125,
+          195312,
+          488281,
+          1220703
+        ],
+        "not_measured": "delta is the CP eigenvalue gap of Anandkumar et al. (2014) Theorem 5.1 and is not a free parameter of the generative model we can set independently, so its delta^-2 factor is reconstructed from the derivation but not measured.",
+        "gating_sweeps": [
+          "sigma",
+          "pi_min"
+        ],
+        "contract_violations": [],
+        "p_sweep_excluded_because_not_attributable": true,
+        "gating_sweeps_informative": {
+          "sigma": true,
+          "pi_min": false
+        },
+        "sample_complexity_condition_measured": false,
+        "why_condition_not_measured": "the gating sweeps pi_min are NOT INFORMATIVE at this budget, so the sample-complexity condition is unmeasured rather than satisfied"
+      },
+      "route_c_boundary_sigma_probe": {
+        "rows": [
+          {
+            "sigma_max": 1.0,
+            "n": 20000,
+            "median_max_abs_pi_error": 0.020993194979990693,
+            "iqr": [
+              0.006181675714698354,
+              0.10751771801735134
+            ],
+            "stated_bound_unit_sqrt_plogp_over_n": 0.06836418042952895,
+            "error_over_stated_unit": 0.3070788656880172
+          },
+          {
+            "sigma_max": 1.25,
+            "n": 76294,
+            "median_max_abs_pi_error": 0.04187885114008417,
+            "iqr": [
+              0.00780922061780101,
+              0.04455477954462209
+            ],
+            "stated_bound_unit_sqrt_plogp_over_n": 0.03500244783504377,
+            "error_over_stated_unit": 1.1964549261653603
+          },
+          {
+            "sigma_max": 1.5,
+            "n": 227812,
+            "median_max_abs_pi_error": 0.007436170314920554,
+            "iqr": [
+              0.005889254254548865,
+              0.013670567382205817
+            ],
+            "stated_bound_unit_sqrt_plogp_over_n": 0.020256075689503012,
+            "error_over_stated_unit": 0.3671081422140461
+          },
+          {
+            "sigma_max": 1.75,
+            "n": 574458,
+            "median_max_abs_pi_error": 0.007022857698765372,
+            "iqr": [
+              0.004772506088344064,
+              0.007901478514706017
+            ],
+            "stated_bound_unit_sqrt_plogp_over_n": 0.012755998767467795,
+            "error_over_stated_unit": 0.55055333782848
+          },
+          {
+            "sigma_max": 2.0,
+            "n": 1280000,
+            "median_max_abs_pi_error": 0.0037622686818468004,
+            "iqr": [
+              0.003075873335645407,
+              0.004084815760283134
+            ],
+            "stated_bound_unit_sqrt_plogp_over_n": 0.008545522553691119,
+            "error_over_stated_unit": 0.44026198026026403
+          }
+        ],
+        "loglog_slope_error_over_stated_bound_vs_sigma": 0.0605146674168991,
+        "slope_stderr": 1.1148970218359182,
+        "slope_ci95": [
+          -3.487585240497247,
+          3.6086145753310452
+        ],
+        "ci95_uses_t_quantile": 3.182446305284263,
+        "n_points": 5,
+        "residual_dof": 3,
+        "predicted_slope_if_sigma3_is_missing": 3.0,
+        "predicted_slope_if_theorem_correct": 0.0,
+        "excludes_sigma3_hypothesis": false,
+        "excludes_theorem_hypothesis": false,
+        "discriminates": false,
+        "why": "the interval must exclude exactly one of the two hypotheses to decide between them; excluding neither means the probe measured nothing about the sigma-dependence in either direction",
+        "probe_ran_and_produced_a_finite_fit": true,
+        "ok": true,
+        "ok_means": "the probe executed and the fit is finite. It is NOT a verdict on the sigma^3 hypothesis; read `discriminates`, `excludes_sigma3_hypothesis` and `excludes_theorem_hypothesis` for that."
+      },
+      "negative_controls": {
+        "ok": true,
+        "nc1_oversampling_reduces_error": true,
+        "nc1_rows": [
+          {
+            "sigma_max": 1.0,
+            "n": 20000,
+            "errs": [
+              0.020935698555348978,
+              0.00689346617274883,
+              0.011739410609453188,
+              0.0756808236671569,
+              0.011887875416144639
+            ],
+            "median_err": 0.011887875416144639,
+            "min_err": 0.00689346617274883,
+            "max_err": 0.0756808236671569,
+            "spread_max_over_min": 10.978631325752703,
+            "n_seeds_usable": 5
+          },
+          {
+            "sigma_max": 1.0,
+            "n": 320000,
+            "errs": [
+              0.0011667778913608123,
+              0.014114956733352904,
+              0.0030015810989782454,
+              0.002370688153638445,
+              0.04190069480747127
+            ],
+            "median_err": 0.0030015810989782454,
+            "min_err": 0.0011667778913608123,
+            "max_err": 0.04190069480747127,
+            "spread_max_over_min": 35.91145762849733,
+            "n_seeds_usable": 5
+          },
+          {
+            "sigma_max": 1.0,
+            "n": 2560000,
+            "errs": [
+              0.00044229740035778287,
+              0.18101346687675712,
+              0.0005377603728705105,
+              0.0003313765728684692,
+              0.00043449983081390864
+            ],
+            "median_err": 0.00044229740035778287,
+            "min_err": 0.0003313765728684692,
+            "max_err": 0.18101346687675712,
+            "spread_max_over_min": 546.2470243743073,
+            "n_seeds_usable": 5
+          }
+        ],
+        "nc2_frozen_n_larger_sigma_raises_error": true,
+        "nc1_effect_vs_seed_noise": {
+          "n_seed_pairs": 25,
+          "pairs_in_the_expected_direction": 20,
+          "fraction_in_the_expected_direction": 0.8,
+          "interpretation": "the fraction of endpoint seed pairs whose difference goes the way this control requires (the Mann-Whitney statistic on [0,1]); 0.5 is chance",
+          "control_is_reliable_across_seeds": true
+        },
+        "nc2_effect_vs_seed_noise": {
+          "n_seed_pairs": 25,
+          "pairs_in_the_expected_direction": 23,
+          "fraction_in_the_expected_direction": 0.92,
+          "interpretation": "the fraction of endpoint seed pairs whose difference goes the way this control requires (the Mann-Whitney statistic on [0,1]); 0.5 is chance",
+          "control_is_reliable_across_seeds": true
+        },
+        "shared_configuration_cross_check": {
+          "configuration": {
+            "sigma_max": 1.0,
+            "n": 20000
+          },
+          "median_from_the_control_seed_stream": 0.011887875416144639,
+          "median_from_an_independent_seed_stream": 0.008083391850581212,
+          "independent_stream_seed_offset": 7717,
+          "ratio_between_the_two_streams": 1.471,
+          "stability_limit": 3.0,
+          "stable_under_a_change_of_seed_stream": true,
+          "why": "the same configuration measured from two independent seed streams must give the same answer to within seed noise. This is a live test: it fails if the control curves are being read off a quantity that moves with the seed choice, which is what the two controls' old mismatched offsets were signalling."
+        },
+        "nc2_monotone_across_the_whole_sigma_grid": true,
+        "nc2_saturation_note": "the error rises at every step of the sigma grid, not only between endpoints",
+        "nc2_rows": [
+          {
+            "sigma_max": 1.0,
+            "n": 20000,
+            "errs": [
+              0.020935698555348978,
+              0.00689346617274883,
+              0.011739410609453188,
+              0.0756808236671569,
+              0.011887875416144639
+            ],
+            "median_err": 0.011887875416144639,
+            "min_err": 0.00689346617274883,
+            "max_err": 0.0756808236671569,
+            "spread_max_over_min": 10.978631325752703,
+            "n_seeds_usable": 5
+          },
+          {
+            "sigma_max": 2.0,
+            "n": 20000,
+            "errs": [
+              0.08703032622478492,
+              0.01739620033221595,
+              0.03670122316022073,
+              0.09699463250180079,
+              0.06577068325826868
+            ],
+            "median_err": 0.06577068325826868,
+            "min_err": 0.01739620033221595,
+            "max_err": 0.09699463250180079,
+            "spread_max_over_min": 5.575621724830154,
+            "n_seeds_usable": 5
+          },
+          {
+            "sigma_max": 3.0,
+            "n": 20000,
+            "errs": [
+              0.14521909096641666,
+              0.031038857950759224,
+              0.03893660008873118,
+              0.4011632650918424,
+              0.23432936369492774
+            ],
+            "median_err": 0.14521909096641666,
+            "min_err": 0.031038857950759224,
+            "max_err": 0.4011632650918424,
+            "spread_max_over_min": 12.92454979265852,
+            "n_seeds_usable": 5
+          }
+        ]
+      },
+      "route_d_restart_budget_attribution": {
+        "restarts_baseline": 30,
+        "restarts_tripled": 90,
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rows": [
+          {
+            "p_total": 12,
+            "n_star_30_restarts": 107.87515899319283,
+            "n_star_90_restarts": 107.87515899319283,
+            "ratio_90_over_30": 1.0
+          },
+          {
+            "p_total": 36,
+            "n_star_30_restarts": 4827.508471734126,
+            "n_star_90_restarts": 4679.665956999188,
+            "ratio_90_over_30": 0.9693749859579572
+          }
+        ],
+        "solver_bound": false,
+        "p_exponent_attributable_to_the_theorem": false,
+        "why": "only 2 setting(s) produced an n* at both restart budgets; the solver cannot be ruled out, so the p-exponent is treated as unattributable",
+        "ok": false
+      },
+      "route_e_p_sweep_confound_audit": {
+        "rows": [
+          {
+            "p_total": 12,
+            "min_pairwise_mean_separation": 4.242640687119285,
+            "empirical_m2_topk_condition_number": 3.9414713463205677,
+            "empirical_m2_leakage_outside_topk": null,
+            "n_used_for_this_probe": 5000
+          },
+          {
+            "p_total": 15,
+            "min_pairwise_mean_separation": 4.242640687119284,
+            "empirical_m2_topk_condition_number": 4.205322153642913,
+            "empirical_m2_leakage_outside_topk": 0.001707274959033451,
+            "n_used_for_this_probe": 5000
+          },
+          {
+            "p_total": 18,
+            "min_pairwise_mean_separation": 4.242640687119285,
+            "empirical_m2_topk_condition_number": 4.361291297596149,
+            "empirical_m2_leakage_outside_topk": 0.02148897416668695,
+            "n_used_for_this_probe": 5000
+          },
+          {
+            "p_total": 24,
+            "min_pairwise_mean_separation": 4.242640687119285,
+            "empirical_m2_topk_condition_number": 3.827377311965953,
+            "empirical_m2_leakage_outside_topk": 0.17153697236448034,
+            "n_used_for_this_probe": 5000
+          },
+          {
+            "p_total": 30,
+            "min_pairwise_mean_separation": 4.242640687119286,
+            "empirical_m2_topk_condition_number": 4.024297623103224,
+            "empirical_m2_leakage_outside_topk": 0.14541171276666054,
+            "n_used_for_this_probe": 5000
+          },
+          {
+            "p_total": 36,
+            "min_pairwise_mean_separation": 4.242640687119285,
+            "empirical_m2_topk_condition_number": 13.116780152458105,
+            "empirical_m2_leakage_outside_topk": 0.4422251446439535,
+            "n_used_for_this_probe": 5000
+          }
+        ],
+        "fixed_by_construction": {
+          "sigma_max": 1.0,
+          "pi_min": 0.1,
+          "delta_cp_eigenvalue_gap": 0.24460302826636426,
+          "population_m2_condition_number": 4.0,
+          "why_these_cannot_drift": "sigma and pi_min are sweep arguments; lambda_i = pi_i^{-1/2} depends only on PI_TRUE; population M2 eigenvalues are pi_i * MEAN_SCALE^2 for an orthonormal mean frame. None is a function of p."
+        },
+        "held_fixed": {
+          "min_pairwise_mean_separation": true,
+          "empirical_m2_topk_condition_number": false
+        },
+        "measured_quantities_held_fixed": false,
+        "leakage_ratio_first_to_last_measured_p": 259.0239740260192,
+        "leakage_measured_between_p": [
+          15,
+          36
+        ],
+        "leakage_undefined_at_p": [
+          12
+        ],
+        "leakage_grows_with_p": true,
+        "ok": true,
+        "all_other_quantities_held_fixed": false,
+        "why_not_attributable": "the empirical M2 top-k condition number is not constant across p, and subspace leakage grows 259x between p = 15 and p = 36 at fixed n",
+        "why": "these quantities move with p: ['empirical_m2_topk_condition_number']; the measured p-exponent is confounded and cannot decide the stated bound"
+      },
+      "ok": true,
+      "verdict": "The paper's derivation is RECONSTRUCTED and the two displayed bounds come out differently. Bound (I), the mean error, is VERIFIED: composing the paper's own cited results (8) and (10) reproduces C_1 (sigma^3/delta) sqrt(p log(p/eps)/n) exactly, with a zero residual. The displayed proof of bound (II), the weight error, is FALSIFIED AS A DERIVATION: composing (8) with (11) yields a bound larger than the stated C_2 sqrt(p log(p/eps)/n) by exactly sigma_max^3, an unbounded factor that no universal constant can absorb. Both conclusions are reached twice, by independent routes -- sympy in the claim module, and exact exponent-vector arithmetic with no symbolic algebra in the independent checker. Bound (II) AS STATED is NOT decided here in either direction: the boundary probe that earlier revisions used to argue it survives is UNINFORMATIVE. Its 95% interval, computed with the correct t quantile for a 5-point fit, includes both the slope of 0 the theorem predicts and the slope of 3 a missing sigma^3 predicts, and its two estimators disagree eightfold. Earlier revisions published the same probe as EXCLUDING 3, using a normal quantile on 3 residual degrees of freedom; that reading is withdrawn. The sample-complexity EXPONENTS are likewise NOT MEASURED at this budget: informative sweeps: sigma, p; not informative: pi_min",
+      "ok_scope": {
+        "covered_by_ok": [
+          "route A symbolic chain (both bounds)",
+          "negative controls NC1 and NC2",
+          "the sample-complexity sweeps, where they measured anything"
+        ],
+        "not_covered_by_ok": [
+          "restart-budget attribution (diagnostic; its own ok is False)",
+          "the sigma boundary probe's discrimination (it does not discriminate)"
+        ]
+      },
+      "findings": {
+        "mean_bound_reproduced": true,
+        "stated_p_factor_falsified": false,
+        "sample_complexity_exponents_measured": false,
+        "sample_complexity_exponents_respected": null,
+        "displayed_proof_of_weight_bound_is_incomplete": true,
+        "stated_weight_bound_empirically_violated": null,
+        "note": "Composing the paper's own eq. (11) with eq. (8) yields C_pi C sigma_max^3 sqrt(p log(p/eps)/n), while the theorem states C_2 sqrt(p log(p/eps)/n) with C_2 universal: the displayed chain does not establish the stated weight bound. That is reached by two independent routes and is exact. What we canNOT say is whether the stated bound ITSELF fails: the boundary probe intended to decide that is uninformative -- its correct 95% interval covers both competing hypotheses and its two estimators disagree eightfold. Earlier revisions read that probe as corroborating the stated bound; that reading rested on a normal quantile applied to a 5-point fit and is withdrawn. This is recorded as a proof gap plus an undecided empirical question, and as neither a falsification nor a corroboration of the bound as stated."
+      },
+      "runtime_s": 511.65
+    }
+  },
+  "seed_record": {
+    "generated_from": "inspect.signature of the functions run() actually calls",
+    "call_sites_override_a_seed": false,
+    "rows": [
+      {
+        "claim": "Claim 4",
+        "stage": "exact Davis-Kahan constant",
+        "function": "claim_c4_prop41.thm_d4_exact_constant",
+        "seeds": {
+          "seed": 20260801
+        },
+        "n_seeds": 1
+      },
+      {
+        "claim": "Claim 4",
+        "stage": "adversarial supremum",
+        "function": "claim_c4_prop41.thm_d4_adversarial_constant",
+        "seeds": {
+          "seed": 20260801
+        },
+        "n_seeds": 1
+      },
+      {
+        "claim": "Claim 4",
+        "stage": "finite-perturbation sweep",
+        "function": "claim_c4_prop41.thm_d4_finite_perturbation",
+        "seeds": {
+          "seed": 7
+        },
+        "n_seeds": 1
+      },
+      {
+        "claim": "Claim 4",
+        "stage": "negative controls",
+        "function": "claim_c4_prop41.negative_controls",
+        "seeds": {
+          "seed": 3
+        },
+        "n_seeds": 1
+      },
+      {
+        "claim": "Claim 5",
+        "stage": "Davis-Kahan adversarial search",
+        "function": "claim_c5_thm42.davis_kahan_constant_check",
+        "seeds": {
+          "seed": 5
+        },
+        "n_seeds": 1
+      },
+      {
+        "claim": "Claim 5",
+        "stage": "calibrated rate",
+        "function": "claim_c5_thm42.calibrated_rate",
+        "seeds": {
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "n_seeds": 7
+      },
+      {
+        "claim": "Claim 5",
+        "stage": "negative controls",
+        "function": "claim_c5_thm42.negative_controls",
+        "seeds": {
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "n_seeds": 5
+      },
+      {
+        "claim": "Claim 5",
+        "stage": "eta tail measurement",
+        "function": "claim_c5_thm42.eta_tail_measurement",
+        "seeds": {
+          "seed0": 90210
+        },
+        "n_seeds": 1
+      },
+      {
+        "claim": "Claim 6",
+        "stage": "sample-complexity sweeps (sigma, pi_min, p)",
+        "function": "claim_c6_thm43.sample_complexity_sweeps",
+        "seeds": {
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        "n_seeds": 21
+      },
+      {
+        "claim": "Claim 6",
+        "stage": "sigma boundary probe",
+        "function": "claim_c6_thm43.sigma_sweep",
+        "seeds": {
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "n_seeds": 5
+      },
+      {
+        "claim": "Claim 6",
+        "stage": "restart-budget attribution",
+        "function": "claim_c6_thm43.restart_budget_attribution",
+        "seeds": {
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        "n_seeds": 21
+      },
+      {
+        "claim": "Claim 6",
+        "stage": "negative controls",
+        "function": "claim_c6_thm43.negative_controls",
+        "seeds": {
+          "model_seed": 20260801,
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "n_seeds": 6
+      }
+    ],
+    "benchmark_shards": {
+      "note": "passed to the authors' --seed; drives their validation split and numpy RNG",
+      "seeds": [
+        2024,
+        2025,
+        2026,
+        2027,
+        2028
+      ]
+    },
+    "pythonhashseed": "unset"
+  },
+  "independent_check": {
+    "table_percentages_exact_rational": {
+      "pooled_vs_AVG_pct": 17.365359542673755,
+      "pooled_vs_MV_pct": 12.749510245142162,
+      "mean_relative_vs_AVG_pct": 15.187125048535693,
+      "mean_relative_vs_MV_pct": 17.59346382921747,
+      "ultrafeedback_vs_MV_pct": 26.79200940070505,
+      "pooled_matches_17_37": true,
+      "pooled_matches_12_75": true,
+      "ultrafeedback_matches_26_8": true,
+      "summarize_pct_vs_strongest_baseline_0p718": 13.370473537604457,
+      "summarize_pct_vs_claimstring_0p705": 15.460992907801419,
+      "summarize_13_4_from_0p814_over_0p718": true,
+      "claimstring_0p705_does_not_reproduce_13_4": true
+    },
+    "c2_unit_invariance_exact": {
+      "unweighted_across_benchmark_avg_vs_AVG_pct": 15.187125048535693,
+      "unweighted_across_benchmark_avg_vs_MV_pct": 17.59346382921747,
+      "unweighted_exactly_invariant_under_unit_change": true,
+      "pooled_spread_across_unit_changes_pct": 3.337028529039893,
+      "pooled_ordering_flips": true,
+      "weighted_mean_identity_exact": true,
+      "asset_weight_share": 0.8440226657306188,
+      "paper_headline_pct": 17.37,
+      "discrepancy_pp": 2.182874951464308,
+      "scope_qualification_established": true
+    },
+    "appendix_consistency_exact": {
+      "rows": [
+        {
+          "dataset": "ASSET",
+          "gap_exact": "481/1000",
+          "gap_is_zero": false,
+          "z": 2.346,
+          "consistent": false
+        },
+        {
+          "dataset": "FeedbackQA",
+          "gap_exact": "-23/1000",
+          "gap_is_zero": false,
+          "z": 6.379,
+          "consistent": false
+        },
+        {
+          "dataset": "Review-5K",
+          "gap_exact": "7/1000",
+          "gap_is_zero": false,
+          "z": 0.369,
+          "consistent": true
+        },
+        {
+          "dataset": "Summarize",
+          "gap_exact": "0",
+          "gap_is_zero": true,
+          "z": 0.0,
+          "consistent": true
+        },
+        {
+          "dataset": "UltraFeedback",
+          "gap_exact": "1/1000",
+          "gap_is_zero": false,
+          "z": 0.118,
+          "consistent": true
+        },
+        {
+          "dataset": "Yelp",
+          "gap_exact": "0",
+          "gap_is_zero": true,
+          "z": 0.0,
+          "consistent": true
+        }
+      ],
+      "n_consistent": 4,
+      "inconsistent_datasets": [
+        "ASSET",
+        "FeedbackQA"
+      ],
+      "claim1_pct_using_table1": 26.79200940070505,
+      "claim1_pct_using_table7": 26.90951821386604,
+      "claim2_pooled_vs_AVG_using_table1": 17.365359542673755,
+      "claim2_pooled_vs_AVG_using_table7": 18.533747868819578,
+      "claim2_pooled_vs_MV_using_table1": 12.749510245142162,
+      "claim2_pooled_vs_MV_using_table7": 13.983163022184572
+    },
+    "c6_composition_by_exponent_arithmetic": {
+      "route": "exponent-vector arithmetic in exact Fractions; no symbolic algebra",
+      "derived_mean_bound_exponents": {
+        "sigma": "3",
+        "delta": "-1",
+        "p_log": "1/2",
+        "n": "-1/2"
+      },
+      "stated_mean_bound_exponents": {
+        "sigma": "3",
+        "delta": "-1",
+        "p_log": "1/2",
+        "n": "-1/2"
+      },
+      "mean_bound_residual_exponents": {
+        "sigma": "0",
+        "delta": "0",
+        "p_log": "0",
+        "n": "0"
+      },
+      "mean_bound_reproduced_exactly": true,
+      "derived_weight_bound_exponents": {
+        "sigma": "3",
+        "delta": "0",
+        "p_log": "1/2",
+        "n": "-1/2"
+      },
+      "stated_weight_bound_exponents": {
+        "sigma": "0",
+        "delta": "0",
+        "p_log": "1/2",
+        "n": "-1/2"
+      },
+      "weight_bound_residual_exponents": {
+        "sigma": "3",
+        "delta": "0",
+        "p_log": "0",
+        "n": "0"
+      },
+      "weight_bound_reproduced_exactly": false,
+      "missing_factor_is_sigma_cubed": true,
+      "why": "composing the paper's own cited results reproduces bound (I) with a zero residual and bound (II) with a residual of exactly sigma^3; because the residual is a positive power of sigma it is unbounded, so no universal constant C_2 can absorb it"
+    },
+    "table2_second_transcription": {
+      "recomputed_winners": [
+        "CARE-SVD",
+        "CARE-SVD",
+        "CARE-Tensor",
+        "MACE",
+        "CARE-Tensor",
+        "CARE-Tensor"
+      ],
+      "matches_paper_bold_cells": true,
+      "care_wins": 5,
+      "of_datasets": 6,
+      "care_best_on_5_of_6": true,
+      "care_tensor_leads_on": [
+        "PKU-BETTER",
+        "SHP",
+        "Summarize"
+      ],
+      "strongest_summarize_baseline": "GLAD",
+      "strongest_summarize_baseline_value": 0.718,
+      "summarize_relative_improvement_pct": 13.370473537604457,
+      "summarize_matches_13_4": true,
+      "generated_claim_quoted_pair_relative_pct": 15.460992907801419,
+      "generated_claim_literal_holds": false,
+      "positive_control_replace_0p705_with_strongest_baseline_holds": true,
+      "cells_compared": 54,
+      "cell_mismatches_vs_first_transcription": [],
+      "two_transcriptions_agree_cell_by_cell": true
+    },
+    "prop41_counterexample_mpmath": {
+      "dps": 60,
+      "max_abs_L_minus_Lprime": 8.138529331711972e-62,
+      "same_L_to_full_precision": true,
+      "both_have_orthogonal_columns": true,
+      "columns_are_signed_permutation": false,
+      "counterexample_holds": true
+    },
+    "first_order_formula_vs_finite_difference": {
+      "worst_relative_disagreement": 5.315671936559425e-06,
+      "analytic_formula_confirmed": true
+    },
+    "davis_kahan_by_principal_angle": {
+      "trials": 500,
+      "two_routes_agree_on_eigvec_distance": true,
+      "worst_err_over_bound": 0.30341228548889515,
+      "constant_2_to_the_3_over_2_holds": true
+    },
+    "theorem_d5_counterexamples_independent": {
+      "ok": true,
+      "sign_counterexample_raw_distance": 2.0,
+      "sign_counterexample_rhs_at_zero_noise": 0.0,
+      "sign_aligned_control_distance": 0.0,
+      "paper_gap_ratio_diverges_decade_by_decade": true,
+      "full_gap_control_stays_bounded": true,
+      "rows": [
+        {
+          "a": 0.1,
+          "error": 0.007811844446888177,
+          "paper_normalized_ratio": 18.998405694832044,
+          "full_gap_normalized_ratio": 0.9999160892016867
+        },
+        {
+          "a": 0.01,
+          "error": 0.007811844446888177,
+          "paper_normalized_ratio": 198.98330175113563,
+          "full_gap_normalized_ratio": 0.9999160892016866
+        },
+        {
+          "a": 0.001,
+          "error": 0.007811844446888177,
+          "paper_normalized_ratio": 1998.8322623141717,
+          "full_gap_normalized_ratio": 0.9999160892016866
+        },
+        {
+          "a": 0.0001,
+          "error": 0.007811844446888177,
+          "paper_normalized_ratio": 19997.32186794453,
+          "full_gap_normalized_ratio": 0.9999160892016866
+        }
+      ],
+      "gaussian_two_point_lower_bound": {
+        "rows": [
+          {
+            "a": 0.1,
+            "n_sample_kl_from_matrix_formula": 0.032051282048794545,
+            "le_cam_error_probability_lower_bound": 0.43670378955972705,
+            "eigenvector_error_threshold": 7.629394531175985e-06,
+            "threshold_over_paper_unit_rate": 5.484827557248234
+          },
+          {
+            "a": 0.01,
+            "n_sample_kl_from_matrix_formula": 0.031328320799573615,
+            "le_cam_error_probability_lower_bound": 0.4374217282122085,
+            "eigenvector_error_threshold": 7.629394531175985e-06,
+            "threshold_over_paper_unit_rate": 57.446351783810464
+          },
+          {
+            "a": 0.001,
+            "n_sample_kl_from_matrix_formula": 0.03125781445118748,
+            "le_cam_error_probability_lower_bound": 0.43749218603727663,
+            "eigenvector_error_threshold": 7.629394531175985e-06,
+            "threshold_over_paper_unit_rate": 577.0615940494328
+          },
+          {
+            "a": 0.0001,
+            "n_sample_kl_from_matrix_formula": 0.031250781267106356,
+            "le_cam_error_probability_lower_bound": 0.43749921873777664,
+            "eigenvector_error_threshold": 7.629394531175985e-06,
+            "threshold_over_paper_unit_rate": 5773.214016705655
+          }
+        ],
+        "kl_stays_bounded": true,
+        "lower_error_probability_exceeds_theorem_budget": true,
+        "lower_bound_over_advertised_rate_diverges": true,
+        "ok": true
+      },
+      "route": "independent 2x2 eigendecomposition and trace/log-determinant Gaussian KL"
+    },
+    "c5_stage_slope_recheck": {
+      "available": true,
+      "stage_1_theil_sen_slope": -0.512916454674898,
+      "stage_1_least_squares_slope": -0.5089141494472996,
+      "stage_2_theil_sen_slope": -0.4765481219084882,
+      "stage_2_least_squares_slope": -0.4724105293903735,
+      "stage_1_agrees_at_least_root_n": true,
+      "stage_2_agrees_at_least_root_n": true,
+      "agrees_with_claim_module": true,
+      "agreement_tolerance": 0.15
+    },
+    "c6_slope_recheck": {
+      "available": true,
+      "theil_sen_slope": 0.4800580595115054,
+      "least_squares_slope": 0.0605146674168991,
+      "theil_sen_agrees_no_sigma_growth": true,
+      "abs_difference_between_estimators": 0.4195433920946063,
+      "estimators_agree_on_the_slope": false,
+      "why": "the two estimators disagree by far more than either one's own claimed precision, so the boundary probe resolves no slope and must not be read as evidence for or against the missing sigma^3 factor"
+    },
+    "c6_p_exponent_recheck": {
+      "available": true,
+      "fitted_over_settings": [
+        12,
+        15,
+        24,
+        36
+      ],
+      "fitted_theil_sen_slope": 3.058241622028703,
+      "fitted_n_points": 4,
+      "crossing_theil_sen_slope": 2.987101330554033,
+      "crossing_n_points": 4,
+      "refit_expected": true,
+      "refit_produced_nothing": false,
+      "least_squares_slope_from_claim_module": 2.9461902466232845,
+      "stated_exponent": 1.0,
+      "min_theil_sen_slope": 2.987101330554033,
+      "max_theil_sen_slope": 3.058241622028703,
+      "theil_sen_agrees_with_least_squares": true,
+      "both_estimators_exceed_stated_exponent": true
+    },
+    "agreement_with_claim_module": {
+      "pooled_vs_AVG": true,
+      "pooled_vs_MV": true,
+      "c3_literal_verdict": true,
+      "c5_sign_counterexample": true,
+      "c5_missing_gap_counterexample": true,
+      "c5_gaussian_lower_bound": true,
+      "c2_scope_qualification": true,
+      "c2_unweighted_average": true,
+      "appendix_inconsistent_set": true,
+      "appendix_headline_shift": true
+    },
+    "c6_two_route_agreement_evaluated": true,
+    "ok": true,
+    "runtime_s": 0.04
+  },
+  "total_runtime_s": 615.22,
+  "all_contracts_ok": true
+}

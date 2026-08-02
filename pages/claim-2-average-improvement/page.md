@@ -1,0 +1,345 @@
+# Claim 2 — 17.37% average improvement over simple averaging
+
+<!-- FILL:c2.header -->
+**Verdict:** **VERIFIED EXACTLY, with a quantified scope qualification on what the headline statistic measures.** Recomputed in exact rational arithmetic from Table 1's own entries, the pooled mean-MAE improvement is **17.3654 %** over AVG and **12.7495 %** over MV — matching the published 17.37 % and 12.75 % to the precision the paper prints them at. Of the three natural readings of 'average improvement' that were enumerated, exactly 1 reproduces the published pair (`pooled_mean_MAE_ratio`), and each published figure on its own already selects it — the nearest rival is several percentage points away in both cases — so the identification is **unique and over-determined**, not a coincidence rescued by using two targets. The independent checker re-derives all of it from a second transcription. **CARE improves on AVG on all 6 of the continuous-scoring benchmarks**; the direction of the paper's claim is not in dispute here. The scope qualification is quantified rather than asserted: the identified definition is algebraically an MAE-weighted mean of the per-dataset improvements, and those weights are an artefact of unit selection — ASSET's 0–100 scale gives it **84.40 %** of the total weight, so the published 'average across scoring datasets' is very nearly ASSET's number alone. The unit-invariant average across the six benchmarks is **15.19 %** over AVG and 17.59 % over MV, and rescaling ASSET reverses the paper's ordering of the two baselines. This is a **scope qualification, not a falsification** — every number the paper prints is correct under the definition it used. A second, independent defect: Appendix E.8's Table 7 republishes the CARE-SVD row this statistic is computed from and disagrees with Table 1 on 2 of its six columns (ASSET, FeedbackQA), which moves the headline again. **REPRODUCED at full scale** on ASSET with the authors' code and a negative control; **BLOCKED** on the other five Table 1 columns, which ship no judge outputs
+
+**Confidence: HIGH.** The definition is identified uniquely and over-determined: each published target selects the pooled mean-MAE ratio on its own, in exact rational arithmetic, and the identification is confirmed against a second independent transcription.
+
+Machine-checkable contract satisfied by the release run: **yes**.
+<!-- /FILL -->
+
+## The exact claim
+
+> CARE achieves an average 17.37% improvement over simple averaging across
+> continuous-scoring benchmarks (Table 1).
+
+The paper states two such figures in the same sentence — **17.37%** against AVG and
+**12.75%** against MV — over Table 1's six continuous-scoring datasets (ASSET,
+FeedbackQA, Review-5K, Summarize, UltraFeedback, Yelp).
+
+## Result
+
+**Both published figures are reproduced, and the definition behind them is identified
+uniquely and with room to spare.** Recomputed in exact rational arithmetic from Table 1's
+own entries, the pooled mean-MAE improvement is **17.3654 %** over AVG and **12.7495 %**
+over MV, matching the published 17.37 % and 12.75 % to the precision the paper prints
+them at. Exactly one of the three enumerated readings of "average improvement" produces
+that pair, and the identification is **over-determined**: each target on its own already
+selects the pooled ratio, since the nearest rival reading is 2.18 pp away on the AVG
+target and 4.84 pp away on the MV target. (An earlier revision of this page argued that
+requiring both targets was what made the identification non-coincidental. That argument
+was wrong on this page's own data — either target alone suffices — and the corrected
+statement is strictly stronger.) All of it is re-derived by an independent checker from a
+second transcription.
+
+**CARE improves on AVG on all six continuous-scoring benchmarks.** The direction of the
+paper's claim is not in dispute anywhere in this page.
+
+**Reproduced at full scale on ASSET** — the authors' code at `72f5b29`, five seeds,
+their own γ search — with a column-wise row-permutation negative control.
+
+**One scope qualification, quantified rather than asserted.** The identified definition
+is algebraically an MAE-weighted mean of the per-dataset improvements, and those weights
+are set by unit selection: ASSET's 0–100 scale gives it **84.4 %** of the total weight,
+so the published "average across scoring datasets" is very nearly ASSET's number alone.
+The unit-invariant average across the six benchmarks is **15.19 %** over AVG and
+17.59 % over MV, and rescaling ASSET reverses the paper's ordering of the two baselines.
+Every number the paper prints is correct under the definition it used; what does not
+survive is the reading of that number as an average *across benchmarks*. This is a scope
+qualification, **not** a falsification — an earlier revision of this page wrongly called
+it one.
+
+**A second, independent defect in the source row.** Appendix E.8's Table 7 republishes
+the CARE-SVD row this statistic is computed from, and disagrees with Table 1 on
+FeedbackQA far outside the paper's own reported seed noise, which moves the headline
+again.
+
+**BLOCKED:** the five non-ASSET Table 1 columns ship no judge outputs, so their MAEs are
+not re-measured here; the arithmetic above is over the paper's published values.
+
+## The substantive question: what does "average improvement" mean?
+
+The paper does not define it, and the choice matters: the candidate definitions
+disagree by several percentage points. This claim is therefore decided by
+**identifying** the definition rather than by assuming one. `table_arithmetic()`
+enumerates three natural readings and evaluates each against **both** published
+targets simultaneously — a definition only qualifies if it reproduces `17.37` *and*
+`12.75`.
+
+<!-- FILL:c2.definitions -->
+| Candidate definition | vs AVG | vs MV | Reproduces both 17.37 and 12.75? |
+|---|---|---|---|
+| Mean of per-dataset relative improvements | 15.19 % | 17.59 % | **no** |
+| **Pooled mean-MAE ratio** | 17.37 % | 12.75 % | **yes** |
+| Median of per-dataset relative improvements | 12.99 % | 18.06 % | **no** |
+
+Definition uniquely identified: ****Pooled mean-MAE ratio**** (1 of 3 candidates reproduce both targets).
+
+Only the pooled mean-MAE ratio reproduces both 17.37% and 12.75%. The arithmetic average of per-dataset relative improvements gives 15.19% (vs AVG) and 17.59% (vs MV). The pooled figure is dominated by ASSET, whose MAE is on a 0-100 scale while the other five datasets are on 0-10 or smaller scales.
+<!-- /FILL -->
+
+Evaluating against both targets is a redundancy check rather than the thing that makes
+the identification work: on Table 1's numbers each target already picks out the pooled
+ratio on its own, by margins of 2.18 pp and 4.84 pp respectively. Requiring both means a
+single transcription error in either target would break the match instead of silently
+selecting a different definition.
+
+### What the identified definition actually is
+
+Identifying the definition is not the end of the matter, because the identified
+definition is not an average across benchmarks. That is an algebraic fact, not an
+opinion about wording:
+
+```
+(mean(AVG) - mean(CARE)) / mean(AVG)  ==  Σ_i w_i · r_i  ,   w_i = AVG_i / Σ_j AVG_j
+```
+
+where `r_i` is dataset `i`'s own relative improvement. "Improvement of the mean MAE"
+**is identically** a weighted mean of the per-dataset improvements, with weights fixed by
+how large each benchmark's MAE happens to be. The verifier checks this identity rather
+than asserting it, and the independent checker re-derives it in exact rationals.
+
+<!-- FILL:c2.weights -->
+| Benchmark | CARE-SVD improvement over AVG | Weight it receives in the 17.37 % |
+|---|---|---|
+| ASSET | 17.92 % | 84.40 % |
+| Review-5K | 13.94 % | 5.70 % |
+| Summarize | 4.95 % | 3.50 % |
+| Yelp | 33.08 % | 2.60 % |
+| FeedbackQA | 12.05 % | 2.08 % |
+| UltraFeedback | 9.18 % | 1.72 % |
+
+Identity residual: **2.487e-14 pp** (exact-rational check in the independent checker returns exact equality, not a tolerance). Largest weight: **ASSET at 84.40 %**.
+<!-- /FILL -->
+
+Those weights are not a modelling choice anyone defended. They are an artefact of unit
+selection: ASSET's judges score on a 0–100 scale, so its MAE is ≈ 30 while the other five
+benchmarks sit near 1, and ASSET therefore absorbs **84.4%** of the weight. The published
+"average across scoring datasets" is, to within a rounding error, ASSET's number alone.
+
+### Quantifying the dependence: units
+
+Any statistic that deserves to be called an average *across benchmarks* must be
+unchanged when one benchmark is re-expressed in different units — reporting ASSET on
+0–10 instead of 0–100 changes no method's ranking, no method's relative advantage, and
+nothing about CARE. So we rescale ASSET's whole column by a constant and recompute.
+
+<!-- FILL:c2.invariance -->
+| ASSET reported in units of | Paper's statistic vs AVG | Paper's statistic vs MV | Across-benchmark average vs AVG | Across-benchmark average vs MV | Which gap looks larger |
+|---|---|---|---|---|---|
+| × 0.01 | 14.52 % | 19.15 % | 15.19 % | 17.59 % | **MV** |
+| × 0.1 | 15.60 % | 16.89 % | 15.19 % | 17.59 % | **MV** |
+| × 0.25 | 16.40 % | 15.08 % | 15.19 % | 17.59 % | AVG |
+| × 0.5 | 16.96 % | 13.76 % | 15.19 % | 17.59 % | AVG |
+| × 1.0 | 17.37 % | 12.75 % | 15.19 % | 17.59 % | AVG |
+| × 2.0 | 17.62 % | 12.10 % | 15.19 % | 17.59 % | AVG |
+| × 10.0 | 17.86 % | 11.48 % | 15.19 % | 17.59 % | AVG |
+
+Paper's statistic moves **3.34 pp** across these unit changes; the across-benchmark average moves **0.0 pp** (exactly zero — the independent checker confirms set-equality over exact rationals). The paper's qualitative ordering — that CARE gains more over AVG than over MV — **reverses** under a unit change on a single benchmark.
+<!-- /FILL -->
+
+**First, what this test is and is not.** It cannot fail. `(c·a − c·k)/(c·a) = (a − k)/a`
+identically, so the unweighted mean is *necessarily* unit-invariant; and the pooled mean
+is *necessarily* unit-dependent unless all six benchmarks improve by the same fraction.
+An earlier revision of this page called the criterion "a property any across-benchmark
+average must have … it could have exonerated the paper's statistic and did not." The
+first half is true; the second is false, and a blind reviewer was right to flag it. The
+sweep does not *decide* anything — it **quantifies** how large the dependence is and in
+which direction, which is the part that is not predictable from the algebra.
+
+With that stated, the size is not marginal. It ranges over
+several percentage points under unit changes well inside the range of scales the six
+benchmarks actually use, and — the substantive consequence — **the qualitative
+conclusion reverses.** The paper reports a larger gain over AVG (17.37%) than over MV
+(12.75%). Express ASSET on a 0–10 scale and the ordering flips: 15.60% over AVG against
+16.89% over MV. Which baseline CARE beats by more is, under this statistic, a
+consequence of a unit convention on one dataset.
+
+The unit-invariant quantity — the average across the six benchmarks of CARE-SVD's
+improvement — is **15.19% over AVG** and **17.59% over MV**, identical under every
+rescaling (exactly, as set-equality over rationals, not to a tolerance).
+
+### Verdict
+
+Both published figures are **reproduced exactly**, and the definition that yields them is
+identified uniquely: an MAE-weighted mean of the per-dataset improvements, with 84.4% of
+the weight on ASSET. The unit-invariant average across the six benchmarks is **15.19%**.
+
+This is a **scope qualification on the headline statistic, not a falsification**, and an
+earlier revision of this page wrongly recorded it as `FALSIFIED as worded`. That verdict
+does not survive scrutiny: it refutes no measurement, every number the paper prints is
+correct under the definition it used, and what remains is a disagreement about which
+statistic the phrase "averaged across scoring datasets" denotes — a genuinely ambiguous
+sentence. Calling that a refutation would be claiming a result the evidence does not
+support, which is the specific failure this logbook is supposed to guard against.
+
+What *is* established, and is worth a reader's attention: the published figure places
+84.4% of its weight on a single benchmark because of that benchmark's label scale, and
+the paper's ordering — a larger gain over AVG than over MV — is a consequence of that
+weighting rather than of the methods. It also does not say CARE fails to beat AVG: CARE
+improves on AVG on all six benchmarks, by 15.19% on average.
+
+**How this finding was arrived at, and twice mis-stated.** The discrepancy between the
+pooled and unweighted readings was found by exploration, not predicted in advance. This
+page has now recorded it wrongly in both directions: an earlier revision called it "a
+finding … **not an error**", which was weaker than the evidence supported, and the
+revision after that called it **FALSIFIED**, which was stronger. Both framings were mine.
+The stable statement is the one above — a quantified scope qualification on a summary
+statistic, with the underlying benchmark comparison untouched. See
+[Limitations items 21 and 23](#/limitations).
+
+## A second source for the same six numbers, inside the paper
+
+The 17.37% is a function of exactly twelve numbers: Table 1's AVG row and its CARE-SVD
+row. The paper publishes that CARE-SVD row a **second** time, in Appendix E.8's Table 7,
+whose text states *"We use the same scoring-task setup as in Table 1"* and identifies its
+"1st Factor" row as CARE-SVD's default heuristic. So the input to this claim can be
+checked against the paper's own duplicate, with no data and no compute.
+
+<!-- FILL:c2.appendix -->
+| Dataset | Table 1 CARE-SVD | Table 7 1st Factor | gap | z | verdict |
+|---|---|---|---|---|---|
+| ASSET | 27.629 ± 0.156 | 27.148 ± 0.133 | 0.481 | 2.35 | **disagree** |
+| FeedbackQA | 0.730 ± 0.002 | 0.753 ± 0.003 | -0.023 | 6.38 | **disagree** |
+| Review-5K | 1.957 ± 0.018 | 1.950 ± 0.006 | 0.007 | 0.37 | agree |
+| Summarize | 1.325 ± 0.004 | 1.325 ± 0.003 | 0.000 | 0.00 | agree |
+| UltraFeedback | 0.623 ± 0.006 | 0.622 ± 0.006 | 0.001 | 0.12 | agree |
+| Yelp | 0.694 ± 0.004 | 0.694 ± 0.005 | 0.000 | 0.00 | agree |
+
+4 of 6 columns agree within the paper's own combined error bars (threshold z ≤ 2.0, fixed before the z-scores were computed). Disagreeing: **ASSET, FeedbackQA**.
+
+The appendix's own assertion that the leading factor beats every other factor: ****yes**** on the **4 of 6** columns where it is testable at all. On FeedbackQA, Summarize Table 7 lists a single factor, so the assertion is true there by having nothing to compare against and is not counted.
+
+| Headline figure | using Table 1 | using Table 7 | shift |
+|---|---|---|---|
+| Claim 1's UltraFeedback reduction vs MV | 26.792 % | 26.910 % | 0.118 pp |
+| Claim 2's improvement over AVG | 17.365 % | 18.534 % | 1.169 pp |
+| Claim 2's improvement over MV | 12.750 % | 13.983 % | 1.233 pp |
+
+- Claim 1's own quoted MAE is internally consistent between the two tables: ****yes****
+- Claim 1's headline still rounds to the same one-decimal percentage under both: ****no****
+
+**Can our own reproduction settle the ASSET disagreement?** ASSET is the only disputed column whose judge outputs were released. Over 5 seeds we measure **27.412 ± 0.264** (range 27.140–27.735), which sits 1.84 standard errors from Table 1's value and 2.23 from Table 7's. Excludes Table 1: **no** · excludes Table 7: **yes**. Our seed spread is wider than both reported standard deviations: **yes**.
+
+**But this does not adjudicate, and the reason is in our own seeds.** Of the 5 seeds, only 4 produced distinct values — two are bit-identical — so there are fewer independent draws than seeds and the standard error above is optimistic. Recomputed at the number of distinct values the standard error is 0.1321, and the exclusion of Table 7 no longer holds: **no**. The adjudication survives the duplicate seed: **no**. **This column is therefore reported as NOT adjudicating between the paper's two published values.** At the nominal five seeds it would exclude Table 7 and side with Table 1 — a stronger result than is claimed here — and that reading is deliberately not taken, because an exclusion that holds at n = 5 and fails at n = 4 is marginal. A blind reviewer found the duplicated seed; without it this block would have published the stronger claim.
+<!-- /FILL -->
+
+**Four of six columns agree; two do not** — FeedbackQA decisively and ASSET marginally,
+with the exact gaps, combined standard deviations and z-scores in the table above.
+Because the 17.37% pools all six columns, the disagreement propagates straight into the
+headline: recomputed from the appendix's own row, the improvement over AVG is the
+"using Table 7" figure in that table, and the shift is stated there in percentage points.
+
+That shift is of the same order as the gap between the pooled statistic and the
+unit-invariant one discussed earlier on this page, and it arises from a completely
+independent cause. The two findings are additive, and neither depends on any measurement
+of ours.
+
+The scope of this is narrow and worth stating precisely:
+
+* It is a defect in the paper's **internal consistency**, not in CARE. Both tables show
+  CARE-SVD beating AVG on all six datasets; they disagree about by how much.
+* We cannot say which of the two rows is correct. ASSET is the only disputed column we
+  can measure, and our reproduction of it — reported in the block above, computed from
+  the same run, not typed here — lands between the two published values and excludes
+  neither.
+* FeedbackQA, the decisive column, has no released judge matrix, so it cannot be
+  adjudicated here at all.
+
+## Per-dataset breakdown
+
+<!-- FILL:c2.per_dataset -->
+| Dataset | CARE-SVD vs AVG | CARE-SVD vs MV |
+|---|---|---|
+| ASSET | 17.92 % | 11.31 % |
+| FeedbackQA | 12.05 % | 11.19 % |
+| Review-5K | 13.94 % | 24.96 % |
+| Summarize | 4.95 % | 6.49 % |
+| UltraFeedback | 9.18 % | 26.79 % |
+| Yelp | 33.08 % | 24.81 % |
+<!-- /FILL -->
+
+## Reproduction at full scale
+
+The arithmetic above is exact and complete for the claim as stated. For the underlying
+MAEs, **ASSET** — the only Table 1 dataset whose judge outputs the authors released — is
+reproduced end-to-end with the authors' own code at `72f5b29` over seeds `2024…2028`,
+including the paper's validation-based `γ` search.
+
+<!-- FILL:c2.asset -->
+| Method | Paper (Table 1) | Reproduced (n=5 seeds) | Abs. diff | Rel. diff |
+|---|---|---|---|---|
+| MV | 31.153 | 31.153 ± 0.000 | 0.000 | 0.00 % |
+| AVG | 33.663 | 33.663 ± 0.000 | 0.000 | 0.00 % |
+| WS | 29.073 | 29.230 ± 0.000 | 0.157 | 0.54 % |
+| UWS | 33.928 | 33.928 ± 0.000 | 0.000 | 0.00 % |
+| CARE-SVD | 27.629 | 27.412 ± 0.264 | 0.217 | 0.79 % |
+
+- CARE-SVD is the best method on the reproduced ASSET column: **yes**
+- Reproduced reduction vs MV: **12.01 %**
+- Reproduced improvement vs AVG: **18.57 %**
+- Contract satisfied: **yes**
+<!-- /FILL -->
+
+The other five Table 1 datasets have no released judge-score matrices and regenerating
+them requires GPU inference over 11–20 LLM judges (Appendix E.2: up to 3 hours per
+dataset on an A100). They are recorded **BLOCKED** with that named missing capability
+rather than replaced by synthetic judges. The coverage audit that enumerates exactly
+which columns are reachable is part of the verifier output, not a prose assertion.
+
+## Negative control
+
+Column-wise row permutation of the ASSET judge matrix, which preserves every judge's
+marginal distribution but destroys cross-judge row alignment. CARE's advantage over
+plain averaging must disappear.
+
+<!-- FILL:c2.control -->
+| Setting | CARE MAE on ASSET |
+|---|---|
+| Real judge scores | **27.7195** |
+| Row-permuted judge scores (control) | 40.1357 |
+| Majority vote, real scores | 31.1533 |
+
+Control behaves as intended: **yes**. Row-permuting each judge column preserves every marginal but destroys the shared latent structure CARE exploits; if CARE still won, the advantage would not be coming from confounder-aware aggregation.
+
+**Why the first row differs from the reproduction table above.** The reproduction runs the authors' full Table 1 procedure — five seeds, each with the paper's validation-based γ grid — and reports the mean over seeds. This control runs a single fixed configuration at γ = 1.0 with no seed averaging, because what it has to hold constant is the aggregator, not the tuning: the only thing allowed to differ between its two rows is whether the judge matrix has been column-permuted. The two numbers are therefore different quantities and are not expected to match; only the gap between the rows of this table is evidence.
+<!-- /FILL -->
+
+## Independent check
+
+[`independent_check.py`](repro/src/independent_check.py) recomputes all three candidate
+definitions in exact `Fraction` arithmetic from a **second, independent transcription**
+of Table 1, so the identification cannot be an artefact of a transcription slip.
+
+`c2_unit_invariance_exact` additionally re-decides the falsification above in exact
+rational arithmetic. This is not redundancy for its own sake: the verdict turns on one
+statistic being *exactly* invariant while another is not, and floating point is the
+wrong instrument for confirming an exact invariance — `spread == 0.0` in `float64`
+could be rounding. Over `Fraction`s the invariance is set-equality of exact rationals,
+and the weighted-mean identity is an exact `==` rather than a residual below a
+threshold. The checker fails the whole run if the two implementations disagree on
+`scope_qualification_established` or on the unweighted average — see
+`agreement_with_claim_module` in [`raw/verdict.json`](raw/verdict.json) — so the verdict
+cannot rest on one implementation. (An earlier revision of this sentence named a field,
+`falsified_as_worded`, that the code had already renamed; a reader checking it would have
+found nothing.)
+
+## Reproduce
+
+```
+uv run python repro/src/run_all.py      # runs this claim as part of stage C1_C2_C3_tables
+```
+
+Record: [`raw/verdict.json`](raw/verdict.json); extract
+[`raw/table1_asset.csv`](raw/table1_asset.csv). Code:
+[`repro/src/claim_c123_benchmarks.py`](repro/src/claim_c123_benchmarks.py).
+Environment and seeds: [Fixed command and environment](#/environment-and-command).
+
+## Contract
+
+This claim's machine-checkable contract — written **before** any result was measured, except for the elements that entry itself marks `POST-HOC` —
+is entry `C2` of [`raw/claim_contract.json`](raw/claim_contract.json): the exact
+statement, its anchor in the paper, the paper's own assumptions, the condition that
+decides it, and the criterion that would falsify it. The paper's verbatim wording and
+exact quantifiers are on [Source audit](#/source-audit); what is and is not covered is
+on [Limitations and deviations](#/limitations).
