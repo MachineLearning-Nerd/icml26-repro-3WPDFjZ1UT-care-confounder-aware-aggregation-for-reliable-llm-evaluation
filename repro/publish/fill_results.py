@@ -1145,8 +1145,17 @@ def c6_boundary(v):
         "The exponent is fitted to the **ratio** column, which is the quantity the "
         "theorem bounds by a constant; the raw weight error itself falls with σ because "
         "n rises as σ⁶ along the boundary. Both columns are shown so the two cannot be "
-        "confused, and so this table can be compared with the negative controls below — "
-        "which report raw errors, not ratios."
+        "confused.\n\n"
+        "**Do not read this table against the negative controls below.** They share the "
+        "nominal configuration σ_max = 1, n = 20 000, but they draw from *different seed "
+        "streams* — the boundary probe seeds `1000 + 17·s`, the controls `500 + 13·s` — "
+        "and at that shared point their medians differ by about 1.8×. That spread is "
+        "between-stream noise, not a disagreement between two measurements of one "
+        "quantity. An earlier revision of this page invited exactly that comparison, "
+        "which was the same defect a blind reviewer had already found between NC1 and "
+        "NC2; those two were unified onto one stream, the boundary probe was not. The "
+        "published `shared_configuration_cross_check` quantifies stream-to-stream spread "
+        "for the controls only."
     )
 
 
@@ -1215,9 +1224,10 @@ CONFIDENCE = {
                    "(ASSET) is what this campaign reproduces at full scale. The block is "
                    "caused by a capability the paper itself names (A100 judge generation), "
                    "not by a gap in this reproduction."),
-    "C2": ("HIGH", "The definition is identified uniquely by requiring both published targets "
-                   "simultaneously, in exact rational arithmetic, and confirmed against a "
-                   "second independent transcription."),
+    "C2": ("HIGH", "The definition is identified uniquely and over-determined: each published "
+                   "target selects the pooled mean-MAE ratio on its own, in exact rational "
+                   "arithmetic, and the identification is confirmed against a second "
+                   "independent transcription."),
     "C3": ("HIGH", "Every arithmetic assertion is decided exactly over all nine Table 2 "
                    "methods, and the nine-method grid is transcribed TWICE by hand and "
                    "compared cell by cell before the argmax is recomputed from the second "
@@ -1244,7 +1254,7 @@ CONFIDENCE = {
                      "grid that is not a violation of an O(.) upper bound, but it is not "
                      "confirmation of the exponent either. xi(T) has no closed form we can "
                      "evaluate and remains reconstructed rather than measured."),
-    "C6": ("MEDIUM", "What stands is exact and symbolic: composing the paper's own cited results reproduces the mean bound (I) with no residual factor, and fails to reproduce the stated weight bound (II) by exactly sigma_max^3 -- a factor that grows without bound, so no universal constant absorbs it. That is a defect in the displayed derivation, established in sympy and re-derived by a second route. It is NOT a falsification of bound (II) itself: probed along the theorem's own boundary, where the missing factor predicts growth in sigma, the measured error does not grow. What does NOT stand: two earlier revisions each reported a falsification of this theorem -- one in sigma, one in the p*log(p/eps) factor -- and BOTH have been withdrawn on this campaign's own evidence. The rebuilt confound audit finds a real confound in the second: at fixed n the empirical M2 conditioning degrades with p and subspace leakage grows by two orders of magnitude, so part of any n*(p) growth is the moment estimate deteriorating rather than the stated factor being wrong. The sample-complexity exponents in sigma, pi_min and p are therefore NOT MEASURED at this budget, and the delta^-2 factor is not independently variable in this generative model. MEDIUM, not HIGH, because the strongest result here is about a proof rather than about the theorem's truth."),
+    "C6": ("MEDIUM", "What stands is exact and symbolic: composing the paper's own cited results reproduces the mean bound (I) with no residual factor, and fails to reproduce the stated weight bound (II) by exactly sigma_max^3 -- a factor that grows without bound, so no universal constant absorbs it. That is a defect in the displayed derivation, established in sympy and re-derived by a second route. It is NOT a falsification of bound (II) itself: whether that bound happens to hold by some other argument is not decided here, and the boundary probe two earlier revisions read as deciding it resolves nothing at the correct t quantile. What does NOT stand: two earlier revisions each reported a falsification of this theorem -- one in sigma, one in the p*log(p/eps) factor -- and BOTH have been withdrawn on this campaign's own evidence. The rebuilt confound audit finds a real confound in the second: at fixed n the empirical M2 conditioning degrades with p and subspace leakage grows by two orders of magnitude, so part of any n*(p) growth is the moment estimate deteriorating rather than the stated factor being wrong. The sample-complexity exponents in sigma, pi_min and p are therefore NOT MEASURED at this budget, and the delta^-2 factor is not independently variable in this generative model. MEDIUM, not HIGH, because the strongest result here is about a proof rather than about the theorem's truth."),
 }
 
 CLAIM_KEY = {
@@ -1253,53 +1263,159 @@ CLAIM_KEY = {
 }
 
 # For C1-C3 the run reports one combined verdict, so each page states its own.
+def _v_c1(v):
+    ta = g(v, "claims", "C1_C2_C3_tables", "table_arithmetic", default={})
+    ap = g(v, "claims", "C1_C2_C3_tables", "appendix_consistency_audit", default={})
+    ca = g(v, "claims", "C1_C2_C3_tables", "comparator_selection_audit", default={})
+    nc = g(v, "claims", "C1_C2_C3_tables", "negative_controls", default={})
+    t1 = g(v, "claims", "C1_C2_C3_tables", "table1_asset", default={})
+    pct = ta.get("claim1_ultrafeedback_reduction_vs_MV_pct")
+    uf = next((r for r in ap.get("rows", []) if r.get("dataset") == "UltraFeedback"), {})
+    bad = ap.get("inconsistent_datasets") or []
+    t7 = g(ap, "headline_using_table7", "claim1_ultrafeedback_reduction_vs_MV_pct")
+    gb = ca.get("global_best_cell") or {}
+    grid = ca.get("relative_reduction_grid_pct") or {}
+    named = ca.get("claimed_baseline")
+    ds = ca.get("claimed_dataset")
+    col = {b: grid[b].get(ds) for b in grid if isinstance(grid.get(b), dict)}
+    col = {b: x for b, x in col.items() if x is not None}
+    best_baseline_for_ds = max(col, key=col.get) if col else None
+    return (
+        "**VERIFIED on everything this claim can be held to without the authors' "
+        "unreleased data, and BLOCKED on the rest — both stated exactly.** "
+        f"(1) The reduction is **VERIFIED exactly**: Table 1's own UltraFeedback entries "
+        f"give **{num(pct, 3)} %** against the paper's stated 26.8 %, by deterministic, "
+        "seed-free arithmetic — checked against a 0.05 pp tolerance written in "
+        "[`claim_c123_benchmarks.py`](repro/src/claim_c123_benchmarks.py) rather than "
+        "recorded in the verdict — and re-derived independently in exact "
+        "`Fraction` arithmetic from a second, hand-typed transcription. The two MAE inputs "
+        "are transcribed in [`repro/src/paper_source.py`](repro/src/paper_source.py), which "
+        "is published in this Space and gated byte-identical at publication time; they are "
+        "not separately restated in `raw/verdict.json`, which records the derived "
+        "percentages. "
+        "(2) The paper's own second report of these MAEs **CORROBORATES the underlying "
+        f"quantity**: Appendix E.8's Table 7 republishes the CARE-SVD row and its "
+        f"UltraFeedback entry sits at z = {num(uf.get('z'), 3)}, well inside one combined "
+        "standard deviation — the one number in this claim we cannot measure ourselves. "
+        "It does **not** corroborate the headline to the last printed digit: recomputed "
+        f"from Table 7 the same reduction reads **{num(t7, 3)} %**, a shift of "
+        f"{num(g(ap, 'headline_shift_pp', 'claim1_ultrafeedback_reduction_vs_MV_pct'), 3)} pp "
+        "that rounds to 26.9 %, not 26.8 %. And "
+        f"{len(bad)} other columns of that same row do not reconcile at all "
+        f"({', '.join(bad)}) — a defect in the paper's internal consistency, decided "
+        "exactly and reported here. "
+        f"(3) A comparator-selection audit over the whole {ca.get('n_cells')}-cell grid of "
+        "(dataset, baseline) reductions locates the headline precisely, and the result is "
+        "**mixed rather than clean**: the cell is the largest reduction against the "
+        f"baseline the paper names ({named}), so 'up to' is used correctly, and "
+        f"{named} is also the most favourable baseline for {ds} — so the reported pair is "
+        "the best of its row *and* of its column. What the audit does establish against "
+        "selection is that it is **not** the largest cell available: "
+        f"{gb.get('baseline')} on {gb.get('dataset')} would have supported "
+        f"{num(gb.get('pct'), 2)} %, leaving {num(ca.get('headroom_left_on_the_table_pp'), 2)} pp "
+        "unclaimed. Baseline selection itself is not tested by any check here. "
+        "(4) CARE's Table 1 methodology is **REPRODUCED END-TO-END AT FULL SCALE** on "
+        "ASSET — the one Table 1 dataset whose judge outputs the authors released — with "
+        f"their own code, {len(t1.get('seeds') or [])} seeds, and the paper's "
+        "validation-based γ search, plus a negative control that row-permutes each judge "
+        f"column and drives CARE's MAE from {num(nc.get('care_mae_real_judge_scores'), 2)} "
+        f"to {num(nc.get('care_mae_row_permuted_judge_scores'), 2)}, worse than majority "
+        f"vote at {num(nc.get('majority_vote_mae'), 2)}, as it must. "
+        "**BLOCKED:** the UltraFeedback MAE pair itself is never re-measured, because the "
+        "authors released no UltraFeedback judge-score matrix and regenerating one requires "
+        "GPU inference over 11–20 LLM judges (Appendix E.2, ≈3 A100-hours) — a named "
+        "missing capability, not a gap in this reproduction. It is **not** replaced by a "
+        "synthetic proxy"
+    )
+
+
+def _v_c2(v):
+    ta = g(v, "claims", "C1_C2_C3_tables", "table_arithmetic", default={})
+    ag = g(v, "claims", "C1_C2_C3_tables", "aggregation_convention_audit", default={})
+    ap = g(v, "claims", "C1_C2_C3_tables", "appendix_consistency_audit", default={})
+    cd = ta.get("candidate_definitions") or {}
+    pooled = cd.get("pooled_mean_MAE_ratio") or {}
+    unw = cd.get("mean_of_per_dataset_relative_improvement") or {}
+    tg = ta.get("paper_targets") or {}
+    matching = ta.get("definition_matching_paper") or []
+    share = ag.get("largest_weight_share")
+    per = ta.get("per_dataset_relative_improvement_vs_AVG_pct") or {}
+    bad = ap.get("inconsistent_datasets") or []
+    return (
+        "**VERIFIED EXACTLY, with a quantified scope qualification on what the headline "
+        "statistic measures.** Recomputed in exact rational arithmetic from Table 1's own "
+        f"entries, the pooled mean-MAE improvement is **{num(pooled.get('vs_AVG'), 4)} %** "
+        f"over AVG and **{num(pooled.get('vs_MV'), 4)} %** over MV — matching the "
+        f"published {num(tg.get('vs_AVG_pct'), 2)} % and {num(tg.get('vs_MV_pct'), 2)} % to "
+        "the precision the paper prints them at. Of the three natural readings of 'average "
+        f"improvement' that were enumerated, exactly {len(matching)} reproduces the "
+        f"published pair (`{', '.join(matching)}`), and each published figure on its own "
+        "already selects it — the nearest rival is several percentage points away in both "
+        "cases — so the identification is **unique and over-determined**, not a coincidence "
+        "rescued by using two targets. The independent checker re-derives all of it from a "
+        "second transcription. "
+        f"**CARE improves on AVG on all {len(per)} of the continuous-scoring benchmarks**; "
+        "the direction of the paper's claim is not in dispute here. "
+        "The scope qualification is quantified rather than asserted: the identified "
+        "definition is algebraically an MAE-weighted mean of the per-dataset improvements, "
+        "and those weights are an artefact of unit selection — ASSET's 0–100 scale gives it "
+        f"**{num(100.0 * share, 2) if isinstance(share, float) else '—'} %** of the total "
+        "weight, so the published 'average across scoring datasets' is very nearly ASSET's "
+        "number alone. The unit-invariant average across the six benchmarks is "
+        f"**{num(unw.get('vs_AVG'), 2)} %** over AVG and {num(unw.get('vs_MV'), 2)} % over "
+        "MV, and rescaling ASSET reverses the paper's ordering of the two baselines. This "
+        "is a **scope qualification, not a falsification** — every number the paper prints "
+        "is correct under the definition it used. "
+        "A second, independent defect: Appendix E.8's Table 7 republishes the CARE-SVD row "
+        f"this statistic is computed from and disagrees with Table 1 on {len(bad)} of its "
+        f"six columns ({', '.join(bad)}), which moves the headline again. "
+        "**REPRODUCED at full scale** on ASSET with the authors' code and a negative "
+        "control; **BLOCKED** on the other five Table 1 columns, which ship no judge outputs"
+    )
+
+
+def _v_c6(v):
+    sym = g(v, "claims", "C6_thm43", "route_a_symbolic_chain_audit", default={})
+    sw = g(v, "claims", "C6_thm43", "route_b_calibrated_sample_complexity", default={})
+    nc = g(v, "claims", "C6_thm43", "negative_controls", default={})
+    ic = g(v, "independent_check", "c6_composition_by_exponent_arithmetic", default={})
+    agreed = g(v, "independent_check", "c6_two_route_agreement_evaluated", default=None)
+    missing = sym.get("factor_missing_from_stated_weight_bound")
+    unmeasured = sw.get("uninformative_sweeps") or []
+    return (
+        "**FALSIFIED (the displayed proof) and VERIFIED (the mean bound) — both exact, "
+        "both reached by two independent routes.** "
+        "(1) **VERIFIED:** composing the paper's own equations (8) and (10) reproduces the "
+        f"stated mean-error bound exactly — the derived-over-stated ratio is "
+        f"`{sym.get('mean_bound_ratio')}`, free of σ, δ, p, ε and n, so the two differ by "
+        "at most a universal constant, which is what the theorem asserts "
+        f"(`mean_bound_reproduced_exactly = {sym.get('mean_bound_reproduced_exactly')}`). "
+        "(2) **FALSIFIED as a derivation:** composing the paper's own (8) with (11) yields "
+        f"a weight-error bound larger than the stated one by exactly **σ_max³** "
+        f"(`factor_missing_from_stated_weight_bound = {missing}`) — an "
+        "unbounded factor no universal constant `C₂` can absorb, so the displayed chain "
+        "does not establish the inequality it displays. Both results are obtained twice by "
+        "machinery that shares no code: `sympy` simplification in the claim module, and "
+        f"exact exponent-vector arithmetic over `Fraction`s in the independent checker "
+        f"(`{ic.get('route', '')}`); the two routes are compared for agreement and the "
+        f"comparison is a published field (`c6_two_route_agreement_evaluated = "
+        f"{agreed}`), so a disagreement fails the run rather than being reported as "
+        "a result. "
+        "Scope, stated precisely: this falsifies the **written proof**, not the bound "
+        "itself. Whether bound (II) as stated happens to hold is **not decided here** — the "
+        "boundary probe two earlier revisions read as settling it has a 95 % interval "
+        "containing both hypotheses at the correct t quantile, and that reading is "
+        f"withdrawn. The sample-complexity exponents {', '.join('`' + s + '`' for s in unmeasured)} "
+        "are **NOT MEASURED** at this budget. Negative controls confirm the estimator does "
+        "respond to `n` and to `σ` in the required directions "
+        f"(`negative_controls.ok = {nc.get('ok')}`), so that is a power limit rather "
+        "than a broken estimator"
+    )
+
+
 PAGE_VERDICT = {
-    "C1": "**VERIFIED on everything this claim can be held to without the authors' "
-          "unreleased data, and BLOCKED on the rest — both stated exactly.** "
-          "(1) The 26.8 % reduction is **VERIFIED exactly**: it follows from Table 1's own "
-          "0.851 and 0.623 by deterministic, seed-free arithmetic, checked to 0.05 pp and "
-          "re-derived independently in exact `Fraction` arithmetic from a second, "
-          "hand-typed transcription. (2) The paper's own second report of this number "
-          "**CORROBORATES** it: Appendix E.8's Table 7 republishes the CARE-SVD row, and "
-          "its UltraFeedback entry agrees with Table 1 well inside one combined standard "
-          "deviation — while two other columns of that same row (FeedbackQA, ASSET) do "
-          "**not** reconcile, a defect in the paper's internal consistency decided exactly "
-          "and reported here. (3) A comparator-selection audit over the whole 6 × 4 grid "
-          "of (dataset, baseline) reductions finds **no cherry-picking**: 26.8 % is the "
-          "largest reduction against MV, so 'up to' is used correctly, and it is not the "
-          "largest cell available — CARE-SVD against AVG on Yelp would have supported "
-          "33.08 %. (4) CARE's Table 1 methodology is **REPRODUCED END-TO-END AT FULL "
-          "SCALE** on ASSET — the one Table 1 dataset whose judge outputs the authors "
-          "released — with their own code at `72f5b29`, five seeds, and the paper's "
-          "validation-based γ search, plus a column-permutation negative control that "
-          "destroys CARE's advantage as it must. "
-          "**BLOCKED:** the UltraFeedback MAE pair itself is never re-measured, because "
-          "the authors released no UltraFeedback judge-score matrix and regenerating one "
-          "requires GPU inference over 11–20 LLM judges (Appendix E.2, ≈3 A100-hours) — a "
-          "named missing capability, not a gap in this reproduction. It is **not** "
-          "replaced by a synthetic proxy",
-    "C2": "**VERIFIED EXACTLY, with a quantified scope qualification on what the headline "
-          "statistic measures.** Both published figures — 17.37 % over AVG and 12.75 % "
-          "over MV — are **reproduced exactly**, and the definition that yields them is "
-          "**identified uniquely** by requiring a candidate to hit both targets at once: "
-          "it is the improvement of the pooled mean MAE, which is identically an "
-          "MAE-weighted mean of the per-dataset improvements. All of this is decided in "
-          "exact rational arithmetic and re-derived by an independent checker from a "
-          "second transcription. "
-          "The scope qualification is quantified rather than asserted: those weights are "
-          "an artefact of unit selection, ASSET's 0–100 scale giving it **84.4 %** of the "
-          "total weight, so the published 'average across scoring datasets' is very nearly "
-          "ASSET's number alone. The unit-invariant average across the six benchmarks is "
-          "**15.19 %** over AVG and 17.59 % over MV, and rescaling ASSET reverses the "
-          "paper's ordering of the two baselines. This is a **scope qualification, not a "
-          "falsification** — every number the paper prints is correct under the definition "
-          "it used, and CARE improves on AVG on all six benchmarks. A second, independent "
-          "defect: Appendix E.8's Table 7 republishes the CARE-SVD row this statistic is "
-          "computed from and disagrees with Table 1 on FeedbackQA far outside the paper's "
-          "own reported seed noise, which moves the headline again. "
-          "**REPRODUCED at full scale** on ASSET with the authors' code and a negative "
-          "control; **BLOCKED** on the other five Table 1 columns, which ship no judge "
-          "outputs",
+    "C1": _v_c1,
+    "C2": _v_c2,
     "C3": "**VERIFIED** as arithmetic over the paper's published nine-method grid (best on "
           "5 of 6, CARE-Tensor's three leads, and the 13.4 % Summarize figure), decided "
           "exactly and recomputed from a **second, independent hand transcription of all "
@@ -1312,25 +1428,7 @@ PAGE_VERDICT = {
           "the authors' own baseline harness. **BLOCKED** on the other five: four ship no "
           "judge outputs, and PKU-BETTER's released labels are constant, which an "
           "executable precondition detects and reports before any accuracy is computed",
-    "C6": "**FALSIFIED (the displayed proof) and VERIFIED (the mean bound) — both exact, "
-          "both reached by two independent routes.** "
-          "(1) **VERIFIED:** composing the paper's own equations (8) and (10) reproduces "
-          "the stated mean-error bound `C₁(σ³/δ)√(p log(p/ε)/n)` with a **zero residual** — "
-          "the derived-over-stated ratio is the constant `√3·C_dec·C/C₁`, free of σ, δ, p, "
-          "ε and n. (2) **FALSIFIED as a derivation:** composing the paper's own (8) with "
-          "(11) yields a weight-error bound larger than the stated "
-          "`C₂√(p log(p/ε)/n)` by **exactly σ_max³** — an unbounded factor no universal "
-          "constant `C₂` can absorb, so the displayed chain does not establish the "
-          "inequality it displays. Both results are obtained twice by machinery that "
-          "shares nothing: `sympy` in the claim module, and exact exponent-vector "
-          "arithmetic over `Fraction`s in the independent checker. "
-          "Scope, stated precisely: this falsifies the **written proof**, not the bound "
-          "itself. Whether bound (II) as stated happens to hold is **not decided here** — "
-          "the boundary probe two earlier revisions read as settling it has a 95 % "
-          "interval containing both hypotheses at the correct t quantile, and that reading "
-          "is withdrawn. The sample-complexity **exponents** in σ, π_min and p are **NOT "
-          "MEASURED** at this budget. Negative controls confirm the estimator does respond "
-          "to n and to σ in the required directions",
+    "C6": _v_c6,
 }
 
 
@@ -1371,7 +1469,13 @@ def _header(cid):
     def fn(v):
         conf, why = CONFIDENCE[cid]
         run_verdict = g(v, "claims", CLAIM_KEY[cid], "verdict", default=None)
-        verdict = PAGE_VERDICT.get(cid) or (run_verdict or "—")
+        # A page verdict may be a callable so that every number in the most-read
+        # paragraph on the page is rendered from the verdict rather than typed. A
+        # hand-typed headline number is stale the moment the run moves.
+        verdict = PAGE_VERDICT.get(cid)
+        if callable(verdict):
+            verdict = verdict(v)
+        verdict = verdict or (run_verdict or "—")
         contract = g(v, "claims", CLAIM_KEY[cid], "ok", default=None)
         # "Contract satisfied: yes" must never stand alone when part of the contract was
         # never measured -- that is how a vacuous sweep reads as a pass.

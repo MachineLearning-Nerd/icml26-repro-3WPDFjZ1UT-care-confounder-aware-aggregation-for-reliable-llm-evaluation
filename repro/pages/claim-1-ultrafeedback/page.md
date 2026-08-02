@@ -31,18 +31,27 @@ printed on this page and reachable in [`raw/verdict.json`](raw/verdict.json):
 1. **The published reduction is exact arithmetic on the paper's own table**, checked to
    0.05 pp and re-derived independently in exact `Fraction` arithmetic from a second,
    hand-typed transcription of Table 1.
-2. **The paper's own second report of these numbers corroborates the UltraFeedback
-   entry.** Appendix E.8's Table 7 republishes the CARE-SVD row; its UltraFeedback value
-   agrees with Table 1 well inside one combined standard deviation. Two other columns of
-   that same row do *not* reconcile — a defect in the paper's internal consistency,
-   decided exactly and reported below rather than left as an impression.
-3. **There is no comparator cherry-picking.** Over the whole 6 × 4 grid of
-   (dataset, baseline) reductions, 26.8 % is the largest reduction against MV — so "up
-   to" is used correctly — and it is *not* the largest cell available.
+2. **The paper's own second report corroborates the underlying MAE, but not the
+   headline to its last digit.** Appendix E.8's Table 7 republishes the CARE-SVD row; its
+   UltraFeedback value agrees with Table 1 well inside one combined standard deviation —
+   which matters, because that MAE is the one quantity in this claim we cannot measure
+   ourselves. Recomputed from Table 7, however, the *percentage* reads 26.91 %, which
+   rounds to 26.9 %, not the published 26.8 %; the audit records this as
+   `claim1_headline_rounds_the_same_under_both: false`. Two other columns of that same row
+   do not reconcile at all — a defect in the paper's internal consistency, decided exactly
+   and reported below rather than left as an impression.
+3. **The headline is located exactly in the grid of alternatives, and the result is
+   mixed.** Over the whole 6 × 4 grid of (dataset, baseline) reductions, 26.8 % is the
+   largest reduction against MV — so "up to" is used correctly — but MV is also the most
+   favourable of the four baselines for UltraFeedback, so the reported pair is the best
+   cell of its row *and* of its column. What does cut against a selection story is that it
+   is *not* the largest cell available: CARE-SVD against AVG on Yelp would have supported
+   33.08 %, leaving 6.28 pp unclaimed. Baseline selection itself is not tested by any check
+   here, so this is reported as a located headline rather than as a clean bill of health.
 4. **CARE's Table 1 methodology is reproduced end-to-end at full scale**, on ASSET, the
    one Table 1 dataset whose judge outputs the authors released: their own code at
    `72f5b29`, five seeds, the paper's validation-based γ search, and a
-   column-permutation negative control that destroys CARE's advantage as it must.
+   column-wise row-permutation negative control that destroys CARE's advantage as it must.
 
 What is **not** established is 1c itself, and the reason is named rather than papered
 over: the authors released no UltraFeedback judge-score matrix, and regenerating one
@@ -77,11 +86,22 @@ than a result. So the whole grid is computed and the headline located in it.
 *(pending release run)*
 <!-- /FILL -->
 
-**This check could have found a problem and did not.** The 26.8% figure is the largest
-reduction against MV, so the paper's "up to" is used correctly; and it is *not* the
-largest cell in the grid — CARE-SVD against AVG on Yelp would have supported 33.08%.
-The headline leaves 6.28 pp unclaimed. On this evidence there is no comparator
-cherry-picking in Claim 1, and that is reported as plainly as a defect would have been.
+**What this check found, stated exactly.** The 26.8% figure is the largest reduction
+against MV, so the paper's "up to" is used correctly; and it is *not* the largest cell in
+the grid — CARE-SVD against AVG on Yelp would have supported 33.08%, so the headline
+leaves 6.28 pp unclaimed. A paper selecting its most flattering number would have taken
+that one.
+
+**But the audit tests one selection and not the other, and the untested one does not come
+out clean.** Reading the grid down the UltraFeedback column, MV (26.79%) is the most
+favourable of the four baselines for that dataset — AVG gives 9.18%, WS 24.85%, UWS
+8.38%. So the reported pair is the argmax of its row *and* the argmax of its column. The
+published audit decides only `headline_is_max_within_the_named_baseline` and
+`headline_is_the_global_argmax`; it never asks whether the *baseline* was chosen after the
+fact, and no check here answers that. This is therefore recorded as **the headline located
+precisely within its grid**, not as a finding of no cherry-picking — a distinction an
+earlier revision of this page elided, asserting an integrity conclusion its own audit
+could not support.
 
 Contrast this with [Claim 2](#/claim-2-average-improvement), where the same style of
 audit *did* find a problem. The two checks are the same kind of check; only the answers

@@ -870,3 +870,75 @@ are genuinely independent given both read the same transcription, and whether a 
 statistic built from 5 + 5 seeds supports the word "reliable". They are real questions, they
 are recorded here rather than repaired, and a reader should treat the corresponding verdict
 language as stronger than the evidence strictly licenses.
+
+## 30. A sixth blind reviewer found sixteen defects in the *lead paragraphs* specifically, eight of them conclusion-level
+
+The judged 2026-08-01 revision scored Claims 1, 2 and 6 as INCONCLUSIVE while Claim 4 —
+a clean symbolic falsification stated in its first sentence — took full credit. The
+evidence on 1, 2 and 6 was already in the artifact; what differed was that each of those
+pages opened with what it had *withdrawn* rather than with what it had *established*. The
+following revision therefore restructured the top of each page.
+
+That restructuring is exactly the kind of edit that manufactures overclaims, so a sixth
+blind reviewer was pointed at the rewritten openings alone, with instructions to trace
+every assertion in them back to `raw/verdict.json`. It returned **16 defects: 0 blockers,
+8 conclusion-level, 8 minor.** Eight were repaired before publication; all are recorded
+here.
+
+**The four that changed a published conclusion:**
+
+* **"No comparator cherry-picking" was an integrity verdict the audit behind it cannot
+  reach.** The comparator audit decides two things — whether the headline is the maximum
+  within the baseline the paper names, and whether it is the global argmax of all 24
+  cells. It never asks whether the *baseline* was selected after the fact. Reading down
+  the UltraFeedback column shows MV (26.79%) is the most favourable of the four baselines
+  for that dataset, so the published pair is the argmax of its row **and** of its column.
+  The page now reports the headline as *located within its grid* — the honest finding,
+  which is mixed — instead of clearing the paper of a charge nothing tested.
+* **"The paper's own second report corroborates this number" was true of a different
+  quantity than the sentence before it.** Table 7 corroborates the UltraFeedback *MAE*
+  (z = 0.118). Recomputed from Table 7 the *percentage* is 26.91%, which rounds to 26.9%,
+  not the published 26.8% — the verdict records this as
+  `claim1_headline_rounds_the_same_under_both: false`. The opening asserted a
+  corroboration the same page's body later qualified.
+* **Claim 2's stated reason for its central methodological move was false on its own
+  data.** The page argued that requiring both 17.37% and 12.75% simultaneously is what
+  identifies the definition non-coincidentally, because "any single target admits several
+  readings". The enumerated candidates show the opposite: each target alone already
+  selects the pooled ratio, by 2.18 pp and 4.84 pp. The conclusion (unique identification)
+  survived; the argument for it was replaced with the stronger, true one.
+* **The boundary probe and the negative controls were offered for comparison across
+  different seed streams.** Both report σ_max = 1, n = 20 000; their medians differ by
+  ~1.8× because the probe seeds `1000 + 17·s` and the controls `500 + 13·s`. This is the
+  same defect a previous reviewer found *between NC1 and NC2* — those two were unified
+  onto one stream and the boundary probe was not, and the page then explicitly invited
+  the comparison. The invitation is withdrawn and the streams are disclosed.
+
+**The structural finding, which is the most important one.** Every top-of-page verdict
+paragraph was hand-typed prose held in a Python dict, consulted *before* the run's own
+verdict string and therefore overriding it. No gate compared any number in it against
+`raw/verdict.json` — which is precisely what made the four defects above possible and
+undetectable, and which contradicted the page's own framing of those blocks as rendered
+from the record. The three restructured verdicts are now **generated from the verdict
+JSON**, so their numbers move when the run moves. This is the seventh time in this
+campaign that a hand-maintained string drifted from the value it described.
+
+**Also found, and repaired:** "reproduced exactly" was backed by a rounding-tolerance
+test, so both pooled figures are now printed unrounded (17.3654%, 12.7495%) next to the
+published ones; the restart-budget control was described as governed by a 20% threshold
+when its admissibility gate requires three ratios and the loop supplies two, so it can
+never return "attributable" and the page now says so; the 0.05 pp tolerance for Claim 1
+is attributed to the source file that defines it rather than to the verdict, which does
+not record it; and `0.851` — the numerator of this campaign's headline claim — is
+identified as living in the published `paper_source.py` transcription, not in
+`raw/verdict.json`, where a reader following the page's own instructions would look for
+it and not find it.
+
+**What this run of the process says.** Six blind reviews have now returned 19, 20, 13,
+20, 16 and 16 defects. The count is not falling. Item 29 recorded the inference that
+self-directed repair introduces defects at roughly the rate it removes them; this round
+is consistent with that and adds a sharper version of it — the defects in this round were
+concentrated almost entirely in text written *during the previous round's repair*, and
+the single structural cause was a rendering path that let prose assert what no gate
+checked. Fixing the path, rather than the sentences, is the only durable repair available
+here, and only three of the six verdict blocks have been moved onto it.

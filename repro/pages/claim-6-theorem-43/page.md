@@ -20,7 +20,7 @@ tolerance, no seed.
 
 | Displayed bound | Verdict |
 |---|---|
-| (I) mean error `C₁(σ³/δ)√(p log(p/ε)/n)` | **VERIFIED exactly** — the paper's own equations (8) and (10) compose to it with a **zero residual**; the derived-over-stated ratio is the constant `√3·C_dec·C/C₁`, free of σ, δ, p, ε and n |
+| (I) mean error `C₁(σ³/δ)√(p log(p/ε)/n)` | **VERIFIED exactly** — the paper's own equations (8) and (10) compose to it; the derived-over-stated ratio is `√3·C_dec·C/C₁`, free of σ, δ, p, ε and n, so the two differ by at most a universal constant |
 | (II) weight error `C₂√(p log(p/ε)/n)` | **FALSIFIED as a derivation** — composing the paper's own (8) with (11) yields a bound larger by **exactly `σ_max³`**, an unbounded factor no universal constant `C₂` can absorb |
 
 Both results are obtained twice by machinery with nothing in common: `sympy`
@@ -58,8 +58,11 @@ predicts it constant. The symbolic audit did find the missing factor:
 *(pending release run)*
 <!-- /FILL -->
 
-**But the experiment refuted the consequence.** Along the boundary `n = 20000·σ⁶` the
-measured weight error did not grow:
+**But the experiment did not decide the consequence either way.** Along the boundary
+`n = 20000·σ⁶` the measured weight error showed no growth *at the precision this probe
+achieves* — and that precision turns out to be too low to distinguish "no growth" from
+the growth a missing `σ³` predicts. Two earlier revisions read the same numbers as a
+refutation. They were wrong, for a reason set out immediately below:
 
 <!-- FILL:c6.boundary -->
 *(pending release run)*
@@ -295,8 +298,19 @@ Two audits establish that, and both are published.
 non-convex search run with a fixed 30 restarts. If a larger `p` simply needs more
 restarts to find all `k` components, `n*` grows for an optimisation reason that may not
 be charged to a statistical bound. The control repeats the smallest and largest `p` at
-three times the restart budget; a fall of more than 20 % (a threshold fixed before the
-numbers were seen) would disqualify the sweep.
+three times the restart budget and compares `n*`.
+
+**This control cannot exonerate the sweep, and the reason is structural rather than
+empirical.** It runs two `p` settings, while its own admissibility gate requires at least
+three ratios before it will report an attribution — so `ok` is `False` on every possible
+run, and `p_exponent_attributable_to_the_theorem` is set `False` regardless of what the
+comparison finds. The 20 % fall that an earlier revision of this paragraph described as
+the operative disqualifier is therefore never operative. What the comparison did return is
+reported below for what it is worth (both ratios came out above 0.9, i.e. no restart-driven
+collapse was observed at the two settings tested), but **no attribution rests on it**, and
+the `p` exponent is NOT MEASURED for the independent reasons given above. Naming a live
+threshold over a gate that can never open is the kind of vacuous pass this logbook has had
+to remove elsewhere; it is left visible here rather than quietly deleted.
 
 <!-- FILL:c6.attribution -->
 *(pending release run)*

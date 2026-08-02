@@ -15,19 +15,24 @@ FeedbackQA, Review-5K, Summarize, UltraFeedback, Yelp).
 
 ## Result
 
-**Both published figures are reproduced exactly, and the definition behind them is
-identified uniquely.** 17.37 % over AVG and 12.75 % over MV both fall out of Table 1's
-own entries under one, and only one, of the three natural readings of "average
-improvement" — the improvement of the *pooled mean* MAE. Requiring a candidate
-definition to hit both targets simultaneously is what pins it down; any single target
-admits several readings by coincidence. All of it is decided in exact rational
-arithmetic and re-derived by an independent checker from a second transcription.
+**Both published figures are reproduced, and the definition behind them is identified
+uniquely and with room to spare.** Recomputed in exact rational arithmetic from Table 1's
+own entries, the pooled mean-MAE improvement is **17.3654 %** over AVG and **12.7495 %**
+over MV, matching the published 17.37 % and 12.75 % to the precision the paper prints
+them at. Exactly one of the three enumerated readings of "average improvement" produces
+that pair, and the identification is **over-determined**: each target on its own already
+selects the pooled ratio, since the nearest rival reading is 2.18 pp away on the AVG
+target and 4.84 pp away on the MV target. (An earlier revision of this page argued that
+requiring both targets was what made the identification non-coincidental. That argument
+was wrong on this page's own data — either target alone suffices — and the corrected
+statement is strictly stronger.) All of it is re-derived by an independent checker from a
+second transcription.
 
 **CARE improves on AVG on all six continuous-scoring benchmarks.** The direction of the
 paper's claim is not in dispute anywhere in this page.
 
 **Reproduced at full scale on ASSET** — the authors' code at `72f5b29`, five seeds,
-their own γ search — with a column-permutation negative control.
+their own γ search — with a column-wise row-permutation negative control.
 
 **One scope qualification, quantified rather than asserted.** The identified definition
 is algebraically an MAE-weighted mean of the per-dataset improvements, and those weights
@@ -61,9 +66,11 @@ targets simultaneously — a definition only qualifies if it reproduces `17.37` 
 *(pending release run)*
 <!-- /FILL -->
 
-Requiring both targets at once is what makes this a real test: any single target can be
-hit by one of several definitions by coincidence, but hitting `17.37` and `12.75`
-together identifies the definition **uniquely**.
+Evaluating against both targets is a redundancy check rather than the thing that makes
+the identification work: on Table 1's numbers each target already picks out the pooled
+ratio on its own, by margins of 2.18 pp and 4.84 pp respectively. Requiring both means a
+single transcription error in either target would break the match instead of silently
+selecting a different definition.
 
 ### What the identified definition actually is
 
