@@ -29,8 +29,8 @@ it is not a claim that every nearby corrected statement is false.
 | Benchmark source contract | official CARE code at `72f5b29`; released real judge matrices | local CPU | $0 |
 | Claims 1–3 | exact table arithmetic; full five-seed ASSET and CivilComments reruns | local CPU | $0 |
 | Claims 4–6 | symbolic/exact audits, controls, finite-sample probes, Gaussian minimax construction | local CPU | $0 |
-| Full clean rerun | fixed entrypoint; all decision contracts and independent checker | **388.34 seconds** | $0 |
-| Reproducibility repeat | identical scientific-payload SHA after runtime fields are removed | **391.54 seconds** | $0 |
+| Full clean rerun | fixed entrypoint; all decision contracts and independent checker | **634.96 seconds** | $0 |
+| Reproducibility repeat | identical scientific-payload SHA after runtime, environment, and trial-count metadata are removed | **615.22 seconds** | $0 |
 
 No GPU, Hugging Face Job, Bucket, model, or dataset repository was used. Missing
 benchmark matrices would require regenerating outputs from 11–20 LLM judges and are

@@ -12,10 +12,11 @@ Claim 6's displayed weight-bound derivation is falsified by an unbounded missing
 its mean bound verifies, and no stronger claim is made that a different proof of the
 weight bound is impossible.
 
-The fixed entrypoint completed in **388.34 seconds** on eight local CPU cores with every
-decision contract and the independent checker passing. A second clean run produced the
-same scientific-payload SHA after runtime fields were removed. No GPU, paid job, or
-synthetic replacement for missing evidence was used.
+The fixed entrypoint completed in **634.96 seconds** on eight local CPU cores with every
+decision contract and the independent checker passing. A second clean run completed in
+**615.22 seconds** and produced the same scientific-payload SHA after runtime,
+environment, and trial-count metadata were removed. No GPU, paid job, or synthetic
+replacement for missing evidence was used.
 
 - [Hugging Face Space](https://huggingface.co/spaces/DineshAI/3WPDFjZ1UT)
 - [GitHub repository](https://github.com/MachineLearning-Nerd/icml26-repro-3WPDFjZ1UT-care-confounder-aware-aggregation-for-reliable-llm-evaluation)
