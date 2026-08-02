@@ -157,7 +157,17 @@ def _stated_bound_unit(n):
 # 5000 every pi_min setting returned n* = 5000 exactly: the error was already under
 # target at the first point, so the search was censored and the fitted exponent was a
 # property of the grid, not of the estimator.
-NS_GRID = [20, 50, 125, 320, 800, 2000, 5000, 12500, 31250, 78125, 195312, 488281, 1220703]
+# Geometric at ~2.5x per step, which under-resolves the decay curve wherever n* is
+# small: at sigma_max = 1.0, n* ~ 353 sits between 320 and 800 with only four grid
+# points beneath it, the fit and crossing estimators of n* then disagree, and the
+# per-setting screen correctly discards the setting. That cost the sigma sweep four
+# of its seven settings and left one residual degree of freedom.
+#
+# The low end is refined to ~1.6x per step up to 5000. This is deliberately cheap:
+# cost grows with n, so the added points are the least expensive in the grid, and
+# the large-n tail -- which dominates runtime -- is untouched.
+NS_GRID = [20, 32, 50, 80, 125, 200, 320, 500, 800, 1250, 2000, 3200, 5000,
+           12500, 31250, 78125, 195312, 488281, 1220703]
 TARGET = 0.05  # target accuracy for max_{q,c} |pi^_qc - pi_qc|
 
 
