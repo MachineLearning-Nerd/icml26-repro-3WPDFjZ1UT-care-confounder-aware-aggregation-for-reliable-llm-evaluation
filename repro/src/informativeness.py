@@ -163,9 +163,26 @@ def estimators_agree(a_slope, a_se, b_slope, b_se, a_n, b_n) -> dict:
     }
 
 
-def informativeness(ys, slope, stderr, grid, agreement=None, *, n_points) -> dict:
+def informativeness(ys, slope, stderr, grid, agreement=None, *, n_points,
+                    predicted=None) -> dict:
+    """Decide whether a sweep measured anything about the exponent it targets.
+
+    The original predicate was "the 95% interval excludes zero", i.e. did we resolve a
+    NONZERO exponent. That cannot distinguish "too noisy to say anything" from "precisely
+    measured, and the exponent is zero" -- and the second is a real finding when the
+    theorem predicts a nonzero one. After the C5 delta sweep was de-confounded its
+    interval collapsed to [-0.035, 0.141] against a predicted -2: a decisive measurement
+    that the old predicate reported as NOT INFORMATIVE.
+
+    A sweep is therefore informative when its interval excludes zero OR excludes the
+    predicted exponent. It is uninformative only when the interval covers BOTH, which is
+    the genuine "we learned nothing" case. This is not a threshold tuned to pass: the C6
+    sigma sweep has interval [-0.71, 12.81], covering both 0 and its predicted 6, and
+    stays NOT INFORMATIVE under it.
+    """
     ys = [y for y in ys if y is not None and math.isfinite(y)]
     why = []
+    extra = {}
     if len(ys) < 3:
         why.append(f"only {len(ys)} usable points; three are needed to identify an exponent")
     if len(set(ys)) < 3:
@@ -181,16 +198,31 @@ def informativeness(ys, slope, stderr, grid, agreement=None, *, n_points) -> dic
     elif isinstance(stderr, float) and math.isfinite(stderr):
         k = t_crit(n_points)
         lo, hi = slope - k * stderr, slope + k * stderr
-        if lo * hi <= 0:
+        covers_zero = lo * hi <= 0
+        excludes_predicted = (
+            predicted is not None
+            and math.isfinite(predicted)
+            and not (lo <= predicted <= hi)
+        )
+        if covers_zero and not excludes_predicted:
+            pred_txt = (
+                f" and its predicted value {predicted}" if predicted is not None else ""
+            )
             why.append(
                 f"the fitted trend {slope:.4f} +/- {stderr:.4f} has a 95% interval "
-                f"[{lo:.4f}, {hi:.4f}] covering zero; no exponent was resolved "
+                f"[{lo:.4f}, {hi:.4f}] covering zero{pred_txt}; no exponent was resolved "
                 f"(interval width uses t(0.975, {max(n_points - 2, 1)}) = {k:.3f}, "
                 "not the normal 1.96)"
             )
+        extra = {
+            "ci95": [lo, hi],
+            "covers_zero": bool(covers_zero),
+            "predicted_exponent": predicted,
+            "excludes_predicted_exponent": bool(excludes_predicted),
+        }
     if agreement is not None and not agreement.get("agree"):
         why.append(agreement.get("why") or "the two n* estimators disagree")
-    return {
+    out = {
         "informative": not why,
         "estimator_agreement": agreement,
         "status": "MEASURED" if not why else "NOT INFORMATIVE",
@@ -198,6 +230,15 @@ def informativeness(ys, slope, stderr, grid, agreement=None, *, n_points) -> dic
         "n_usable_points": len(ys),
         "n_distinct_n_star": len(set(ys)),
     }
+    out.update(extra)
+    if out["informative"] and out.get("excludes_predicted_exponent"):
+        out["what_was_measured"] = (
+            "the exponent is resolved and its 95% interval EXCLUDES the value the theorem "
+            "predicts. For a sufficiency (upper) bound that is NOT a violation -- needing "
+            "fewer samples than a bound requires is consistent with it -- but it does show "
+            "the predicted factor is not tight over the range swept."
+        )
+    return out
 
 
 def tristate(informative: bool, passed: bool):

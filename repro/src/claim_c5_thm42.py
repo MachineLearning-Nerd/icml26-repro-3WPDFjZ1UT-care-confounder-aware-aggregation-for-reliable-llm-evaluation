@@ -370,10 +370,10 @@ def calibrated_rate(p=20, h=3, seeds=(0, 1, 2, 3, 4, 5, 6)) -> dict:
     )
 
     alpha_info = informativeness([n for _, n in stars], slope_alpha, se_alpha, ns,
-                                 n_points=len(stars))
+                                 n_points=len(stars), predicted=-2.0)
     delta_info = informativeness(
         [r["n_star_alpha_0.30"] for r in ok_rows], slope_delta, se_delta, ns,
-        n_points=len(ok_rows))
+        n_points=len(ok_rows), predicted=-2.0)
 
     theta_ok = abs(slope_theta + 0.5) < 0.12
     # A one-sided contract (slope <= -0.42) passes for -0.472 and equally for -0.9, so

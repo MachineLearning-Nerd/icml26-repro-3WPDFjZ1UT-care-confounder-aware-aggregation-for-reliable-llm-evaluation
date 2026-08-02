@@ -314,7 +314,7 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
         rows, lambda rs: [r["sigma_max"] for r in rs], "sigma_max")
     info_sigma = informativeness(
         [r["n_star"] for r in ok_rows], s_sigma, se_sigma, NS_GRID, agr_sigma,
-        n_points=len(ok_rows))
+        n_points=len(ok_rows), predicted=6.0)
     info_sigma = with_screen(info_sigma, scr_sigma)
     out["sigma"] = {
         "rows": rows, "per_setting_screen": scr_sigma, "exponent": s_sigma, "stderr": se_sigma,
@@ -347,7 +347,7 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
         rows, lambda rs: [r["pi_min"] for r in rs], "pi_min")
     info_pi_min = informativeness(
         [r["n_star"] for r in ok_rows], s_pi, se_pi, NS_GRID, agr_pi,
-        n_points=len(ok_rows))
+        n_points=len(ok_rows), predicted=-2.0)
     info_pi_min = with_screen(info_pi_min, scr_pi)
     out["pi_min"] = {
         "rows": rows, "per_setting_screen": scr_pi, "exponent": s_pi, "stderr": se_pi,
@@ -380,7 +380,7 @@ def sample_complexity_sweeps(seeds=tuple(range(21))) -> dict:
         rows, lambda rs: [r["p_total"] * np.log(r["p_total"] / EPS) for r in rs], "p_total")
     info_p = with_screen(
         informativeness([r["n_star"] for r in ok_rows], s_p, se_p, NS_GRID, agr_p,
-                        n_points=len(ok_rows)), scr_p)
+                        n_points=len(ok_rows), predicted=1.0), scr_p)
     out["p"] = {
         "rows": rows, "per_setting_screen": scr_p, "exponent_vs_p_log_p": s_p, "stderr": se_p,
         "stated_exponent": 1.0, "requirement": "exponent <= 1 + 2*stderr",
